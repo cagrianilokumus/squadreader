@@ -1,0 +1,303 @@
+/* squadreader.com "site" surface — activated by <html data-site="1"> (set in
+   main.tsx when VITE_THEME=apple AND the path is /stats). It makes the rich
+   stats view match the hand-built homepage (central/web/index.html): the SAME
+   Apple palette, LIGHT by default + dark via prefers-color-scheme, the same
+   card / table / pill / tile system. It only touches tokens the existing
+   #player-stats / #home CSS already consumes, plus a layer of component polish,
+   so nothing in the replay viewer (data-theme="apple", stays dark) is affected.
+
+   Token names mirror style.css:9-54 so every existing rule re-skins from here.
+   Values mirror central/web/index.html:8-33 one-to-one. */
+
+/* ---- tokens: LIGHT (default) ------------------------------------------- */
+:root[data-site="1"],
+:root[data-site="1"][data-theme="light"] {
+  --bg:        #fbfbfd;
+  --surface-1: #ffffff;   /* cards */
+  --surface-2: #f5f5f7;   /* headers / inputs / hover (homepage bg-soft) */
+  --surface-3: #ececf1;   /* active tab / selected row */
+  --ink:       #1d1d1f;
+  --ink-mute:  #6e6e73;
+  --ink-faint: #86868b;
+  --on-accent: #ffffff;
+  --accent:      #0071e3;
+  --accent-2:    #0077ed;
+  --accent-weak: rgba(0,113,227,0.07);
+  --accent-ring: rgba(0,113,227,0.35);
+  --good: #1a8a3a;
+  --warn: #9a6a00;
+  --bad:  #d13b3b;
+  --radius:      20px;    /* homepage .card / .feat rounding */
+  --radius-sm:   10px;
+  --radius-chip: 980px;   /* tabs / chips become pills, like the homepage seg */
+  --shadow:    0 4px 24px rgba(0,0,0,.06), 0 24px 60px rgba(0,0,0,.07);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06);
+  --border:        #e3e3e8;
+  --border-strong: #d2d2d7;
+  --panel:   var(--surface-1);
+  --panel-2: var(--surface-2);
+  --glass:   var(--surface-1);
+  --glass-2: rgba(251,251,253,0.82);   /* sticky nav/tab bar — blurred bg tint */
+  --glass-brd: var(--border);
+}
+
+/* ---- tokens: DARK ------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root[data-site="1"]:not([data-theme="light"]) {
+    --bg:        #000000;
+    --surface-1: #1a1a1c;
+    --surface-2: #0f0f11;
+    --surface-3: #262628;
+    --ink:       #f5f5f7;
+    --ink-mute:  #a1a1a6;
+    --ink-faint: #6e6e73;
+    --on-accent: #ffffff;
+    --accent:      #2997ff;
+    --accent-2:    #4aa8ff;
+    --accent-weak: rgba(41,151,255,0.14);
+    --accent-ring: rgba(41,151,255,0.40);
+    --good: #30d158;
+    --warn: #ffd426;
+    --bad:  #ff6b6b;
+    --shadow:    0 4px 24px rgba(0,0,0,.4), 0 30px 70px rgba(0,0,0,.55);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.4);
+    --border:        #262628;
+    --border-strong: #333336;
+    --glass-2: rgba(0,0,0,0.72);
+  }
+}
+:root[data-site="1"][data-theme="dark"] {
+  --bg:#000000; --surface-1:#1a1a1c; --surface-2:#0f0f11; --surface-3:#262628;
+  --ink:#f5f5f7; --ink-mute:#a1a1a6; --ink-faint:#6e6e73; --on-accent:#ffffff;
+  --accent:#2997ff; --accent-2:#4aa8ff; --accent-weak:rgba(41,151,255,0.14);
+  --accent-ring:rgba(41,151,255,0.40); --good:#30d158; --warn:#ffd426; --bad:#ff6b6b;
+  --shadow:0 4px 24px rgba(0,0,0,.4),0 30px 70px rgba(0,0,0,.55);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.4); --border:#262628; --border-strong:#333336;
+  --glass-2:rgba(0,0,0,0.72);
+}
+
+/* ---- typography: SF Pro, homepage letter-spacing ----------------------- */
+:root[data-site="1"],
+:root[data-site="1"] body,
+:root[data-site="1"] #root {
+  font-family: -apple-system, "SF Pro Display", "SF Pro Text", system-ui,
+               "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  letter-spacing: -0.011em;
+}
+
+/* =======================================================================
+   THE STATS PAGE  (#player-stats rendered inline as .ps-view)
+   Reads as a real squadreader.com page: the WHOLE DOCUMENT scrolls under a
+   sticky nav + sticky tab bar (like the homepage) — not a fixed shell with an
+   inner scroll region (which clipped at the bottom). Centered column, homepage
+   cards / tables / pills.
+   ======================================================================= */
+/* release the app's fixed-viewport overflow chain — ONLY on /stats */
+:root[data-site="1"] { overflow: auto; height: auto; scroll-behavior: smooth; color-scheme: light dark; }
+:root[data-site="1"] body,
+:root[data-site="1"] #root { height: auto; overflow: visible; }
+:root[data-site="1"] #root-grid { height: auto; min-height: 100%; }
+@media (prefers-reduced-motion: reduce) { :root[data-site="1"] { scroll-behavior: auto; } }
+
+:root[data-site="1"] #player-stats.ps-view {
+  position: static;
+  inset: auto;
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  height: auto;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--bg);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+/* --- sticky nav header (mirrors header.nav on the homepage) --- */
+:root[data-site="1"] #player-stats .ps-head {
+  position: sticky; top: 0; z-index: 50;
+  height: 56px;
+  /* content aligns to the same centered 1120 column as the body below, while
+     the bar itself spans full width (border + blur edge-to-edge) */
+  padding-inline: max(clamp(18px, 4vw, 40px), calc((100% - 1120px) / 2));
+  background: var(--glass-2);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--border);
+  gap: 20px;
+}
+:root[data-site="1"] #player-stats .ps-brand {
+  font-weight: 600; font-size: 1.12rem; letter-spacing: -0.02em;
+  color: var(--ink); text-decoration: none;
+}
+:root[data-site="1"] #player-stats .ps-brand span { color: var(--ink-faint); font-weight: 400; }
+:root[data-site="1"] #player-stats h2 {
+  font-size: 1.05rem; font-weight: 600; letter-spacing: -0.02em; color: var(--ink);
+}
+:root[data-site="1"] #player-stats .ps-back,
+:root[data-site="1"] #player-stats .ps-back-home {
+  font-family: inherit; font-size: .9rem; font-weight: 500;
+  color: var(--accent); background: transparent; border: 0;
+  border-radius: var(--radius-chip); padding: 7px 4px; cursor: pointer;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+}
+:root[data-site="1"] #player-stats .ps-back:hover,
+:root[data-site="1"] #player-stats .ps-back-home:hover { color: var(--accent-2); }
+:root[data-site="1"] #player-stats .pill.beta-pill {
+  background: var(--surface-2); color: var(--ink-faint);
+  border: 1px solid var(--border); border-radius: var(--radius-chip);
+  font-size: .62rem; letter-spacing: .08em; padding: 3px 8px;
+}
+
+/* --- search box (homepage pill input) --- */
+:root[data-site="1"] #player-stats .ps-search {
+  background: var(--surface-1); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-chip); padding: 8px 14px; gap: 8px;
+  color: var(--ink-mute);
+}
+:root[data-site="1"] #player-stats .ps-search:focus-within { border-color: var(--accent); box-shadow: none; }
+:root[data-site="1"] #player-stats .ps-search input { font-size: .92rem; color: var(--ink); }
+
+/* --- body: centered column with generous rhythm (document scrolls) --- */
+:root[data-site="1"] #player-stats .ps-body {
+  flex: 1 0 auto; min-height: 0; overflow: visible;
+  padding: clamp(28px, 5vw, 56px) clamp(18px, 4vw, 40px) 80px;
+}
+:root[data-site="1"] #player-stats .ps-body > * { max-width: 1120px; margin-left: auto; margin-right: auto; }
+
+/* a light section heading above the leaderboard, like the homepage kicker+h2 */
+:root[data-site="1"] #player-stats .ps-page-head { margin: 0 auto 26px; max-width: 1120px; }
+:root[data-site="1"] #player-stats .ps-page-kicker {
+  color: var(--accent); font-size: 1rem; font-weight: 600; letter-spacing: -0.01em;
+}
+:root[data-site="1"] #player-stats .ps-page-title {
+  font-size: clamp(2rem, 4vw, 2.9rem); font-weight: 600; letter-spacing: -0.03em;
+  line-height: 1.08; margin: 6px 0 0; color: var(--ink);
+}
+:root[data-site="1"] #player-stats .ps-page-sub {
+  color: var(--ink-mute); font-size: 1.08rem; margin: 12px 0 0; font-weight: 400;
+}
+
+/* --- segmented control (mirrors the homepage .seg): a single bg-soft pill
+       track whose active item is a raised white/surface "thumb" --- */
+:root[data-site="1"] #player-stats .ps-tabs {
+  position: sticky; top: 56px; z-index: 40;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  backdrop-filter: saturate(180%) blur(14px);
+  padding: 12px 0; margin: -12px auto 22px; max-width: 1120px;
+  align-items: center; flex-wrap: wrap; gap: 14px;
+}
+:root[data-site="1"] #player-stats .ps-tabstrip {
+  display: inline-flex; flex-wrap: wrap; gap: 3px;
+  background: var(--surface-2); border-radius: var(--radius-chip); padding: 4px;
+}
+:root[data-site="1"] #player-stats .ps-tab {
+  font-family: inherit; font-size: .84rem; font-weight: 500;
+  padding: 7px 14px; border-radius: var(--radius-chip);
+  border: 0; background: transparent; color: var(--ink-mute);
+  transition: .2s ease; cursor: pointer;
+}
+:root[data-site="1"] #player-stats .ps-tab:hover { color: var(--ink); }
+:root[data-site="1"] #player-stats .ps-tab.active {
+  background: var(--surface-1); color: var(--ink); box-shadow: var(--shadow-sm);
+}
+:root[data-site="1"] #player-stats .ps-period,
+:root[data-site="1"] #player-stats .ps-server,
+:root[data-site="1"] #player-stats .hm-controls .ps-period {
+  font-family: inherit; font-size: .9rem; font-weight: 500; color: var(--ink);
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-chip); padding: 8px 14px; margin-left: auto;
+}
+:root[data-site="1"] #player-stats .ps-server { margin-left: 0; }
+:root[data-site="1"] #player-stats .hm-controls .ps-period { margin-left: 0; }
+
+/* --- tables: homepage card + spacing --- */
+:root[data-site="1"] #player-stats .ps-table {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm);
+  overflow: hidden; font-size: .95rem; border-spacing: 0;
+}
+:root[data-site="1"] #player-stats .ps-table th {
+  padding: 14px 22px; font-size: .72rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--ink-faint); background: transparent;
+  border-bottom: 1px solid var(--border);
+}
+:root[data-site="1"] #player-stats .ps-table td { padding: 13px 22px; border-bottom: 1px solid var(--border); }
+:root[data-site="1"] #player-stats .ps-table tbody tr:last-child td { border-bottom: 0; }
+:root[data-site="1"] #player-stats .ps-row:hover td { background: var(--surface-2); }
+:root[data-site="1"] #player-stats .ps-hl { color: var(--ink); font-weight: 600; }
+:root[data-site="1"] #player-stats .ps-rank { color: var(--ink-faint); }
+:root[data-site="1"] #player-stats .ps-clan { color: var(--ink-faint); }
+
+/* --- profile --- */
+:root[data-site="1"] #player-stats .ps-profile { padding: 0; }
+:root[data-site="1"] #player-stats .ps-prof-head {
+  align-items: center; gap: 14px; margin-bottom: 22px;
+}
+:root[data-site="1"] #player-stats .ps-prof-head .ps-pname {
+  font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 600; letter-spacing: -0.025em;
+}
+:root[data-site="1"] #player-stats .ps-prof-seen { color: var(--ink-mute); font-size: .92rem; }
+
+/* tiles: homepage tile type (uppercase faint label, big tabular value) */
+:root[data-site="1"] #player-stats .ps-tiles {
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 14px; margin-bottom: 22px;
+}
+:root[data-site="1"] #player-stats .ps-tile {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 16px 14px;
+}
+:root[data-site="1"] #player-stats .ps-tile-hl { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+:root[data-site="1"] #player-stats .ps-tile-v { font-size: 1.7rem; font-weight: 600; }
+:root[data-site="1"] #player-stats .ps-tile-l { font-size: .68rem; color: var(--ink-faint); margin-top: 4px; }
+
+:root[data-site="1"] #player-stats .ps-extra { gap: 14px; }
+:root[data-site="1"] #player-stats .ps-extra-card {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 16px 18px;
+}
+:root[data-site="1"] #player-stats .ps-extra-v { font-size: 1.35rem; font-weight: 600; }
+
+:root[data-site="1"] #player-stats .ps-cols { gap: 30px; }
+:root[data-site="1"] #player-stats .ps-col h3 {
+  font-size: .74rem; letter-spacing: .05em; color: var(--ink-faint); margin: 24px 0 10px;
+}
+:root[data-site="1"] #player-stats .ps-mini td { padding: 8px 8px; border-bottom: 1px solid var(--border); }
+
+/* role / elo pills keep their accent semantics but sit on the light card */
+:root[data-site="1"] #player-stats .ps-role-pill {
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--ink-mute);
+}
+
+/* messages / spinner on a light ground */
+:root[data-site="1"] #player-stats .ps-spin {
+  border-color: color-mix(in srgb, var(--ink) 14%, transparent); border-top-color: var(--accent);
+}
+:root[data-site="1"] #player-stats .ps-msg { font-size: .95rem; }
+
+/* weapon / bar tracks read on light */
+:root[data-site="1"] #player-stats .ps-bar-track,
+:root[data-site="1"] #player-stats .ps-w-track { background: var(--surface-2); }
+
+/* activity-grid empty cells: base outlines them with a white inset that is
+   invisible on the light page — use a token-derived ink tint instead */
+:root[data-site="1"] #player-stats .ps-act-cell {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 9%, transparent);
+}
+
+/* --- footer note under the page --- */
+:root[data-site="1"] #player-stats .ps-page-foot {
+  max-width: 1120px; margin: 56px auto 0; padding-top: 28px;
+  border-top: 1px solid var(--border); color: var(--ink-faint);
+  font-size: .85rem; text-align: center;
+}
+:root[data-site="1"] #player-stats .ps-page-foot a { color: var(--accent); text-decoration: none; }
+
+/* responsive: single-column profile on narrow screens */
+@media (max-width: 760px) {
+  :root[data-site="1"] #player-stats .ps-cols { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,314 @@
+{
+  "AlBasrah": {
+    "file": "/maps/AlBasrah.webp",
+    "topLeft": {
+      "x": -200000,
+      "y": -200000
+    },
+    "bottomRight": {
+      "x": 200000,
+      "y": 200000
+    },
+    "source": "squadcalc"
+  },
+  "Anvil": {
+    "file": "/maps/Anvil.png",
+    "topLeft": {
+      "x": -204000,
+      "y": -204000
+    },
+    "bottomRight": {
+      "x": 102000,
+      "y": 102000
+    },
+    "source": "fmodel"
+  },
+  "Belaya": {
+    "file": "/maps/Belaya.webp",
+    "topLeft": {
+      "x": -195400,
+      "y": -208000
+    },
+    "bottomRight": {
+      "x": 195000,
+      "y": 182500
+    },
+    "source": "squadcalc"
+  },
+  "BlackCoast": {
+    "file": "/maps/BlackCoast.webp",
+    "topLeft": {
+      "x": -229999.515625,
+      "y": -212746.78125
+    },
+    "bottomRight": {
+      "x": 229998.46875,
+      "y": 247251.0625
+    },
+    "source": "squadcalc"
+  },
+  "Chora": {
+    "file": "/maps/Chora.webp",
+    "topLeft": {
+      "x": -246400,
+      "y": -266400
+    },
+    "bottomRight": {
+      "x": 159990,
+      "y": 140000
+    },
+    "source": "squadcalc"
+  },
+  "Fallujah": {
+    "file": "/maps/Fallujah.webp",
+    "topLeft": {
+      "x": -131500,
+      "y": -154500
+    },
+    "bottomRight": {
+      "x": 169000,
+      "y": 146000
+    },
+    "source": "squadcalc"
+  },
+  "FoolsRoad": {
+    "file": "/maps/FoolsRoad.webp",
+    "topLeft": {
+      "x": -132576.921875,
+      "y": -132576.921875
+    },
+    "bottomRight": {
+      "x": 44805.078125,
+      "y": 44805.078125
+    },
+    "source": "squadcalc"
+  },
+  "GooseBay": {
+    "file": "/maps/GooseBay.webp",
+    "topLeft": {
+      "x": -201657.890625,
+      "y": -201674.84375
+    },
+    "bottomRight": {
+      "x": 201523.078125,
+      "y": 201503.078125
+    },
+    "source": "squadcalc"
+  },
+  "Gorodok": {
+    "file": "/maps/Gorodok_fmodel.webp",
+    "topLeft": {
+      "x": -203199,
+      "y": -203200
+    },
+    "bottomRight": {
+      "x": 203201,
+      "y": 203200
+    },
+    "source": "fmodel"
+  },
+  "Harju": {
+    "file": "/maps/Harju.webp",
+    "topLeft": {
+      "x": -201600,
+      "y": -201600
+    },
+    "bottomRight": {
+      "x": 201600,
+      "y": 201600
+    },
+    "source": "squadcalc"
+  },
+  "Jensen": {
+    "file": "/maps/Jensen.webp",
+    "topLeft": {
+      "x": -200400,
+      "y": -200400
+    },
+    "bottomRight": {
+      "x": 200400,
+      "y": 200400
+    },
+    "source": "squadcalc"
+  },
+  "Kamdesh": {
+    "file": "/maps/Kamdesh.webp",
+    "topLeft": {
+      "x": -201600,
+      "y": -201600
+    },
+    "bottomRight": {
+      "x": 201600,
+      "y": 201600
+    },
+    "source": "squadcalc"
+  },
+  "Kohat": {
+    "file": "/maps/Kohat.webp",
+    "topLeft": {
+      "x": -230000,
+      "y": -230000
+    },
+    "bottomRight": {
+      "x": 231700,
+      "y": 231700
+    },
+    "source": "squadcalc"
+  },
+  "Kokan": {
+    "file": "/maps/Kokan.webp",
+    "topLeft": {
+      "x": -107634.9375,
+      "y": -107566.75
+    },
+    "bottomRight": {
+      "x": 142013.671875,
+      "y": 142013.671875
+    },
+    "source": "squadcalc"
+  },
+  "Lashkar": {
+    "file": "/maps/Lashkar.webp",
+    "topLeft": {
+      "x": -216700,
+      "y": -216700
+    },
+    "bottomRight": {
+      "x": 216700,
+      "y": 216700
+    },
+    "source": "squadcalc"
+  },
+  "Logar": {
+    "file": "/maps/Logar_fmodel.png",
+    "topLeft": {
+      "x": -88145.140625,
+      "y": -113238.7578125
+    },
+    "bottomRight": {
+      "x": 87978.328125,
+      "y": 62921.7109375
+    },
+    "source": "squadcalc"
+  },
+  "Manicouagan": {
+    "file": "/maps/Manicouagan.png",
+    "topLeft": {
+      "x": -201657.890625,
+      "y": -201674.84375
+    },
+    "bottomRight": {
+      "x": 201657.890625,
+      "y": 201674.84375
+    },
+    "source": "fmodel"
+  },
+  "Mestia": {
+    "file": "/maps/Mestia.webp",
+    "topLeft": {
+      "x": -120000,
+      "y": -110000
+    },
+    "bottomRight": {
+      "x": 120000,
+      "y": 130000
+    },
+    "source": "squadcalc"
+  },
+  "Mutaha": {
+    "file": "/maps/Mutaha.webp",
+    "topLeft": {
+      "x": -93500,
+      "y": -114000
+    },
+    "bottomRight": {
+      "x": 182000,
+      "y": 161500
+    },
+    "source": "squadcalc"
+  },
+  "Narva": {
+    "file": "/maps/Narva.webp",
+    "topLeft": {
+      "x": -138970.6875,
+      "y": -140207.4375
+    },
+    "bottomRight": {
+      "x": 141029.375,
+      "y": 139792.515625
+    },
+    "source": "squadcalc"
+  },
+  "Pacific": {
+    "file": "/maps/Pacific.webp",
+    "topLeft": {
+      "x": -201600,
+      "y": -201600
+    },
+    "bottomRight": {
+      "x": 201600,
+      "y": 201600
+    },
+    "source": "squadcalc"
+  },
+  "Sanxian": {
+    "file": "/maps/Sanxian.webp",
+    "topLeft": {
+      "x": -230000,
+      "y": -205000
+    },
+    "bottomRight": {
+      "x": 230000,
+      "y": 255000
+    },
+    "source": "squadcalc"
+  },
+  "Skorpo": {
+    "file": "/maps/Skorpo.png",
+    "topLeft": {
+      "x": -360150,
+      "y": -360150
+    },
+    "bottomRight": {
+      "x": 324850,
+      "y": 324850
+    },
+    "source": "fmodel"
+  },
+  "Sumari": {
+    "file": "/maps/Sumari.webp",
+    "topLeft": {
+      "x": -63973.92578125,
+      "y": -44728.078125
+    },
+    "bottomRight": {
+      "x": 66033.578125,
+      "y": 85297.234375
+    },
+    "source": "squadcalc"
+  },
+  "Tallil": {
+    "file": "/maps/Tallil.png",
+    "topLeft": {
+      "x": -234000,
+      "y": -234000
+    },
+    "bottomRight": {
+      "x": 234000,
+      "y": 234000
+    },
+    "source": "fmodel"
+  },
+  "Yehorivka": {
+    "file": "/maps/Yehorivka.webp",
+    "topLeft": {
+      "x": -330197.40625,
+      "y": -330199.5
+    },
+    "bottomRight": {
+      "x": 304803,
+      "y": 304800
+    },
+    "source": "squadcalc"
+  }
+}

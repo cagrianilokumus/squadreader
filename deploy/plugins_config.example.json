@@ -1,0 +1,36 @@
+{
+  "_comment": [
+    "Copy to <SQREADER_HOME>/plugins_config.json and pass it with",
+    "--plugins-config. Only keys you want to override need to appear under",
+    "'config' — everything else falls back to DEFAULT_CONFIG in the plugin.",
+    "",
+    "Alerts are written to --stats-db and read back from GET /api/alerts,",
+    "which is live-gated (an alert names a player and calls them a cheater).",
+    "",
+    "IMPORTANT: every 'sustained ticks' threshold is scaled to the production",
+    "tick rate of 0.5 Hz (--hz 0.5 => a 2 s tick). If you change --hz, re-scale",
+    "them or the detectors quietly change meaning. See sqreader/plugins/",
+    "cheat_detect.py for the table."
+  ],
+
+  "cheat_detect": {
+    "enabled": true,
+    "config": {
+      "report_cooldown_minutes": 5.0,
+
+      "detect_speedhack": true,
+      "speed_max_foot_mps": 18.0,
+      "speed_sustained_ticks": 8,
+
+      "detect_infinite_ammo": true,
+      "inf_ammo_min_damage_events": 3,
+      "inf_ammo_min_window_seconds": 30.0,
+      "inf_ammo_stale_seconds": 15.0,
+
+      "detect_remote_melee": true,
+      "remote_melee_max_dist_m": 25.0,
+
+      "detect_magic_bullet": false
+    }
+  }
+}

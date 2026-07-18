@@ -1,0 +1,20 @@
+[Unit]
+Description=Prune old SqReader match recordings
+# Recordings grow ~250 MB/day and nothing else deletes them. On a box that also
+# runs the game server, a full disk takes Squad down with SqReader — this is the
+# safety valve. Policy: keep 90 days of history, and never let the archive itself
+# grow past 150 GB or squeeze the filesystem below 50 GB free.
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=@SQREADER_HOME@/deploy/cleanup_recordings.sh \
+    --dir @SQREADER_HOME@/recordings \
+    --max-age-days 90 \
+    --max-total-gb 150 \
+    --min-free-gb 50
+# Everything the script prints lands in the journal:  journalctl -u sqreader-retention
+StandardOutput=journal
+StandardError=journal
+Nice=10
+IOSchedulingClass=idle

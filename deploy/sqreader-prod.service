@@ -1,0 +1,46 @@
+[Unit]
+Description=sqreader live map (prod Squad pid, auto-resolved)
+After=network.target
+# STABILITY: never give up restarting. Disabling the start-rate limit means
+# a fault storm can never leave the unit in 'failed'/stopped — it keeps
+# retrying forever. Backoff is handled by RestartSteps (below), not by
+# giving up.
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+WorkingDirectory=@SQREADER_HOME@
+Environment=PYTHONPATH=@SQREADER_HOME@/sqreader
+ExecStart=/bin/bash -c 'exec /usr/bin/python3 -m sqreader.cli serve \
+    --pid $(pidof -s SquadGameServer) \
+    --host 127.0.0.1 --port 8081 --hz 0.5 \
+    --recordings-dir @SQREADER_HOME@/recordings \
+    --stats-db @SQREADER_HOME@/stats/player_stats.db \
+    --icons-dir @SQREADER_HOME@/icons \
+    --sqmaps-dir @SQREADER_HOME@/sqmaps \
+    --frontend-dir @SQREADER_HOME@/frontend/dist'
+# Plugins (anti-cheat) are opt-in. To turn them on, copy
+# deploy/plugins_config.example.json into place and add to the line above:
+#     --plugins-config @SQREADER_HOME@/plugins_config.json
+# They run inside the tick loop and need --stats-db (that is where alerts go).
+# Their "sustained N ticks" thresholds are scaled to --hz 0.5 (a 2 s tick) —
+# re-scale them if that changes.
+Restart=always
+# Exponential backoff 2s -> 30s over 5 steps, then holds at 30s and keeps
+# trying forever. Stops a tight restart storm from burning CPU while still
+# recovering promptly once the target (Squad) is back.
+RestartSec=2
+RestartSteps=5
+RestartMaxDelaySec=30
+# Log to the journal (auto-rotated) instead of an unbounded /tmp file that
+# could eventually fill the disk and become its own crash cause.
+# Tail with:  journalctl -u sqreader-prod -f
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+
+# NOTE: a drop-in at /etc/systemd/system/sqreader-prod.service.d/*.conf
+# adds CPUQuota=50%, Nice=19, IOSchedulingClass=idle to keep the reader
+# from competing with the game server for CPU/IO.

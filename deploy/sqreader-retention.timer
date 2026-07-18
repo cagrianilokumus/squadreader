@@ -1,0 +1,14 @@
+[Unit]
+Description=Daily SqReader recording retention
+
+[Timer]
+# Once a day is plenty — the archive grows by about one match every 30 minutes.
+OnCalendar=daily
+# If the box was off at the scheduled time, run on the next boot instead of
+# skipping the day.
+Persistent=true
+# Don't collide with whatever else fires at midnight.
+RandomizedDelaySec=30m
+
+[Install]
+WantedBy=timers.target

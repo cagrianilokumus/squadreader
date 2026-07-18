@@ -1,0 +1,5758 @@
+{
+"BP_2A20_AP": {
+"displayName": "3BM-4 115mm Armor-Piercing Sabot",
+"firemodes": [
+1
+],
+"iconKey": "tank_sabot",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_sabot.png",
+"maxMags": 12,
+"muzzleVelocity": 130000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_2A20_Frag": {
+"displayName": "OF-11 115mm Fragmentation",
+"firemodes": [
+1
+],
+"iconKey": "tank_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_frag.png",
+"maxMags": 20,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_2A20_HEAT": {
+"displayName": "BK-4M 115mm High Explosive Anti-Tank",
+"firemodes": [
+1
+],
+"iconKey": "tank_heat",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_heat.png",
+"maxMags": 8,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_2A20_coax": {
+"maxMags": 1,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 2500,
+"timeBetweenShots": 0.085
+},
+"BP_2A45_AP": {
+"displayName": "3BM60 125mm Armor-Piercing Sabot",
+"firemodes": [
+1
+],
+"iconKey": "tank_sabot",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_sabot.png",
+"maxMags": 14,
+"muzzleVelocity": 130000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_2A45_Frag": {
+"displayName": "3OF82 125mm Fragmentation",
+"firemodes": [
+1
+],
+"iconKey": "tank_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_frag.png",
+"maxMags": 14,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_2A45_HEAT": {
+"displayName": "3BK29M 125mm High Explosive Anti-Tank",
+"firemodes": [
+1
+],
+"iconKey": "tank_heat",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_heat.png",
+"maxMags": 6,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_2A45_coax": {
+"maxMags": 1,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 2000,
+"timeBetweenShots": 0.085
+},
+"BP_2A46M_AP": {
+"displayName": "3BM60 125mm Armor-Piercing Sabot",
+"firemodes": [
+1
+],
+"iconKey": "tank_sabot",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_sabot.png",
+"maxMags": 20,
+"muzzleVelocity": 130000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_2A46M_Frag": {
+"displayName": "3OF82 125mm Fragmentation",
+"firemodes": [
+1
+],
+"iconKey": "tank_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_frag.png",
+"maxMags": 9,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_2A46M_HEAT": {
+"displayName": "3BK29M 125mm High Explosive Anti-Tank",
+"firemodes": [
+1
+],
+"iconKey": "tank_heat",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_heat.png",
+"maxMags": 10,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_2A46M_coax": {
+"maxMags": 1,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 2000,
+"timeBetweenShots": 0.085
+},
+"BP_2A46_AP": {
+"displayName": "3BM60 125mm Armor-Piercing Sabot",
+"firemodes": [
+1
+],
+"iconKey": "tank_sabot",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_sabot.png",
+"maxMags": 20,
+"muzzleVelocity": 130000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_2A46_Frag": {
+"displayName": "3OF82 125mm Fragmentation",
+"firemodes": [
+1
+],
+"iconKey": "tank_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_frag.png",
+"maxMags": 9,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_2A46_HEAT": {
+"displayName": "3BK29M 125mm High Explosive Anti-Tank",
+"firemodes": [
+1
+],
+"iconKey": "tank_heat",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_heat.png",
+"maxMags": 10,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_2A46_T72A_AP": {
+"displayName": "3BM32 125mm Armor-Piercing Sabot",
+"firemodes": [
+1
+],
+"iconKey": "tank_sabot",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_sabot.png",
+"maxMags": 16,
+"muzzleVelocity": 130000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_2A46_T72A_Frag": {
+"displayName": "3OF26 125mm Fragmentation",
+"firemodes": [
+1
+],
+"iconKey": "tank_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_frag.png",
+"maxMags": 22,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_2A46_T72A_HEAT": {
+"displayName": "3BK18M 125mm High Explosive Anti-Tank",
+"firemodes": [
+1
+],
+"iconKey": "tank_heat",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_heat.png",
+"maxMags": 12,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_2A46_T72A_coax": {
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"timeBetweenShots": 0.085
+},
+"BP_2A46_T72S_AP": {
+"displayName": "BM32 125mm Armor-Piercing Sabot",
+"firemodes": [
+1
+],
+"iconKey": "tank_sabot",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_sabot.png",
+"maxMags": 16,
+"muzzleVelocity": 130000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_2A46_T72S_Frag": {
+"displayName": "OF26 125mm Fragmentation",
+"firemodes": [
+1
+],
+"iconKey": "tank_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_frag.png",
+"maxMags": 22,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_2A46_T72S_HEAT": {
+"displayName": "BK18M 125mm High Explosive Anti-Tank",
+"firemodes": [
+1
+],
+"iconKey": "tank_heat",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_heat.png",
+"maxMags": 12,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_2A46_T72S_coax": {
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"timeBetweenShots": 0.085
+},
+"BP_2A46_coax": {
+"maxMags": 1,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 2000,
+"timeBetweenShots": 0.085
+},
+"BP_2A6_C6_Loaders_Weapon": {
+"displayName": "C6A1 FLEX",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 500,
+"timeBetweenShots": 0.085
+},
+"BP_2A6_C6_Loaders_Weapon_Desert": {
+"displayName": "C6A1 FLEX",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 500,
+"timeBetweenShots": 0.085
+},
+"BP_2A6_Mag58_Loaders_Weapon": {
+"displayName": "Mag58",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 500,
+"timeBetweenShots": 0.085
+},
+"BP_2A6_Mag58_Loaders_Weapon_Desert": {
+"displayName": "Mag58",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 500,
+"timeBetweenShots": 0.085
+},
+"BP_50Cal_LUVW": {
+"maxMags": 10,
+"roundsPerMag": 100
+},
+"BP_50Cal_LUVW_Desert": {
+"maxMags": 10,
+"roundsPerMag": 100
+},
+"BP_50Cal_M1128": {
+"maxMags": 10,
+"roundsPerMag": 100
+},
+"BP_50Cal_M1128_Woodland": {
+"maxMags": 10,
+"roundsPerMag": 100
+},
+"BP_50Cal_M1151": {
+"displayName": "M2A1 Browning",
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 10,
+"roundsPerMag": 100
+},
+"BP_50Cal_M1151_Black": {
+"displayName": "M2A1 Browning",
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 10,
+"roundsPerMag": 100
+},
+"BP_50Cal_M1151_GFI": {
+"displayName": "M2A1 Browning",
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 10,
+"roundsPerMag": 100
+},
+"BP_50Cal_M1151_USMC_Woodland": {
+"displayName": "M2A1 Browning",
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 10,
+"roundsPerMag": 100
+},
+"BP_50Cal_M1151_Woodland": {
+"displayName": "M2A1 Browning",
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 10,
+"roundsPerMag": 100
+},
+"BP_9M117M1BastionATGM": {
+"displayName": "9M117M1 Bastion Guided Missile",
+"firemodes": [
+1
+],
+"iconKey": "kornet",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/kornet.png",
+"maxMags": 3,
+"muzzleVelocity": 30000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.085
+},
+"BP_9M119MRefleks_ATGM": {
+"displayName": "9M119M Refleks Guided Missile",
+"iconKey": "kornet",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/kornet.png",
+"maxMags": 2,
+"muzzleVelocity": 30000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.085
+},
+"BP_9M119MRefleks_ATGM_Sprut": {
+"displayName": "9M119M Refleks Guided Missile",
+"iconKey": "kornet",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/kornet.png",
+"maxMags": 2,
+"muzzleVelocity": 30000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.085
+},
+"BP_9M119MRefleks_ATGM_T90A": {
+"displayName": "9M119M Refleks Guided Missile",
+"iconKey": "kornet",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/kornet.png",
+"maxMags": 2,
+"muzzleVelocity": 30000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.085
+},
+"BP_AAVP7A1_M2": {
+"displayName": "M2A1 Browning",
+"firemodes": [
+0
+],
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 5,
+"muzzleVelocity": 89000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 8.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.12
+},
+"BP_AAVP7A1_M2_Woodland": {
+"displayName": "M2A1 Browning",
+"firemodes": [
+0
+],
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 5,
+"muzzleVelocity": 89000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 8.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.12
+},
+"BP_AAVP7A1_MK19": {
+"displayName": "MK19",
+"firemodes": [
+0
+],
+"iconKey": "40mmhedp",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/40mmhedp.png",
+"maxMags": 6,
+"muzzleVelocity": 23000.0,
+"rearmRoundsPerItem": 5,
+"rearmSeconds": 45.0,
+"roundsPerMag": 32,
+"timeBetweenShots": 0.171
+},
+"BP_AAVP7A1_MK19_Woodland": {
+"displayName": "MK19",
+"firemodes": [
+0
+],
+"iconKey": "40mmhedp",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/40mmhedp.png",
+"maxMags": 6,
+"muzzleVelocity": 23000.0,
+"rearmRoundsPerItem": 5,
+"rearmSeconds": 45.0,
+"roundsPerMag": 32,
+"timeBetweenShots": 0.171
+},
+"BP_ACV15_OpenTurret_M2_Weapon": {
+"maxMags": 10,
+"roundsPerMag": 100
+},
+"BP_ACV15_OpenTurret_MG3_Weapon": {
+"displayName": "MG3",
+"firemodes": [
+-1
+],
+"iconKey": "mg3",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/mg3.png",
+"maxMags": 6,
+"muzzleVelocity": 82000.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.0545
+},
+"BP_ACV_762": {
+"displayName": "M240C Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 2,
+"muzzleVelocity": 85300.0,
+"rearmSeconds": 10.0,
+"roundsPerMag": 800,
+"timeBetweenShots": 0.07
+},
+"BP_ACV_762_Desert": {
+"displayName": "M240C Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 2,
+"muzzleVelocity": 85300.0,
+"rearmSeconds": 10.0,
+"roundsPerMag": 800,
+"timeBetweenShots": 0.07
+},
+"BP_ACV_M252_AP": {
+"displayName": "M791 25mm Armor-Piercing Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 138500.0,
+"rearmRoundsPerItem": 5,
+"rearmSeconds": 3.0,
+"roundsPerMag": 70,
+"timeBetweenShots": 0.3
+},
+"BP_ACV_M252_AP_Desert": {
+"displayName": "M791 25mm Armor-Piercing Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 138500.0,
+"rearmRoundsPerItem": 5,
+"rearmSeconds": 3.0,
+"roundsPerMag": 70,
+"timeBetweenShots": 0.3
+},
+"BP_ACV_M252_HE": {
+"displayName": "M792 25mm High Explosive Incendiary",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 100000.0,
+"rearmRoundsPerItem": 6,
+"rearmSeconds": 3.0,
+"roundsPerMag": 230,
+"timeBetweenShots": 0.3
+},
+"BP_ACV_M252_HE_Desert": {
+"displayName": "M792 25mm High Explosive Incendiary",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 100000.0,
+"rearmRoundsPerItem": 6,
+"rearmSeconds": 3.0,
+"roundsPerMag": 230,
+"timeBetweenShots": 0.3
+},
+"BP_APS201-125_ATGM": {
+"displayName": "APS201-125 Anti Tank Guided Missile",
+"iconKey": "kornet",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/kornet.png",
+"maxMags": 4,
+"muzzleVelocity": 30000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.085
+},
+"BP_ASLAV_762": {
+"displayName": "Mag58 Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 2,
+"muzzleVelocity": 85300.0,
+"rearmSeconds": 10.0,
+"roundsPerMag": 800,
+"timeBetweenShots": 0.07
+},
+"BP_ASLAV_M252_AP": {
+"displayName": "M919 25mm Armor-Piercing Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 138500.0,
+"rearmRoundsPerItem": 5,
+"rearmSeconds": 3.0,
+"roundsPerMag": 70,
+"timeBetweenShots": 0.3
+},
+"BP_ASLAV_M252_HE": {
+"displayName": "MK210 25mm High Explosive Incendiary",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 125000.0,
+"rearmRoundsPerItem": 6,
+"rearmSeconds": 3.0,
+"roundsPerMag": 230,
+"timeBetweenShots": 0.3
+},
+"BP_ASLAV_Mag58_Cmdr_Weapon": {
+"displayName": "M240B",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 10,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_ASLAV_SmokeLauncher": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Arbalet_Kord": {
+"displayName": "Arbalet Kord",
+"firemodes": [
+0,
+4
+],
+"iconKey": "nsv",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/nsv.png",
+"maxMags": 1,
+"muzzleVelocity": 86000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 450,
+"timeBetweenShots": 0.085
+},
+"BP_Arbalet_Kord_Desert": {
+"displayName": "Arbalet Kord",
+"firemodes": [
+0,
+4
+],
+"iconKey": "nsv",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/nsv.png",
+"maxMags": 1,
+"muzzleVelocity": 86000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 450,
+"timeBetweenShots": 0.085
+},
+"BP_AutoCannon": {
+"displayName": "Generic Auto Cannon"
+},
+"BP_BFV_762": {
+"displayName": "M240C Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 2,
+"muzzleVelocity": 85300.0,
+"rearmSeconds": 10.0,
+"roundsPerMag": 800,
+"timeBetweenShots": 0.07
+},
+"BP_BFV_762_Woodland": {
+"displayName": "M240C Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 2,
+"muzzleVelocity": 85300.0,
+"rearmSeconds": 10.0,
+"roundsPerMag": 800,
+"timeBetweenShots": 0.07
+},
+"BP_BFV_M252_AP": {
+"displayName": "M919 25mm Armor-Piercing Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 138500.0,
+"rearmRoundsPerItem": 5,
+"rearmSeconds": 3.0,
+"roundsPerMag": 70,
+"timeBetweenShots": 0.3
+},
+"BP_BFV_M252_AP_Woodland": {
+"displayName": "M919 25mm Armor-Piercing Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 138500.0,
+"rearmRoundsPerItem": 5,
+"rearmSeconds": 3.0,
+"roundsPerMag": 70,
+"timeBetweenShots": 0.3
+},
+"BP_BFV_M252_HE": {
+"displayName": "MK210 25mm High Explosive Incendiary",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 100000.0,
+"rearmRoundsPerItem": 6,
+"rearmSeconds": 3.0,
+"roundsPerMag": 230,
+"timeBetweenShots": 0.3
+},
+"BP_BFV_M252_HE_Woodland": {
+"displayName": "MK210 25mm High Explosive Incendiary",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 100000.0,
+"rearmRoundsPerItem": 6,
+"rearmSeconds": 3.0,
+"roundsPerMag": 230,
+"timeBetweenShots": 0.3
+},
+"BP_BFV_vehicleTOW": {
+"displayName": "BGM-71 TOW High Explosive Anti-Tank",
+"iconKey": "bgm71_tow",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/bgm71_tow.png",
+"maxMags": 1,
+"muzzleVelocity": 1.0,
+"rearmSeconds": 20.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 4.5
+},
+"BP_BFV_vehicleTOW_Woodland": {
+"displayName": "BGM-71 TOW High Explosive Anti-Tank",
+"iconKey": "bgm71_tow",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/bgm71_tow.png",
+"maxMags": 1,
+"muzzleVelocity": 1.0,
+"rearmSeconds": 20.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 4.5
+},
+"BP_BGM71TOW_MATV_WPMC": {
+"maxMags": 6,
+"rearmSeconds": 5.0
+},
+"BP_BM21Grad_Weapon_AFU_Kraz": {
+"displayName": "9M22U 122mm Rocket",
+"firemodes": [
+1
+],
+"iconKey": "s5rocket",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/s5rocket.png",
+"maxMags": 1,
+"muzzleVelocity": 20000.0,
+"rearmSeconds": 3.8,
+"roundsPerMag": 40,
+"timeBetweenShots": 0.25
+},
+"BP_BM21Grad_Weapon_IMF": {
+"displayName": "9M22U 122mm Rocket",
+"firemodes": [
+1
+],
+"iconKey": "s5rocket",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/s5rocket.png",
+"maxMags": 1,
+"muzzleVelocity": 20000.0,
+"rearmSeconds": 3.8,
+"roundsPerMag": 40,
+"timeBetweenShots": 0.25
+},
+"BP_BM21Grad_Weapon_MEI": {
+"displayName": "9M22U 122mm Rocket",
+"firemodes": [
+1
+],
+"iconKey": "s5rocket",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/s5rocket.png",
+"maxMags": 1,
+"muzzleVelocity": 20000.0,
+"rearmSeconds": 3.8,
+"roundsPerMag": 40,
+"timeBetweenShots": 0.25
+},
+"BP_BM21Grad_Turret_MEI": {
+"displayName": "9M22U 122mm Rocket",
+"firemodes": [
+1
+],
+"iconKey": "s5rocket",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/s5rocket.png",
+"maxMags": 1,
+"muzzleVelocity": 20000.0,
+"rearmSeconds": 3.8,
+"roundsPerMag": 40,
+"timeBetweenShots": 0.25
+},
+"BP_C16_C6_Desert": {
+"displayName": "Protector C6 GPMG",
+"iconKey": "c6a1",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/C6A1.png",
+"maxMags": 1,
+"roundsPerMag": 1000
+},
+"BP_M3MAAWS_HEAT_C": {
+"displayName": "M3 MAAWS (FFV551 HEAT)",
+"iconKey": "m3maaws_heat",
+"iconPath": "static/icons/Inventory/Weapons/RocketLaunchers/m3maaws_heat.png",
+"maxMags": 1,
+"roundsPerMag": 1
+},
+"BP_BMD1M_2A28_Frag": {
+"displayName": "OG-15V Fragmentation",
+"firemodes": [
+1
+],
+"iconKey": "og7v_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/og7v_frag.png",
+"maxMags": 16,
+"muzzleVelocity": 29000.0,
+"rearmRoundsPerItem": 3,
+"rearmSeconds": 5.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.085
+},
+"BP_BMD1M_2A28_HEAT": {
+"displayName": "PG-15V High Explosive Anti-Tank",
+"firemodes": [
+1
+],
+"iconKey": "pg7v_heat",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/pg7v_heat.png",
+"maxMags": 24,
+"muzzleVelocity": 43500.0,
+"rearmRoundsPerItem": 3,
+"rearmSeconds": 5.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.085
+},
+"BP_BMD1M_Bow_PKT": {
+"displayName": "PKT Machine Gun",
+"maxMags": 8,
+"rearmRoundsPerItem": 100,
+"timeBetweenShots": 0.085
+},
+"BP_BMD1M_PKT": {
+"displayName": "PKT Machine Gun",
+"maxMags": 8,
+"rearmRoundsPerItem": 100,
+"timeBetweenShots": 0.085
+},
+"BP_BMD1M_Smoke_Launcher": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_BMD4M_2A70_HEFrag": {
+"displayName": "3UOF19 100mm High-Explosive Fragmentation",
+"firemodes": [
+1
+],
+"iconKey": "tank_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_frag.png",
+"maxMags": 22,
+"muzzleVelocity": 35500.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_BMD4M_2A70_coax": {
+"maxMags": 1,
+"muzzleVelocity": 89500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 3000,
+"timeBetweenShots": 0.075
+},
+"BP_BMD4M_2A72_AP": {
+"displayName": "3UBR8 30mm Armor Piercing Discarding Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 100400.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 150,
+"timeBetweenShots": 0.18
+},
+"BP_BMD4M_2A72_HE": {
+"displayName": "3UOR6 30mm Fragmentation Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 100400.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 150,
+"timeBetweenShots": 0.18
+},
+"BP_BMD4M_APS03-100ATGM": {
+"displayName": "9M117M1 Bastion Guided Missile",
+"firemodes": [
+1
+],
+"iconKey": "kornet",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/kornet.png",
+"maxMags": 3,
+"muzzleVelocity": 30000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.085
+},
+"BP_BMD4M_Smoke_Launcher": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_BMP1TS_KBA117": {
+"displayName": "GPD-30 Fragmentation",
+"firemodes": [
+0
+],
+"iconKey": "gdp30_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/gdp30_frag.png",
+"maxMags": 4,
+"muzzleVelocity": 19000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 29,
+"timeBetweenShots": 0.15
+},
+"BP_BMP1TS_KT762": {
+"displayName": "KT-7.62 Coaxial Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 6,
+"muzzleVelocity": 85500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 8.5,
+"roundsPerMag": 350,
+"timeBetweenShots": 0.0856
+},
+"BP_BMP1TS_Smoke_Launcher": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_BMP1TS_StugnaP": {
+"displayName": "RK-2M-K Skif High Explosive Anti-Tank",
+"iconKey": "bgm71_tow",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/bgm71_tow.png",
+"maxMags": 2,
+"muzzleVelocity": 1.0,
+"rearmSeconds": 20.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 2.0
+},
+"BP_BMP1TS_ZTM1_AP": {
+"displayName": "3UBR8 30mm Armor Piercing Discarding Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 100400.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 150,
+"timeBetweenShots": 0.18
+},
+"BP_BMP1TS_ZTM1_HE": {
+"displayName": "3UOR6 30mm Fragmentation Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 150,
+"timeBetweenShots": 0.18
+},
+"BP_BMP1_2A28_Frag": {
+"displayName": "OG-15V Fragmentation",
+"firemodes": [
+1
+],
+"iconKey": "og7v_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/og7v_frag.png",
+"maxMags": 16,
+"muzzleVelocity": 29000.0,
+"rearmRoundsPerItem": 3,
+"rearmSeconds": 5.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.085
+},
+"BP_BMP1_2A28_HEAT": {
+"displayName": "PG-15V High Explosive Anti-Tank",
+"firemodes": [
+1
+],
+"iconKey": "pg7v_heat",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/pg7v_heat.png",
+"maxMags": 24,
+"muzzleVelocity": 43500.0,
+"rearmRoundsPerItem": 3,
+"rearmSeconds": 5.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.085
+},
+"BP_BMP1_AT3": {
+"displayName": "9M14P Malyutka-P High Explosive Anti-Tank",
+"iconKey": "bgm71_tow",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/bgm71_tow.png",
+"maxMags": 4,
+"muzzleVelocity": 1.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_BMP1_PKT": {
+"maxMags": 8,
+"rearmRoundsPerItem": 100,
+"timeBetweenShots": 0.085
+},
+"BP_BMP2M_2A42_AP": {
+"displayName": "3UBR8 30mm Armor Piercing Discarding Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 100400.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 160,
+"timeBetweenShots": 0.109
+},
+"BP_BMP2M_2A42_AP_Desert": {
+"displayName": "3UBR8 30mm Armor Piercing Discarding Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 100400.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 160,
+"timeBetweenShots": 0.109
+},
+"BP_BMP2M_2A42_HE": {
+"displayName": "3UOR6 30mm Fragmentation Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 90000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 340,
+"timeBetweenShots": 0.109
+},
+"BP_BMP2M_2A42_HE_Desert": {
+"displayName": "3UOR6 30mm Fragmentation Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 90000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 340,
+"timeBetweenShots": 0.109
+},
+"BP_BMP2M_AGS30": {
+"displayName": "GPD-30 Fragmentation",
+"firemodes": [
+0
+],
+"iconKey": "gdp30_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/gdp30_frag.png",
+"maxMags": 1,
+"muzzleVelocity": 19000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 120,
+"timeBetweenShots": 0.15
+},
+"BP_BMP2M_AGS30_Desert": {
+"displayName": "GPD-30 Fragmentation",
+"firemodes": [
+0
+],
+"iconKey": "gdp30_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/gdp30_frag.png",
+"maxMags": 1,
+"muzzleVelocity": 19000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 120,
+"timeBetweenShots": 0.15
+},
+"BP_BMP2M_Kornet": {
+"displayName": "9M133 Kornet High Explosive Anti-Tank",
+"iconKey": "bgm71_tow",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/bgm71_tow.png",
+"maxMags": 1,
+"muzzleVelocity": 1.0,
+"rearmSeconds": 20.0,
+"roundsPerMag": 4,
+"timeBetweenShots": 2.0
+},
+"BP_BMP2M_Kornet_Desert": {
+"displayName": "9M133 Kornet High Explosive Anti-Tank",
+"iconKey": "bgm71_tow",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/bgm71_tow.png",
+"maxMags": 1,
+"muzzleVelocity": 1.0,
+"rearmSeconds": 20.0,
+"roundsPerMag": 4,
+"timeBetweenShots": 2.0
+},
+"BP_BMP2M_PKT": {
+"displayName": "PKT Coaxial Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 1,
+"muzzleVelocity": 85500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 8.5,
+"roundsPerMag": 2000,
+"timeBetweenShots": 0.0856
+},
+"BP_BMP2M_PKT_Desert": {
+"displayName": "PKT Coaxial Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 1,
+"muzzleVelocity": 85500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 8.5,
+"roundsPerMag": 2000,
+"timeBetweenShots": 0.0856
+},
+"BP_BMP2M_Smoke_Launcher": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_BMP2M_Smoke_Launcher_Desert": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_BMP2_2A42_AP": {
+"displayName": "3UBR8 30mm Armor Piercing Discarding Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 100400.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 160,
+"timeBetweenShots": 0.109
+},
+"BP_BMP2_2A42_AP_Desert": {
+"displayName": "3UBR8 30mm Armor Piercing Discarding Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 100400.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 160,
+"timeBetweenShots": 0.109
+},
+"BP_BMP2_2A42_HE": {
+"displayName": "3UOR6 30mm Fragmentation Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 90000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 340,
+"timeBetweenShots": 0.109
+},
+"BP_BMP2_2A42_HE_Desert": {
+"displayName": "3UOR6 30mm Fragmentation Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 90000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 340,
+"timeBetweenShots": 0.109
+},
+"BP_BMP2_AFU_2A42_AP": {
+"displayName": "3UBR8 30mm Armor Piercing Discarding Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 100400.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 160,
+"timeBetweenShots": 0.109
+},
+"BP_BMP2_AFU_2A42_HE": {
+"displayName": "3UOR6 30mm Fragmentation Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 90000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 340,
+"timeBetweenShots": 0.109
+},
+"BP_BMP2_AFU_Konkurs": {
+"displayName": "9M113 Konkurs Guided Missile",
+"iconKey": "bgm71_tow",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/bgm71_tow.png",
+"maxMags": 4,
+"muzzleVelocity": 1.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_BMP2_AFU_PKT": {
+"displayName": "PKT Coaxial Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 1,
+"muzzleVelocity": 85500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 8.5,
+"roundsPerMag": 2000,
+"timeBetweenShots": 0.0856
+},
+"BP_BMP2_AFU_Smoke_Launcher": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_BMP2_GFI_2A42_AP": {
+"displayName": "3UBR6 30mm Armor Piercing",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 100400.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 160,
+"timeBetweenShots": 0.109
+},
+"BP_BMP2_GFI_2A42_HE": {
+"displayName": "3UOR6 30mm Fragmentation Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 90000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 340,
+"timeBetweenShots": 0.109
+},
+"BP_BMP2_GFI_Konkurs": {
+"displayName": "9M113 Konkurs Guided Missile",
+"iconKey": "bgm71_tow",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/bgm71_tow.png",
+"maxMags": 4,
+"muzzleVelocity": 1.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_BMP2_GFI_PKT": {
+"displayName": "PKT Coaxial Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 1,
+"muzzleVelocity": 85500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 8.5,
+"roundsPerMag": 2000,
+"timeBetweenShots": 0.0856
+},
+"BP_BMP2_GFI_Smoke_Launcher": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_BMP2_Konkurs": {
+"displayName": "9M113 Konkurs Guided Missile",
+"iconKey": "bgm71_tow",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/bgm71_tow.png",
+"maxMags": 4,
+"muzzleVelocity": 1.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_BMP2_Konkurs_Desert": {
+"displayName": "9M113 Konkurs Guided Missile",
+"iconKey": "bgm71_tow",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/bgm71_tow.png",
+"maxMags": 4,
+"muzzleVelocity": 1.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_BMP2_PKT": {
+"displayName": "PKT Coaxial Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 1,
+"muzzleVelocity": 85500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 8.5,
+"roundsPerMag": 2000,
+"timeBetweenShots": 0.0856
+},
+"BP_BMP2_PKT_Desert": {
+"displayName": "PKT Coaxial Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 1,
+"muzzleVelocity": 85500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 8.5,
+"roundsPerMag": 2000,
+"timeBetweenShots": 0.0856
+},
+"BP_BMP2_Smoke_Launcher": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_BMP2_Smoke_Launcher_Desert": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_BMP3M_2A70_HEFrag": {
+"displayName": "3UOF19 100mm High-Explosive Fragmentation",
+"firemodes": [
+1
+],
+"iconKey": "tank_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_frag.png",
+"maxMags": 22,
+"muzzleVelocity": 35500.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_BMP3M_2A70_coax": {
+"maxMags": 1,
+"muzzleVelocity": 89500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 3000,
+"timeBetweenShots": 0.075
+},
+"BP_BMP3M_2A72_AP": {
+"displayName": "3UBR8 30mm Armor Piercing Discarding Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 97000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 195,
+"timeBetweenShots": 0.18
+},
+"BP_BMP3M_2A72_HE": {
+"displayName": "3UOR6 30mm Fragmentation Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 97000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 305,
+"timeBetweenShots": 0.18
+},
+"BP_BMP3M_BowGun_PKT": {
+"displayName": "PKTM Machine Gun",
+"maxMags": 1,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 2000
+},
+"BP_BRDM2_GFI_UB32": {
+"displayName": "S5 Rockets",
+"firemodes": [
+1
+],
+"iconKey": "s5rocket",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/s5rocket.png",
+"maxMags": 1,
+"muzzleVelocity": 30000.0,
+"rearmRoundsPerItem": 4,
+"rearmSeconds": 8.5,
+"roundsPerMag": 32,
+"timeBetweenShots": 0.1
+},
+"BP_BRDM2_INS_PKT": {
+"displayName": "PKT Coaxial Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 1,
+"muzzleVelocity": 85500.0,
+"rearmSeconds": 8.5,
+"roundsPerMag": 250,
+"timeBetweenShots": 0.0856
+},
+"BP_BRDM2_INS_KPVT": {
+"displayName": "KPVT BZT",
+"firemodes": [
+0
+],
+"iconKey": "14_5mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/14_5mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 30000.0,
+"rearmSeconds": 8.5,
+"roundsPerMag": 50,
+"timeBetweenShots": 0.1
+},
+"BP_BTR4_KBA117": {
+"displayName": "GPD-30 Fragmentation",
+"firemodes": [
+0
+],
+"iconKey": "gdp30_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/gdp30_frag.png",
+"maxMags": 4,
+"muzzleVelocity": 19000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 29,
+"timeBetweenShots": 0.15
+},
+"BP_BTR4_KT762": {
+"displayName": "KT-7.62 Coaxial Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 6,
+"muzzleVelocity": 85500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 8.5,
+"roundsPerMag": 350,
+"timeBetweenShots": 0.0856
+},
+"BP_BTR4_Smoke_Launcher": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_BTR4_StugnaP": {
+"displayName": "RK-2M-K Skif High Explosive Anti-Tank",
+"iconKey": "bgm71_tow",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/bgm71_tow.png",
+"maxMags": 2,
+"muzzleVelocity": 1.0,
+"rearmSeconds": 20.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 2.0
+},
+"BP_BTR4_ZTM1_AP": {
+"displayName": "3UBR8 30mm Armor Piercing Discarding Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 100400.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 150,
+"timeBetweenShots": 0.18
+},
+"BP_BTR4_ZTM1_HE": {
+"displayName": "3UOR6 30mm Fragmentation Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 150,
+"timeBetweenShots": 0.18
+},
+"BP_BTR82A_PKT": {
+"displayName": "PKT Coaxial Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 1,
+"muzzleVelocity": 85500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 8.5,
+"roundsPerMag": 2000,
+"timeBetweenShots": 0.0856
+},
+"BP_BTR82A_PKT_desert": {
+"displayName": "PKT Coaxial Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 1,
+"muzzleVelocity": 85500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 8.5,
+"roundsPerMag": 2000,
+"timeBetweenShots": 0.0856
+},
+"BP_BTR82A_RUS_2A72_AP": {
+"displayName": "3UBR8 30mm Armor Piercing Discarding Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 100400.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 150,
+"timeBetweenShots": 0.18
+},
+"BP_BTR82A_RUS_2A72_AP_Desert": {
+"displayName": "3UBR8 30mm Armor Piercing Discarding Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 100400.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 150,
+"timeBetweenShots": 0.18
+},
+"BP_BTR82A_RUS_2A72_HE": {
+"displayName": "3UOR6 30mm Fragmentation Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 150,
+"timeBetweenShots": 0.18
+},
+"BP_BTR82A_RUS_2A72_HE_Desert": {
+"displayName": "3UOR6 30mm Fragmentation Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 150,
+"timeBetweenShots": 0.18
+},
+"BP_BTR82A_RUS_Smoke_Launcher": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_BTR82A_RUS_Smoke_Launcher_Desert": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_BTRMDM_Bow_PKT": {
+"displayName": "PKT Machine Gun",
+"maxMags": 8,
+"rearmRoundsPerItem": 100,
+"timeBetweenShots": 0.085
+},
+"BP_C6A1_DoorGun": {
+"displayName": "C6A1",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 5,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_C6_LAV_Manned_Turret": {
+"displayName": "C6A1 FLEX",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 10,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_C6_LUVW": {
+"displayName": "C6A1 FLEX",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 10,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_C6_LUVW_Desert": {
+"displayName": "C6A1 FLEX",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 10,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_CH146_Hydra": {
+"displayName": "Hydra-70 Rockets",
+"firemodes": [
+0
+],
+"iconKey": "T_Hydra70_HE",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/T_Hydra70_HE.png",
+"maxMags": 1,
+"muzzleVelocity": 73900.0,
+"rearmRoundsPerItem": 4,
+"rearmSeconds": 8.5,
+"roundsPerMag": 38,
+"timeBetweenShots": 0.25
+},
+"BP_CROWS_C6_LAV": {
+"displayName": "C6 CROWS"
+},
+"BP_CROWS_C6_LAV_Desert": {
+"displayName": "C6 CROWS"
+},
+"BP_CoaxialMachinegun": {
+"displayName": "Generic Coaxial Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 5,
+"muzzleVelocity": 85500.0,
+"rearmSeconds": 7.0,
+"roundsPerMag": 250,
+"timeBetweenShots": 0.0856
+},
+"BP_CobraRWS_M2": {
+"displayName": "RWS M2HB",
+"firemodes": [
+0
+],
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 1,
+"muzzleVelocity": 89000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 400,
+"timeBetweenShots": 0.12
+},
+"BP_CobraRWS_M2_Desert": {
+"displayName": "RWS M2HB",
+"firemodes": [
+0
+],
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 1,
+"muzzleVelocity": 89000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 400,
+"timeBetweenShots": 0.12
+},
+"BP_CobraRWS_MG3": {
+"displayName": "RWS MG3",
+"firemodes": [
+-1
+],
+"iconKey": "mg3",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/mg3.png",
+"maxMags": 1,
+"muzzleVelocity": 82000.0,
+"rearmRoundsPerItem": 75,
+"rearmSeconds": 10.0,
+"roundsPerMag": 750,
+"timeBetweenShots": 0.0545
+},
+"BP_CobraRWS_MG3_Desert": {
+"displayName": "RWS MG3",
+"firemodes": [
+-1
+],
+"iconKey": "mg3",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/mg3.png",
+"maxMags": 1,
+"muzzleVelocity": 82000.0,
+"rearmRoundsPerItem": 75,
+"rearmSeconds": 10.0,
+"roundsPerMag": 750,
+"timeBetweenShots": 0.0545
+},
+"BP_Cobra_II_OpenTurret_M2_Weapon": {
+"maxMags": 10,
+"roundsPerMag": 100
+},
+"BP_Cobra_II_OpenTurret_MG3_Weapon": {
+"displayName": "MG3",
+"firemodes": [
+-1
+],
+"iconKey": "mg3",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/mg3.png",
+"maxMags": 6,
+"muzzleVelocity": 82000.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.0545
+},
+"BP_Coyote_M252_HE_Desert": {
+"roundsPerMag": 135
+},
+"BP_Coyote_M252_HE_Woodland": {
+"roundsPerMag": 135
+},
+"BP_Cupola_Dshk": {
+"displayName": "DshK",
+"iconKey": "nsvt",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/nsvt.png",
+"maxMags": 6,
+"muzzleVelocity": 85000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 0.0
+},
+"BP_Cupola_Dshk_MIL": {
+"displayName": "DshK",
+"iconKey": "nsvt",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/nsvt.png",
+"maxMags": 6,
+"muzzleVelocity": 85000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 0.0
+},
+"BP_DShK_RHIB_Weapon": {
+"displayName": "Dshk",
+"iconKey": "dshk",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/dshk.png",
+"maxMags": 10,
+"muzzleVelocity": 85000.0,
+"timeBetweenShots": 0.1
+},
+"BP_DShK_Technical": {
+"displayName": "Dshk",
+"iconKey": "dshk",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/dshk.png",
+"maxMags": 10,
+"muzzleVelocity": 85000.0,
+"timeBetweenShots": 0.1
+},
+"BP_DShK_Technical_Shield": {
+"displayName": "Dshk",
+"iconKey": "dshk",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/dshk.png",
+"maxMags": 10,
+"muzzleVelocity": 85000.0,
+"timeBetweenShots": 0.12
+},
+"BP_EnforcerRWS_L37A2": {
+"displayName": "L37A2 RWS",
+"firemodes": [
+0
+],
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 75,
+"rearmSeconds": 10.0,
+"roundsPerMag": 750,
+"timeBetweenShots": 0.085
+},
+"BP_EnforcerRWS_L37A2_Woodland": {
+"displayName": "L37A2 RWS",
+"firemodes": [
+0
+],
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 75,
+"rearmSeconds": 10.0,
+"roundsPerMag": 750,
+"timeBetweenShots": 0.085
+},
+"BP_EnforcerRWS_M2": {
+"displayName": "L11A1 CROWS",
+"firemodes": [
+0
+],
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 1,
+"muzzleVelocity": 89000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 400,
+"timeBetweenShots": 0.12
+},
+"BP_EnforcerRWS_M2_Woodland": {
+"displayName": "L11A1 CROWS",
+"firemodes": [
+0
+],
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 1,
+"muzzleVelocity": 89000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 400,
+"timeBetweenShots": 0.12
+},
+"BP_GAU21_DoorGun": {
+"displayName": "GAU-21",
+"maxMags": 1,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.06
+},
+"BP_GPMG": {
+"displayName": "L7A2",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 10,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_GPMG_Woodland": {
+"displayName": "L7A2",
+"iconKey": "mag58",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/mag58.png",
+"maxMags": 10,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_GenericVehicleGuidedMissileWeapon": {
+"displayName": "Generic Guided Missile",
+"maxMags": 2,
+"muzzleVelocity": 1.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 5.0
+},
+"BP_HJ8ATGM_CSK131": {
+"displayName": "HJ8L High Explosive Anti-Tank",
+"maxMags": 6,
+"rearmSeconds": 5.0,
+"timeBetweenShots": 5.0
+},
+"BP_HydraRockets": {
+"displayName": "Hydra-70 Rockets",
+"firemodes": [
+-1
+],
+"iconKey": "T_Hydra70_HE",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/T_Hydra70_HE.png",
+"maxMags": 1,
+"muzzleVelocity": 73900.0,
+"rearmRoundsPerItem": 4,
+"rearmSeconds": 8.5,
+"roundsPerMag": 9999,
+"timeBetweenShots": 0.3
+},
+"BP_Hydra_Loach_Dual_Generic": {
+"displayName": "M151 HEDP",
+"firemodes": [
+-1
+],
+"iconKey": "T_Hydra70_HE",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/T_Hydra70_HE.png",
+"maxMags": 1,
+"muzzleVelocity": 73900.0,
+"rearmRoundsPerItem": 4,
+"rearmSeconds": 8.5,
+"roundsPerMag": 14,
+"timeBetweenShots": 0.1
+},
+"BP_Hydra_Loach_Large_Dual": {
+"displayName": "M151 HEDP",
+"firemodes": [
+-1
+],
+"iconKey": "T_Hydra70_HE",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/T_Hydra70_HE.png",
+"maxMags": 1,
+"muzzleVelocity": 73900.0,
+"rearmRoundsPerItem": 4,
+"rearmSeconds": 8.5,
+"roundsPerMag": 38,
+"timeBetweenShots": 0.1
+},
+"BP_Hydra_Loach_Large_Single": {
+"displayName": "M151 HEDP",
+"firemodes": [
+-1
+],
+"iconKey": "T_Hydra70_HE",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/T_Hydra70_HE.png",
+"maxMags": 1,
+"muzzleVelocity": 73900.0,
+"rearmRoundsPerItem": 4,
+"rearmSeconds": 8.5,
+"roundsPerMag": 19,
+"timeBetweenShots": 0.1
+},
+"BP_Hydra_Loach_Single_Generic": {
+"displayName": "M151 HEDP",
+"firemodes": [
+-1
+],
+"iconKey": "T_Hydra70_HE",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/T_Hydra70_HE.png",
+"maxMags": 1,
+"muzzleVelocity": 73900.0,
+"rearmRoundsPerItem": 4,
+"rearmSeconds": 8.5,
+"roundsPerMag": 7,
+"timeBetweenShots": 0.1
+},
+"BP_Hydra_Loach_Small_Dual": {
+"displayName": "M151 HEDP",
+"firemodes": [
+-1
+],
+"iconKey": "T_Hydra70_HE",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/T_Hydra70_HE.png",
+"maxMags": 1,
+"muzzleVelocity": 73900.0,
+"rearmRoundsPerItem": 4,
+"rearmSeconds": 8.5,
+"roundsPerMag": 14,
+"timeBetweenShots": 0.1
+},
+"BP_Hydra_Loach_Small_Single": {
+"displayName": "M151 HEDP",
+"firemodes": [
+-1
+],
+"iconKey": "T_Hydra70_HE",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/T_Hydra70_HE.png",
+"maxMags": 1,
+"muzzleVelocity": 73900.0,
+"rearmRoundsPerItem": 4,
+"rearmSeconds": 8.5,
+"roundsPerMag": 7,
+"timeBetweenShots": 0.1
+},
+"BP_Hydra_Loach_Small_Single_Right": {
+"displayName": "M151 HEDP",
+"firemodes": [
+-1
+],
+"iconKey": "T_Hydra70_HE",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/T_Hydra70_HE.png",
+"maxMags": 1,
+"muzzleVelocity": 73900.0,
+"rearmRoundsPerItem": 4,
+"rearmSeconds": 8.5,
+"roundsPerMag": 7,
+"timeBetweenShots": 0.1
+},
+"BP_Hydra_Loach_Small_Smoke_Single_Left": {
+"displayName": "M156 Smoke",
+"firemodes": [
+-1
+],
+"iconKey": "T_Hydra70_Smoke",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/T_Hydra70_Smoke.png",
+"maxMags": 1,
+"muzzleVelocity": 73900.0,
+"rearmRoundsPerItem": 4,
+"rearmSeconds": 8.5,
+"roundsPerMag": 7,
+"timeBetweenShots": 0.1
+},
+"BP_IFV25_762": {
+"displayName": "M240C Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 2,
+"muzzleVelocity": 85300.0,
+"rearmSeconds": 10.0,
+"roundsPerMag": 800,
+"timeBetweenShots": 0.07
+},
+"BP_IFV25_762_Desert": {
+"displayName": "M240C Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 2,
+"muzzleVelocity": 85300.0,
+"rearmSeconds": 10.0,
+"roundsPerMag": 800,
+"timeBetweenShots": 0.07
+},
+"BP_IFV25_M252_AP": {
+"displayName": "M791 25mm Armor-Piercing Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 138500.0,
+"rearmRoundsPerItem": 5,
+"rearmSeconds": 3.0,
+"roundsPerMag": 70,
+"timeBetweenShots": 0.3
+},
+"BP_IFV25_M252_AP_Desert": {
+"displayName": "M791 25mm Armor-Piercing Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 138500.0,
+"rearmRoundsPerItem": 5,
+"rearmSeconds": 3.0,
+"roundsPerMag": 70,
+"timeBetweenShots": 0.3
+},
+"BP_IFV25_M252_HE": {
+"displayName": "M792 25mm High Explosive Incendiary",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 100000.0,
+"rearmRoundsPerItem": 6,
+"rearmSeconds": 3.0,
+"roundsPerMag": 230,
+"timeBetweenShots": 0.3
+},
+"BP_IFV25_M252_HE_Desert": {
+"displayName": "M792 25mm High Explosive Incendiary",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 100000.0,
+"rearmRoundsPerItem": 6,
+"rearmSeconds": 3.0,
+"roundsPerMag": 230,
+"timeBetweenShots": 0.3
+},
+"BP_KBA3_AP": {
+"displayName": "3BM42 125mm Armor-Piercing Sabot",
+"firemodes": [
+1
+],
+"iconKey": "tank_sabot",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_sabot.png",
+"maxMags": 20,
+"muzzleVelocity": 130000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_KBA3_Frag": {
+"displayName": "3OF26 125mm Fragmentation",
+"firemodes": [
+1
+],
+"iconKey": "tank_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_frag.png",
+"maxMags": 7,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_KBA3_HEAT": {
+"displayName": "3BK18M 125mm High Explosive Anti-Tank",
+"firemodes": [
+1
+],
+"iconKey": "tank_heat",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_heat.png",
+"maxMags": 10,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_KBA3_coax": {
+"maxMags": 1,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 2000,
+"timeBetweenShots": 0.085
+},
+"BP_KPVT_UB32": {
+"displayName": "S5 Rockets",
+"firemodes": [
+1
+],
+"iconKey": "s5rocket",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/s5rocket.png",
+"maxMags": 1,
+"muzzleVelocity": 30000.0,
+"rearmRoundsPerItem": 4,
+"rearmSeconds": 8.5,
+"roundsPerMag": 32,
+"timeBetweenShots": 0.1
+},
+"BP_Kombat_ATGM": {
+"displayName": "9M119M Refleks Guided Missile",
+"iconKey": "kornet",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/kornet.png",
+"maxMags": 2,
+"muzzleVelocity": 30000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.085
+},
+"BP_Kord_BTR-D": {
+"displayName": "Kord",
+"iconKey": "nsv",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/nsv.png",
+"maxMags": 10,
+"muzzleVelocity": 86000.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_Kord_Cupola_Weapon": {
+"displayName": "NSVT",
+"firemodes": [
+0
+],
+"iconKey": "nsvt",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/nsvt.png",
+"maxMags": 2,
+"muzzleVelocity": 86000.0,
+"rearmSeconds": 7.0,
+"roundsPerMag": 150,
+"timeBetweenShots": 0.085
+},
+"BP_Kord_Cupola_Weapon_Desert": {
+"displayName": "NSVT",
+"firemodes": [
+0
+],
+"iconKey": "nsvt",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/nsvt.png",
+"maxMags": 2,
+"muzzleVelocity": 86000.0,
+"rearmSeconds": 7.0,
+"roundsPerMag": 150,
+"timeBetweenShots": 0.085
+},
+"BP_Kord_Cupola_Weapon_T64BM2": {
+"displayName": "NSVT",
+"firemodes": [
+0
+],
+"iconKey": "nsvt",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/nsvt.png",
+"maxMags": 2,
+"muzzleVelocity": 86000.0,
+"rearmSeconds": 7.0,
+"roundsPerMag": 150,
+"timeBetweenShots": 0.085
+},
+"BP_Kord_Kozak": {
+"displayName": "Kord",
+"iconKey": "nsv",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/nsv.png",
+"maxMags": 10,
+"muzzleVelocity": 86000.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_Kord_Safir_Weapon": {
+"displayName": "NSV",
+"iconKey": "dshk",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/dshk.png",
+"maxMags": 10,
+"muzzleVelocity": 86000.0,
+"timeBetweenShots": 0.085
+},
+"BP_Kord_Tigr": {
+"displayName": "Kord",
+"iconKey": "nsv",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/nsv.png",
+"maxMags": 10,
+"muzzleVelocity": 86000.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_Kornet_Safir_Weapon": {
+"displayName": "9M133 Kornet High Explosive Anti-Tank",
+"maxMags": 6,
+"rearmSeconds": 5.0
+},
+"BP_L30A1_AP": {
+"displayName": "L27A1 CHARM 120mm Armor-Piercing Sabot",
+"firemodes": [
+1
+],
+"iconKey": "tank_sabot",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_sabot.png",
+"maxMags": 25,
+"muzzleVelocity": 150000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 1.0
+},
+"BP_L30A1_HESH": {
+"displayName": "L31A7 120mm High Explosive Squash Head",
+"firemodes": [
+1
+],
+"iconKey": "tank_heat",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_heat.png",
+"maxMags": 16,
+"muzzleVelocity": 67000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 3.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_L30A1_Smoke": {
+"displayName": "L34 120mm Smoke",
+"firemodes": [
+1
+],
+"iconKey": "tank_smoke",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_smoke.png",
+"maxMags": 6,
+"muzzleVelocity": 67000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 3.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_L55_AP": {
+"displayName": "DM53 120mm Armor-Piercing Sabot",
+"firemodes": [
+1
+],
+"iconKey": "tank_sabot",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_sabot.png",
+"maxMags": 21,
+"muzzleVelocity": 120000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 1.0
+},
+"BP_L55_HEAT": {
+"displayName": "DM12 120mm High Explosive Anti-Tank",
+"firemodes": [
+1
+],
+"iconKey": "tank_heat",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_heat.png",
+"maxMags": 21,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 3.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_L55_coax": {
+"displayName": "M240 Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 2000,
+"timeBetweenShots": 0.07
+},
+"BP_L94A1_coax": {
+"displayName": "L94A1 Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 2000,
+"timeBetweenShots": 0.12
+},
+"BP_LAV25_762": {
+"displayName": "M240C Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 2,
+"muzzleVelocity": 85300.0,
+"rearmSeconds": 10.0,
+"roundsPerMag": 225,
+"timeBetweenShots": 0.07
+},
+"BP_LAV25_762_Woodland": {
+"displayName": "M240C Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 2,
+"muzzleVelocity": 85300.0,
+"rearmSeconds": 10.0,
+"roundsPerMag": 225,
+"timeBetweenShots": 0.07
+},
+"BP_LAV25_M252_AP": {
+"displayName": "M919 25mm Armor-Piercing Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 138500.0,
+"rearmRoundsPerItem": 5,
+"rearmSeconds": 3.0,
+"roundsPerMag": 60,
+"timeBetweenShots": 0.3
+},
+"BP_LAV25_M252_AP_Woodland": {
+"displayName": "M919 25mm Armor-Piercing Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 138500.0,
+"rearmRoundsPerItem": 5,
+"rearmSeconds": 3.0,
+"roundsPerMag": 60,
+"timeBetweenShots": 0.3
+},
+"BP_LAV25_M252_HE": {
+"displayName": "MK210 25mm High Explosive Incendiary",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 100000.0,
+"rearmRoundsPerItem": 6,
+"rearmSeconds": 3.0,
+"roundsPerMag": 150,
+"timeBetweenShots": 0.3
+},
+"BP_LAV25_M252_HE_Woodland": {
+"displayName": "MK210 25mm High Explosive Incendiary",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 100000.0,
+"rearmRoundsPerItem": 6,
+"rearmSeconds": 3.0,
+"roundsPerMag": 150,
+"timeBetweenShots": 0.3
+},
+"BP_M1064A3_M121mortar": {
+"displayName": "M934A1 120mm High Explosive Impact",
+"maxMags": 1,
+"muzzleVelocity": 14200.0,
+"rearmSeconds": 4.0,
+"roundsPerMag": 30,
+"timeBetweenShots": 3.85
+},
+"BP_M1064A3_M121mortar_Airburst": {
+"displayName": "M934A1 120mm High Explosive Near-Surface",
+"maxMags": 1,
+"muzzleVelocity": 14200.0,
+"rearmSeconds": 4.0,
+"roundsPerMag": 15,
+"timeBetweenShots": 3.85
+},
+"BP_M1064A3_M121mortar_Smoke": {
+"displayName": "M929 120mm White Smoke",
+"iconKey": "81mm_mortar_smoke",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/81mm_mortar_smoke.png",
+"maxMags": 1,
+"muzzleVelocity": 14200.0,
+"rearmSeconds": 4.0,
+"roundsPerMag": 15,
+"timeBetweenShots": 3.85
+},
+"BP_M1117_M2": {
+"displayName": "M2A1 Browning",
+"firemodes": [
+0
+],
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 5,
+"muzzleVelocity": 89000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 8.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.12
+},
+"BP_M1117_MK19": {
+"displayName": "MK19",
+"firemodes": [
+0
+],
+"iconKey": "40mmhedp",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/40mmhedp.png",
+"maxMags": 6,
+"muzzleVelocity": 23000.0,
+"rearmRoundsPerItem": 5,
+"rearmSeconds": 45.0,
+"roundsPerMag": 48,
+"timeBetweenShots": 0.171
+},
+"BP_M1126_M240_Smoke_Launcher": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_M1126_Smoke_Launcher": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_M1151_Technical_DShK_Shield": {
+"displayName": "Dshk",
+"iconKey": "dshk",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/dshk.png",
+"maxMags": 10,
+"muzzleVelocity": 85000.0,
+"timeBetweenShots": 0.12
+},
+"BP_M134_DoorGun": {
+"displayName": "GAU-17/A Minigun",
+"iconKey": "T_M134",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/T_M134.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 250,
+"rearmSeconds": 10.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.036
+},
+"BP_M134_Loach_Dual": {
+"displayName": "GAU-17/A Minigun",
+"iconKey": "T_M134_Mounted_Heli_Dual",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/T_M134_Mounted_Heli_Dual.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 40,
+"rearmSeconds": 10.0,
+"roundsPerMag": 200,
+"timeBetweenShots": 0.17
+},
+"BP_M134_Loach_Single": {
+"displayName": "GAU-17/A Minigun",
+"iconKey": "T_M134_Mounted_Heli",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/T_M134_Mounted_Heli.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 40,
+"rearmSeconds": 10.0,
+"roundsPerMag": 200,
+"timeBetweenShots": 0.17
+},
+"BP_M134_UH60_DoorGun": {
+"displayName": "GAU-17/A Minigun",
+"iconKey": "T_M134",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/T_M134.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 250,
+"rearmSeconds": 10.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.036
+},
+"BP_M134_Weapon": {
+"displayName": "GAU-17/A Minigun",
+"iconKey": "T_M134",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/T_M134.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 250,
+"rearmSeconds": 10.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.036
+},
+"BP_M134_Weapon_CPV": {
+"displayName": "M134 Minigun",
+"iconKey": "T_M134",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/T_M134.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 250,
+"rearmSeconds": 10.0,
+"roundsPerMag": 800,
+"timeBetweenShots": 0.036
+},
+"BP_M1A1_FLEX_M2": {
+"displayName": "M2A1 Browning CWS",
+"firemodes": [
+0
+],
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"muzzleVelocity": 89000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.12
+},
+"BP_M1A1_USMC_Cmdr_M2": {
+"displayName": "M2A1 Browning",
+"firemodes": [
+0
+],
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 1,
+"muzzleVelocity": 89000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 400,
+"timeBetweenShots": 0.12
+},
+"BP_M1A1_USMC_Cmdr_M2_Woodland": {
+"displayName": "M2A1 Browning",
+"firemodes": [
+0
+],
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 1,
+"muzzleVelocity": 89000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 400,
+"timeBetweenShots": 0.12
+},
+"BP_M240G_MGO_Turret_Weapon_Desert": {
+"displayName": "M240G",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 10,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_M240G_MGO_Turret_Weapon_Woodland": {
+"displayName": "M240G",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 10,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_M240G_Turret_Weapon": {
+"displayName": "M240G",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 10,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_M240G_Turret_Weapon_Woodland": {
+"displayName": "M240G",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 10,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_M240H_DoorGun": {
+"displayName": "M240H",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 5,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_M240H_DoorGun_SA330": {
+"displayName": "M240H",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 5,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_M240H_UH1Y_DoorGun": {
+"displayName": "M240H",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 5,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_M240H_WPMC_DoorGun": {
+"displayName": "M240H",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 5,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_M240_Loaders_Weapon": {
+"displayName": "M240B",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 10,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_M240_Loaders_Weapon_WPMC": {
+"displayName": "M240B",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 10,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_M240_Loaders_Weapon_Woodland": {
+"displayName": "M240B",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 10,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_M240_RHIB_Weapon": {
+"displayName": "M240B",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 10,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_M256A1_AP": {
+"displayName": "M829A4 120mm Armor-Piercing Sabot",
+"firemodes": [
+1
+],
+"iconKey": "tank_sabot",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_sabot.png",
+"maxMags": 21,
+"muzzleVelocity": 120000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 1.0
+},
+"BP_M256A1_AP_ADF": {
+"displayName": "KEW-A2 120mm Armor-Piercing Sabot",
+"firemodes": [
+1
+],
+"iconKey": "tank_sabot",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_sabot.png",
+"maxMags": 21,
+"muzzleVelocity": 120000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 1.0
+},
+"BP_M256A1_HEAT": {
+"displayName": "M830A1 120mm High Explosive Anti-Tank",
+"firemodes": [
+1
+],
+"iconKey": "tank_heat",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_heat.png",
+"maxMags": 21,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 3.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_M256A1_coax": {
+"displayName": "M240 Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 2000,
+"timeBetweenShots": 0.07
+},
+"BP_M256A1_coax_ADF": {
+"displayName": "Mag58 Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 2000,
+"timeBetweenShots": 0.07
+},
+"BP_M2HB_RHIB_Weapon": {
+"displayName": "M2HB Browning",
+"maxMags": 10,
+"roundsPerMag": 100
+},
+"BP_M2_DoorGun": {
+"displayName": "M2HB",
+"maxMags": 1,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 100
+},
+"BP_M2_RHIB_Weapon": {
+"maxMags": 10,
+"roundsPerMag": 100
+},
+"BP_M2_Technical": {
+"maxMags": 10,
+"roundsPerMag": 100
+},
+"BP_M60T_M85": {
+"displayName": "M85 HMG",
+"firemodes": [
+0
+],
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 1,
+"muzzleVelocity": 89000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 400,
+"timeBetweenShots": 0.12
+},
+"BP_M60T_M85_Desert": {
+"displayName": "M85 HMG",
+"firemodes": [
+0
+],
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 1,
+"muzzleVelocity": 89000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 400,
+"timeBetweenShots": 0.12
+},
+"BP_M60T_M85_WPMC": {
+"displayName": "M85 HMG",
+"firemodes": [
+0
+],
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 1,
+"muzzleVelocity": 89000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 400,
+"timeBetweenShots": 0.12
+},
+"BP_M68A2_AP": {
+"displayName": "M900 105mm Armor-Piercing Sabot",
+"firemodes": [
+1
+],
+"iconKey": "tank_sabot",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_sabot.png",
+"maxMags": 6,
+"muzzleVelocity": 150000.0,
+"rearmRoundsPerItem": 2,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 1.0
+},
+"BP_M68A2_Canister": {
+"displayName": "M1040 105mm Canister",
+"firemodes": [
+1,
+0
+],
+"iconKey": "tank_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_frag.png",
+"maxMags": 3,
+"muzzleVelocity": 104100.0,
+"rearmRoundsPerItem": 2,
+"rearmSeconds": 3.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_M68A2_HEAT": {
+"displayName": "M456A2 105mm High Explosive Anti-Tank",
+"firemodes": [
+1
+],
+"iconKey": "tank_heat",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_heat.png",
+"maxMags": 10,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 2,
+"rearmSeconds": 3.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_M68A2_HESH": {
+"displayName": "M393A3 105mm High Explosive Squash Head",
+"firemodes": [
+1
+],
+"iconKey": "tank_heat",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_heat.png",
+"maxMags": 8,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 2,
+"rearmSeconds": 3.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_M68A2_Smoke": {
+"displayName": "M416 105mm White Phosphorus",
+"firemodes": [
+1
+],
+"iconKey": "tank_smoke",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_smoke.png",
+"maxMags": 2,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 2,
+"rearmSeconds": 3.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_M68A2_coax": {
+"displayName": "M240 Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 2000,
+"timeBetweenShots": 0.07
+},
+"BP_MG253_AP": {
+"displayName": "M322 120mm Armor-Piercing Sabot",
+"firemodes": [
+1
+],
+"iconKey": "tank_sabot",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_sabot.png",
+"maxMags": 21,
+"muzzleVelocity": 120000.0,
+"rearmRoundsPerItem": 2,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 1.0
+},
+"BP_MG253_AP_WPMC": {
+"displayName": "M322 120mm Armor-Piercing Sabot",
+"firemodes": [
+1
+],
+"iconKey": "tank_sabot",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_sabot.png",
+"maxMags": 21,
+"muzzleVelocity": 120000.0,
+"rearmRoundsPerItem": 2,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 1.0
+},
+"BP_MG253_Frag": {
+"displayName": "M339 120mm High Explosive",
+"firemodes": [
+1
+],
+"iconKey": "tank_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_frag.png",
+"maxMags": 20,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 2,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 1.0
+},
+"BP_MG253_Frag_WPMC": {
+"displayName": "M339 120mm High Explosive",
+"firemodes": [
+1
+],
+"iconKey": "tank_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_frag.png",
+"maxMags": 20,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 2,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 1.0
+},
+"BP_MG253_LAHAT_ATGM": {
+"displayName": "LAHAT Guided Missile",
+"iconKey": "kornet",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/kornet.png",
+"maxMags": 2,
+"muzzleVelocity": 30000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.085
+},
+"BP_MG253_LAHAT_ATGM_WPMC": {
+"displayName": "LAHAT Guided Missile",
+"iconKey": "kornet",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/kornet.png",
+"maxMags": 2,
+"muzzleVelocity": 30000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.085
+},
+"BP_MG253_Smoke": {
+"displayName": "120mm Smoke",
+"firemodes": [
+1
+],
+"iconKey": "tank_smoke",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_smoke.png",
+"maxMags": 5,
+"muzzleVelocity": 67000.0,
+"rearmRoundsPerItem": 2,
+"rearmSeconds": 3.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_MG253_coax": {
+"displayName": "M240 Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 2000,
+"timeBetweenShots": 0.07
+},
+"BP_MG253_coax_WPMC": {
+"displayName": "M240 Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 2000,
+"timeBetweenShots": 0.07
+},
+"BP_MG3_DoorGun": {
+"displayName": "MG3",
+"firemodes": [
+-1
+],
+"iconKey": "mg3",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/mg3.png",
+"maxMags": 6,
+"muzzleVelocity": 82000.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.0545
+},
+"BP_MG3_RHIB_Weapon": {
+"displayName": "MG3",
+"firemodes": [
+-1
+],
+"iconKey": "mg3",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/mg3.png",
+"maxMags": 6,
+"muzzleVelocity": 82000.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.0545
+},
+"BP_MG3_Safir_Weapon": {
+"displayName": "MG3",
+"firemodes": [
+-1
+],
+"iconKey": "mg3",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/mg3.png",
+"maxMags": 6,
+"muzzleVelocity": 82000.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.0545
+},
+"BP_MG3_UH1H_DoorGun": {
+"displayName": "MG3",
+"firemodes": [
+-1
+],
+"iconKey": "mg3",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/mg3.png",
+"maxMags": 6,
+"muzzleVelocity": 84000.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.0545
+},
+"BP_Mag58_DoorGun_MRH90": {
+"displayName": "M240H",
+"iconKey": "m240b",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/m240b.png",
+"maxMags": 5,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_NSV_RHIB_Weapon": {
+"displayName": "Kord",
+"iconKey": "nsv",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/nsv.png",
+"maxMags": 10,
+"muzzleVelocity": 86000.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_PKM_BTR-D": {
+"displayName": "PKM",
+"iconKey": "nsv",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/nsv.png",
+"maxMags": 10,
+"muzzleVelocity": 86000.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_PKM_DoorGun": {
+"displayName": "PKM",
+"iconKey": "pkp",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/pkp.png",
+"maxMags": 8,
+"muzzleVelocity": 82500.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.092
+},
+"BP_PKM_RHIB_Weapon": {
+"displayName": "PKM",
+"iconKey": "pkp",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/pkp.png",
+"maxMags": 8,
+"muzzleVelocity": 82500.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.092
+},
+"BP_PKP_DoorGun": {
+"displayName": "PKP",
+"iconKey": "pkp",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/pkp.png",
+"maxMags": 8,
+"muzzleVelocity": 82500.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.092
+},
+"BP_PKP_RHIB_Weapon": {
+"displayName": "PKP",
+"iconKey": "pkp",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/pkp.png",
+"maxMags": 8,
+"muzzleVelocity": 82500.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.092
+},
+"BP_PK_RWS_Gun": {
+"displayName": "PKT 7.62 RWS Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 1,
+"muzzleVelocity": 85500.0,
+"rearmRoundsPerItem": 75,
+"rearmSeconds": 10.0,
+"roundsPerMag": 750,
+"timeBetweenShots": 0.0856
+},
+"BP_QJY88_CSK131_Weapon": {
+"displayName": "QJY88",
+"iconKey": "qjy88",
+"iconPath": "static/icons/weapons/qjy88.png",
+"maxMags": 5,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.092
+},
+"BP_QJY88_CTM131": {
+"displayName": "QJY88",
+"iconKey": "qjy88",
+"iconPath": "static/icons/weapons/qjy88.png",
+"maxMags": 5,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.092
+},
+"BP_QJY88_RHIB_Weapon": {
+"displayName": "QJY88",
+"iconKey": "qjy88",
+"iconPath": "static/icons/weapons/qjy88.png",
+"maxMags": 5,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.092
+},
+"BP_QJZ-89_RHIB_Weapon": {
+"displayName": "QJZ-89",
+"iconKey": "qjz89",
+"iconPath": "static/icons/weapons/qjz89.png",
+"maxMags": 10,
+"muzzleVelocity": 85000.0,
+"timeBetweenShots": 0.1
+},
+"BP_QJZ89_CSK131": {
+"displayName": "QJZ89",
+"iconKey": "qjz89",
+"iconPath": "static/icons/weapons/qjz89.png",
+"maxMags": 10,
+"muzzleVelocity": 85000.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.092
+},
+"BP_QJZ89_CTM131": {
+"displayName": "QJZ89",
+"iconKey": "qjz89",
+"iconPath": "static/icons/weapons/qjz89.png",
+"maxMags": 10,
+"muzzleVelocity": 85000.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.085
+},
+"BP_QJZ89_RWS": {
+"displayName": "QJC-88 RWS",
+"firemodes": [
+0
+],
+"iconKey": "qjz89",
+"iconPath": "static/icons/weapons/qjz89.png",
+"maxMags": 1,
+"muzzleVelocity": 85000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 450,
+"timeBetweenShots": 0.085
+},
+"BP_QJZ89_RWS_Desert": {
+"displayName": "QJC-88 RWS",
+"firemodes": [
+0
+],
+"iconKey": "qjz89",
+"iconPath": "static/icons/weapons/qjz89.png",
+"maxMags": 1,
+"muzzleVelocity": 85000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 450,
+"timeBetweenShots": 0.085
+},
+"BP_QJZ89_RWS_Naval": {
+"displayName": "QJC-88 RWS",
+"firemodes": [
+0
+],
+"iconKey": "qjz89",
+"iconPath": "static/icons/weapons/qjz89.png",
+"maxMags": 1,
+"muzzleVelocity": 85000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 450,
+"timeBetweenShots": 0.085
+},
+"BP_QJZ89_Weapon_Lynx8x8": {
+"displayName": "QJZ89",
+"iconKey": "qjz89",
+"iconPath": "static/icons/weapons/qjz89.png",
+"maxMags": 10,
+"muzzleVelocity": 85000.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.092
+},
+"BP_QLZ87_OpenTurret_Weapon": {
+"displayName": "QLZ-87 Automatic Grenade Launcher - HEDP",
+"firemodes": [
+-1,
+1
+],
+"iconKey": "T_QLZ87_Vehicle_Optic_HE",
+"iconPath": "static/icons/weapons/T_QLZ87_Vehicle_Optic_HE.png",
+"maxMags": 15,
+"muzzleVelocity": 19000.0,
+"roundsPerMag": 15,
+"timeBetweenShots": 0.125
+},
+"BP_QLZ87_Weapon_Lynx8x8": {
+"displayName": "QLZ-87 Automatic Grenade Launcher - HEDP",
+"firemodes": [
+-1,
+1
+],
+"iconKey": "T_QLZ87_Vehicle_Optic_HE",
+"iconPath": "static/icons/weapons/T_QLZ87_Vehicle_Optic_HE.png",
+"maxMags": 15,
+"muzzleVelocity": 19000.0,
+"roundsPerMag": 15,
+"timeBetweenShots": 0.125
+},
+"BP_S5Rockets": {
+"displayName": "S-5 Rockets",
+"firemodes": [
+-1
+],
+"iconKey": "T_Hydra70_HE",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/T_Hydra70_HE.png",
+"maxMags": 1,
+"muzzleVelocity": 73900.0,
+"rearmRoundsPerItem": 4,
+"rearmSeconds": 8.5,
+"roundsPerMag": 126,
+"timeBetweenShots": 0.3
+},
+"BP_SPG9": {
+"displayName": "SPG-9 PG-9V HEAT",
+"iconKey": "pg7v_heat",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/pg7v_heat.png",
+"maxMags": 8,
+"muzzleVelocity": 43500.0,
+"rearmSeconds": 8.5,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.085
+},
+"BP_SPG9_Frag": {
+"displayName": "SPG-9 OG-9V Fragmentation",
+"iconKey": "og7v_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/og7v_frag.png",
+"maxMags": 8,
+"muzzleVelocity": 31500.0,
+"rearmSeconds": 8.5,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.085
+},
+"BP_SancakRWS_M2": {
+"displayName": "RWS M2HB",
+"firemodes": [
+0
+],
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 1,
+"muzzleVelocity": 89000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 800,
+"timeBetweenShots": 0.12
+},
+"BP_SancakRWS_M2_Desert": {
+"displayName": "RWS M2HB",
+"firemodes": [
+0
+],
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 1,
+"muzzleVelocity": 89000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 800,
+"timeBetweenShots": 0.12
+},
+"BP_SancakRWS_MG3": {
+"displayName": "RWS MG3",
+"firemodes": [
+-1
+],
+"iconKey": "mg3",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/mg3.png",
+"maxMags": 1,
+"muzzleVelocity": 82000.0,
+"rearmRoundsPerItem": 75,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1500,
+"timeBetweenShots": 0.0545
+},
+"BP_SancakRWS_MG3_Desert": {
+"displayName": "RWS MG3",
+"firemodes": [
+-1
+],
+"iconKey": "mg3",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/mg3.png",
+"maxMags": 1,
+"muzzleVelocity": 82000.0,
+"rearmRoundsPerItem": 75,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1500,
+"timeBetweenShots": 0.0545
+},
+"BP_SancakRWS_MK19": {
+"displayName": "RWS MK19",
+"firemodes": [
+0
+],
+"iconKey": "40mmhedp",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/40mmhedp.png",
+"maxMags": 1,
+"muzzleVelocity": 23000.0,
+"rearmRoundsPerItem": 20,
+"rearmSeconds": 10.0,
+"roundsPerMag": 120,
+"timeBetweenShots": 0.171
+},
+"BP_SancakRWS_MK19_Desert": {
+"displayName": "RWS MK19",
+"firemodes": [
+0
+],
+"iconKey": "40mmhedp",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/40mmhedp.png",
+"maxMags": 1,
+"muzzleVelocity": 23000.0,
+"rearmRoundsPerItem": 20,
+"rearmSeconds": 10.0,
+"roundsPerMag": 96,
+"timeBetweenShots": 0.171
+},
+"BP_Scimitar_762": {
+"displayName": "L94A1 EX-34 Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 15,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 200,
+"timeBetweenShots": 0.12
+},
+"BP_Scimitar_762_Woodland": {
+"displayName": "L94A1 EX-34 Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 15,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 200,
+"timeBetweenShots": 0.12
+},
+"BP_Scimitar_Rarden_AP": {
+"displayName": "NM225 30mm Armor-Piercing Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 14,
+"muzzleVelocity": 130000.0,
+"rearmSeconds": 3.0,
+"roundsPerMag": 6,
+"timeBetweenShots": 0.667
+},
+"BP_Scimitar_Rarden_AP_Woodland": {
+"displayName": "NM225 30mm Armor-Piercing Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 14,
+"muzzleVelocity": 130000.0,
+"rearmSeconds": 3.0,
+"roundsPerMag": 6,
+"timeBetweenShots": 0.667
+},
+"BP_Scimitar_Rarden_HE": {
+"displayName": "NM232 30mm High Explosive Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 14,
+"muzzleVelocity": 110000.0,
+"rearmSeconds": 3.0,
+"roundsPerMag": 6,
+"timeBetweenShots": 0.667
+},
+"BP_Scimitar_Rarden_HE_Woodland": {
+"displayName": "NM232 30mm High Explosive Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 14,
+"muzzleVelocity": 110000.0,
+"rearmSeconds": 3.0,
+"roundsPerMag": 6,
+"timeBetweenShots": 0.667
+},
+"BP_Scimitar_Smoke_Launcher": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Scimitar_Smoke_Launcher_Woodland": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_SmokeGenerator_Tracked": {
+"displayName": "Smoke Generator",
+"firemodes": [
+-1
+],
+"iconKey": "smoke_generator",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/smoke_generator.png",
+"maxMags": 1,
+"muzzleVelocity": 1.0,
+"rearmRoundsPerItem": 20,
+"rearmSeconds": 5.0,
+"timeBetweenShots": 1.0
+},
+"BP_SmokeGenerator_Wheeled": {
+"displayName": "Smoke Generator",
+"firemodes": [
+-1
+],
+"iconKey": "smoke_generator",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/smoke_generator.png",
+"maxMags": 1,
+"muzzleVelocity": 1.0,
+"rearmRoundsPerItem": 20,
+"rearmSeconds": 5.0,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_2A6": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_AAVP7A1": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 4,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_AAVP7A1_Woodland": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 4,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_ACV15_Driver_Front": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_Arbalet": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_Arbalet_Desert": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_BFV": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_BFV_Commander": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 10,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_BFV_Commander_Woodland": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 10,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_BFV_Woodland": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_BMP3M": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_BTRD_Driver": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_BTRMDM_Driver": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_Cobra2_Driver": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_FV4034": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_Kozak_Driver": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_LAV25": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_LAV25_Woodland": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_M1117": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_M1128": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_M1A2": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_M1A2_Commander": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_M1A2_Commander_Woodland": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_M60T": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_M60T_WPMC": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_Nanuk_C6": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_Nanuk_C6_Desert": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_Nanuk_M2": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_Nanuk_M2_Desert": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_PARS3_Driver": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_Sprut": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_T64BM2": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_T64BM2_Commander": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_T72A": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_T72B3": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_T72B3_Commander": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_T72B3_Commander_Desert": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_T72S": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_T90A": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_T90A_Commander": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_T90A_Commander_Desert": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_TAPV_C6": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_TAPV_C6_Desert": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_TAPV_M2": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_TAPV_M2_Desert": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_TLAV": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_TLAV_Desert": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_Tigr_Driver": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_Turret_ACV": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_Turret_ACV_Desert": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_Turret_IFV25": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_Turret_IFV25_Desert": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_ZBD04A": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_ZSD89_Driver": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_ZTZ99": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Smoke_Launcher_ZTZ99_Commander": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Spandrel_9M113_Konkurs": {
+"displayName": "9M113 Konkurs Guided Missile",
+"firemodes": [
+0
+],
+"iconKey": "kornet",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/kornet.png",
+"maxMags": 1,
+"muzzleVelocity": 1.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 5,
+"timeBetweenShots": 7.5
+},
+"BP_Spandrel_9M113_Konkurs_Brown": {
+"displayName": "9M113 Konkurs Guided Missile",
+"firemodes": [
+0
+],
+"iconKey": "kornet",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/kornet.png",
+"maxMags": 1,
+"muzzleVelocity": 1.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 5,
+"timeBetweenShots": 7.5
+},
+"BP_Spandrel_9M113_Konkurs_Tan": {
+"displayName": "9M113 Konkurs Guided Missile",
+"firemodes": [
+0
+],
+"iconKey": "kornet",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/kornet.png",
+"maxMags": 1,
+"muzzleVelocity": 1.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 5,
+"timeBetweenShots": 7.5
+},
+"BP_Spandrel_GFI_9M113_Konkurs": {
+"displayName": "9M113 Konkurs Guided Missile",
+"firemodes": [
+0
+],
+"iconKey": "kornet",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/kornet.png",
+"maxMags": 1,
+"muzzleVelocity": 1.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 5,
+"timeBetweenShots": 7.5
+},
+"BP_Sprut_RWS_PKT": {
+"displayName": "PKT Remote Weapon Station",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 1,
+"muzzleVelocity": 85500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 8.5,
+"roundsPerMag": 1500,
+"timeBetweenShots": 0.0856
+},
+"BP_T72A_Kord_Cupola_Weapon": {
+"displayName": "NSVT",
+"firemodes": [
+0
+],
+"iconKey": "nsvt",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/nsvt.png",
+"maxMags": 2,
+"muzzleVelocity": 86000.0,
+"rearmSeconds": 7.0,
+"roundsPerMag": 150,
+"timeBetweenShots": 0.085
+},
+"BP_T72S_Kord_Cupola_Weapon": {
+"displayName": "NSVT",
+"firemodes": [
+0
+],
+"iconKey": "nsvt",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/nsvt.png",
+"maxMags": 2,
+"muzzleVelocity": 86000.0,
+"rearmSeconds": 7.0,
+"roundsPerMag": 150,
+"timeBetweenShots": 0.085
+},
+"BP_T90A_Kord_Cupola_Weapon": {
+"displayName": "NSVT",
+"firemodes": [
+0
+],
+"iconKey": "nsvt",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/nsvt.png",
+"maxMags": 1,
+"muzzleVelocity": 86000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 300,
+"timeBetweenShots": 0.085
+},
+"BP_T90A_Kord_Cupola_Weapon_Desert": {
+"displayName": "NSVT",
+"firemodes": [
+0
+],
+"iconKey": "nsvt",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/nsvt.png",
+"maxMags": 1,
+"muzzleVelocity": 86000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 300,
+"timeBetweenShots": 0.085
+},
+"BP_TAPV_CROWS_C6": {
+"displayName": "C6A1 CROWS",
+"firemodes": [
+0
+],
+"iconKey": "C6A1",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/C6A1.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 75,
+"rearmSeconds": 10.0,
+"roundsPerMag": 750,
+"timeBetweenShots": 0.07
+},
+"BP_TAPV_CROWS_C6_Desert": {
+"displayName": "C6A1 CROWS",
+"firemodes": [
+0
+],
+"iconKey": "C6A1",
+"iconPath": "static/icons/Inventory/Weapons/MachineGuns/C6A1.png",
+"maxMags": 1,
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 75,
+"rearmSeconds": 10.0,
+"roundsPerMag": 750,
+"timeBetweenShots": 0.07
+},
+"BP_TAPV_CROWS_M2": {
+"displayName": "M2A1 Browning CROWS",
+"firemodes": [
+0
+],
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 1,
+"muzzleVelocity": 89000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 400,
+"timeBetweenShots": 0.12
+},
+"BP_TAPV_CROWS_M2_Desert": {
+"displayName": "M2A1 Browning CROWS",
+"firemodes": [
+0
+],
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 1,
+"muzzleVelocity": 89000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 400,
+"timeBetweenShots": 0.12
+},
+"BP_TLAV_M2": {
+"displayName": "M2A1 Browning",
+"firemodes": [
+0
+],
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 5,
+"muzzleVelocity": 89000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 7.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.12
+},
+"BP_TLAV_M240": {
+"displayName": "C6 Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 75,
+"rearmSeconds": 10.0,
+"roundsPerMag": 220,
+"timeBetweenShots": 0.085
+},
+"BP_TLAV_M240_Desert": {
+"displayName": "C6 Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"muzzleVelocity": 85300.0,
+"rearmRoundsPerItem": 75,
+"rearmSeconds": 10.0,
+"roundsPerMag": 220,
+"timeBetweenShots": 0.085
+},
+"BP_TLAV_M2_Desert": {
+"displayName": "M2A1 Browning",
+"firemodes": [
+0
+],
+"iconKey": "m2browning",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/m2browning.png",
+"maxMags": 5,
+"muzzleVelocity": 89000.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 7.0,
+"roundsPerMag": 100,
+"timeBetweenShots": 0.12
+},
+"BP_TankGun": {
+"displayName": "Generic Tank Cannon",
+"firemodes": [
+1
+],
+"iconKey": "tank_sabot",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_sabot.png",
+"maxMags": 20,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 2,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_Technical_BMP1_2A28_Frag": {
+"displayName": "OG-15V Fragmentation",
+"firemodes": [
+1
+],
+"iconKey": "og7v_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/og7v_frag.png",
+"maxMags": 8,
+"muzzleVelocity": 29000.0,
+"rearmRoundsPerItem": 3,
+"rearmSeconds": 5.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.085
+},
+"BP_Technical_BMP1_2A28_HEAT": {
+"displayName": "PG-15V High Explosive Anti-Tank",
+"firemodes": [
+1
+],
+"iconKey": "pg7v_heat",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/pg7v_heat.png",
+"maxMags": 12,
+"muzzleVelocity": 43500.0,
+"rearmRoundsPerItem": 3,
+"rearmSeconds": 5.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.085
+},
+"BP_Technical_BMP1_PKT": {
+"maxMags": 4,
+"rearmRoundsPerItem": 100,
+"timeBetweenShots": 0.085
+},
+"BP_Technical_M1937mortar": {
+"displayName": "VO-832DU 82mm High Explosive",
+"maxMags": 7,
+"muzzleVelocity": 11000.0,
+"roundsPerMag": 3,
+"timeBetweenShots": 1.75
+},
+"BP_Technical_M1937mortar_Smoke": {
+"displayName": "D-832DU 82mm Smoke",
+"iconKey": "81mm_mortar_smoke",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/81mm_mortar_smoke.png",
+"maxMags": 7,
+"muzzleVelocity": 11000.0,
+"roundsPerMag": 3,
+"timeBetweenShots": 1.75
+},
+"BP_Technical_M252mortar": {
+"displayName": "M821A1 81mm High Explosive",
+"maxMags": 7,
+"muzzleVelocity": 11000.0,
+"roundsPerMag": 3,
+"timeBetweenShots": 1.75
+},
+"BP_Technical_M252mortar_Smoke": {
+"displayName": "M819 81mm Smoke",
+"iconKey": "81mm_mortar_smoke",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/81mm_mortar_smoke.png",
+"maxMags": 7,
+"muzzleVelocity": 11000.0,
+"roundsPerMag": 3,
+"timeBetweenShots": 1.75
+},
+"BP_Type23_Z8J": {
+"displayName": "Type-23 Fragmentation Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 98000.0,
+"roundsPerMag": 600,
+"timeBetweenShots": 0.06
+},
+"BP_Type57_Z8J": {
+"displayName": "Type-57 Rockets",
+"firemodes": [
+0
+],
+"iconKey": "s5rocket",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/s5rocket.png",
+"maxMags": 1,
+"muzzleVelocity": 30000.0,
+"rearmRoundsPerItem": 4,
+"rearmSeconds": 8.5,
+"roundsPerMag": 36,
+"timeBetweenShots": 0.125
+},
+"BP_UB-32_GunnerAngleDisplay": {
+"displayName": "Visibility"
+},
+"BP_UB32": {
+"displayName": "S5 Rockets",
+"firemodes": [
+1
+],
+"iconKey": "s5rocket",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/s5rocket.png",
+"maxMags": 2,
+"muzzleVelocity": 30000.0,
+"rearmRoundsPerItem": 4,
+"rearmSeconds": 8.5,
+"roundsPerMag": 32,
+"timeBetweenShots": 0.1
+},
+"BP_UH1Y_Hydra": {
+"displayName": "Hydra-70 Rockets",
+"firemodes": [
+0
+],
+"iconKey": "T_Hydra70_HE",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/T_Hydra70_HE.png",
+"maxMags": 1,
+"muzzleVelocity": 73900.0,
+"rearmRoundsPerItem": 4,
+"rearmSeconds": 8.5,
+"roundsPerMag": 38,
+"timeBetweenShots": 0.25
+},
+"BP_UMG_BMP1_Technical_GunnerReticle": {
+"displayName": "Visibility"
+},
+"BP_W85_Cupola_Weapon": {
+"displayName": "QJC-88",
+"firemodes": [
+0
+],
+"iconKey": "nsvt",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/nsvt.png",
+"maxMags": 2,
+"muzzleVelocity": 86000.0,
+"rearmSeconds": 7.0,
+"roundsPerMag": 150,
+"timeBetweenShots": 0.085
+},
+"BP_Warrior_762": {
+"displayName": "L94A1 EX-34 Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 10,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 200,
+"timeBetweenShots": 0.12
+},
+"BP_Warrior_762_Tan": {
+"displayName": "L94A1 EX-34 Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 10,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 200,
+"timeBetweenShots": 0.12
+},
+"BP_Warrior_CTAS_762": {
+"displayName": "L94A1 EX-34 Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 10,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 200,
+"timeBetweenShots": 0.12
+},
+"BP_Warrior_CTAS_762_Woodland": {
+"displayName": "L94A1 EX-34 Coaxial Machine Gun",
+"iconKey": "coaxialmachinegun_m240c",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun_m240c.png",
+"maxMags": 10,
+"muzzleVelocity": 85300.0,
+"roundsPerMag": 200,
+"timeBetweenShots": 0.12
+},
+"BP_Warrior_CTAS_AP": {
+"displayName": "Telescoped 40mm Armor-Piercing Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 150000.0,
+"rearmRoundsPerItem": 5,
+"rearmSeconds": 5.0,
+"roundsPerMag": 80,
+"timeBetweenShots": 0.15
+},
+"BP_Warrior_CTAS_AP_Woodland": {
+"displayName": "Telescoped 40mm Armor-Piercing Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 150000.0,
+"rearmRoundsPerItem": 5,
+"rearmSeconds": 5.0,
+"roundsPerMag": 80,
+"timeBetweenShots": 0.15
+},
+"BP_Warrior_CTAS_HE": {
+"displayName": "Telescoped 40mm General-Purpose Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 120000.0,
+"rearmRoundsPerItem": 5,
+"rearmSeconds": 5.0,
+"roundsPerMag": 80,
+"timeBetweenShots": 0.15
+},
+"BP_Warrior_CTAS_HE_Woodland": {
+"displayName": "Telescoped 40mm General-Purpose Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 120000.0,
+"rearmRoundsPerItem": 5,
+"rearmSeconds": 5.0,
+"roundsPerMag": 80,
+"timeBetweenShots": 0.15
+},
+"BP_Warrior_CTAS_Smoke_Launcher": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Warrior_CTAS_Smoke_Launcher_Woodland": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Warrior_Rarden_AP": {
+"displayName": "NM225 30mm Armor-Piercing Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 19,
+"muzzleVelocity": 130000.0,
+"rearmSeconds": 3.0,
+"roundsPerMag": 6,
+"timeBetweenShots": 0.667
+},
+"BP_Warrior_Rarden_AP_Tan": {
+"displayName": "NM225 30mm Armor-Piercing Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 19,
+"muzzleVelocity": 130000.0,
+"rearmSeconds": 3.0,
+"roundsPerMag": 6,
+"timeBetweenShots": 0.667
+},
+"BP_Warrior_Rarden_HE": {
+"displayName": "NM232 30mm High Explosive Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 19,
+"muzzleVelocity": 110000.0,
+"rearmSeconds": 3.0,
+"roundsPerMag": 6,
+"timeBetweenShots": 0.667
+},
+"BP_Warrior_Rarden_HE_Tan": {
+"displayName": "NM232 30mm High Explosive Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 19,
+"muzzleVelocity": 110000.0,
+"rearmSeconds": 3.0,
+"roundsPerMag": 6,
+"timeBetweenShots": 0.667
+},
+"BP_Warrior_Smoke_Launcher": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Warrior_Smoke_Launcher_Commander": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_Warrior_Smoke_Launcher_Tan": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_ZBD04A_2A70_HEFrag": {
+"displayName": "DTB02-100 100mm High-Explosive Fragmentation",
+"firemodes": [
+1
+],
+"iconKey": "tank_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_frag.png",
+"maxMags": 22,
+"muzzleVelocity": 35500.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_ZBD04A_2A70_coax": {
+"displayName": "QTJ-02 Coaxial Machine Gun",
+"maxMags": 1,
+"muzzleVelocity": 89500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 3000,
+"timeBetweenShots": 0.075
+},
+"BP_ZBD04A_APS03-100ATGM": {
+"displayName": "APS03-100 Anti-Tank Guided Missile",
+"firemodes": [
+1
+],
+"iconKey": "kornet",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/kornet.png",
+"maxMags": 3,
+"muzzleVelocity": 30000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.085
+},
+"BP_ZBD04A_ZPT99_AP": {
+"displayName": "DTC10-30 30mm Armor Piercing",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 97000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 200,
+"timeBetweenShots": 0.18
+},
+"BP_ZBD04A_ZPT99_HEFrag": {
+"displayName": "DTB02-30 30mm High-Explosive Fragmentation",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 97000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 300,
+"timeBetweenShots": 0.18
+},
+"BP_ZBD05_HJ73C_ATGM": {
+"displayName": "HJ-73C Red Arrow Guided Missile",
+"firemodes": [
+1
+],
+"iconKey": "bgm71_tow",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/bgm71_tow.png",
+"maxMags": 1,
+"muzzleVelocity": 1.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 0.0
+},
+"BP_ZBD05_HJ73C_ATGM_Woodland": {
+"displayName": "HJ-73C Red Arrow Guided Missile",
+"firemodes": [
+1
+],
+"iconKey": "bgm71_tow",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/bgm71_tow.png",
+"maxMags": 1,
+"muzzleVelocity": 1.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 0.0
+},
+"BP_ZBD05_QTJ02": {
+"displayName": "QTJ-02 Coaxial Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 1,
+"muzzleVelocity": 85500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 8.5,
+"roundsPerMag": 3000,
+"timeBetweenShots": 0.0856
+},
+"BP_ZBD05_QTJ02_Woodland": {
+"displayName": "QTJ-02 Coaxial Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 1,
+"muzzleVelocity": 85500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 8.5,
+"roundsPerMag": 3000,
+"timeBetweenShots": 0.0856
+},
+"BP_ZBD05_Smoke_Launcher": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_ZBD05_Smoke_Launcher_Woodland": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_ZBD05_ZPT-99_AP": {
+"displayName": "DTC10-30 30mm Armor Piercing",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 95000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 160,
+"timeBetweenShots": 0.18
+},
+"BP_ZBD05_ZPT-99_APFSDS": {
+"displayName": "DTC041A-30 30mm Armor-Piercing Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 136000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 160,
+"timeBetweenShots": 0.18
+},
+"BP_ZBD05_ZPT-99_APFSDS_Woodland": {
+"displayName": "DTC041A-30 30mm Armor-Piercing Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 136000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 160,
+"timeBetweenShots": 0.18
+},
+"BP_ZBD05_ZPT-99_AP_Woodland": {
+"displayName": "DTC10-30 30mm Armor Piercing",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 95000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 160,
+"timeBetweenShots": 0.18
+},
+"BP_ZBD05_ZPT-99_HE": {
+"displayName": "DTB02-30 30mm High Explosive Fragmentation",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 95000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 300,
+"timeBetweenShots": 0.18
+},
+"BP_ZBD05_ZPT-99_HE_Woodland": {
+"displayName": "DTB02-30 30mm High Explosive Fragmentation",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 95000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 300,
+"timeBetweenShots": 0.18
+},
+"BP_ZBL08_HJ73C_ATGM": {
+"displayName": "HJ-73C Red Arrow Guided Missile",
+"firemodes": [
+1
+],
+"iconKey": "bgm71_tow",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/bgm71_tow.png",
+"maxMags": 1,
+"muzzleVelocity": 1.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 0.0
+},
+"BP_ZBL08_HJ73C_ATGM_Desert": {
+"displayName": "HJ-73C Red Arrow Guided Missile",
+"firemodes": [
+1
+],
+"iconKey": "bgm71_tow",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/bgm71_tow.png",
+"maxMags": 1,
+"muzzleVelocity": 1.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 0.0
+},
+"BP_ZBL08_QTJ02": {
+"displayName": "QTJ-02 Coaxial Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 1,
+"muzzleVelocity": 85500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 8.5,
+"roundsPerMag": 3000,
+"timeBetweenShots": 0.0856
+},
+"BP_ZBL08_QTJ02_Desert": {
+"displayName": "QTJ-02 Coaxial Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 1,
+"muzzleVelocity": 85500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 8.5,
+"roundsPerMag": 3000,
+"timeBetweenShots": 0.0856
+},
+"BP_ZBL08_Smoke_Launcher": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_ZBL08_Smoke_Launcher_Desert": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_ZBL08_ZPT-99_AP": {
+"displayName": "DTC10-30 30mm Armor Piercing",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 95000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 160,
+"timeBetweenShots": 0.18
+},
+"BP_ZBL08_ZPT-99_APFSDS": {
+"displayName": "DTC041A-30 30mm Armor-Piercing Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 136000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 160,
+"timeBetweenShots": 0.18
+},
+"BP_ZBL08_ZPT-99_APFSDS_Desert": {
+"displayName": "DTC041A-30 30mm Armor-Piercing Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 136000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 160,
+"timeBetweenShots": 0.18
+},
+"BP_ZBL08_ZPT-99_HEFrag": {
+"displayName": "DTB02-30 30mm High Explosive Fragmentation",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 95000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 300,
+"timeBetweenShots": 0.18
+},
+"BP_ZBL08_ZPT-99_HEFrag_Desert": {
+"displayName": "DTB02-30 30mm High Explosive Fragmentation",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 95000.0,
+"rearmRoundsPerItem": 10,
+"rearmSeconds": 8.5,
+"roundsPerMag": 300,
+"timeBetweenShots": 0.18
+},
+"BP_ZPT-98_AP": {
+"displayName": "DTC10-125 125mm Armor-Piercing Sabot",
+"firemodes": [
+1
+],
+"iconKey": "tank_sabot",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_sabot.png",
+"maxMags": 15,
+"muzzleVelocity": 130000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_ZPT-98_HE": {
+"displayName": "DTB12-125 125mm High Explosive",
+"firemodes": [
+1
+],
+"iconKey": "tank_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_frag.png",
+"maxMags": 12,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_ZPT-98_HEAT": {
+"displayName": "DTP10-125 125mm High Explosive Anti-Tank",
+"firemodes": [
+1
+],
+"iconKey": "tank_heat",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_heat.png",
+"maxMags": 12,
+"muzzleVelocity": 110000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_ZPT-98_coax": {
+"displayName": "QTJ-02 5.8mm Coaxial Machine Gun",
+"maxMags": 1,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 3000,
+"timeBetweenShots": 0.085
+},
+"BP_ZSL92_Smoke_Launcher": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_ZSL92_Smoke_Launcher_Desert": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_ZSL92_Smoke_Launcher_Naval": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_ZSL92_Type86": {
+"displayName": "Type 86 Coaxial Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 4,
+"muzzleVelocity": 85500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 7.0,
+"roundsPerMag": 250,
+"timeBetweenShots": 0.0856
+},
+"BP_ZSL92_Type86_Desert": {
+"displayName": "Type 86 Coaxial Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 4,
+"muzzleVelocity": 85500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 7.0,
+"roundsPerMag": 250,
+"timeBetweenShots": 0.0856
+},
+"BP_ZSL92_Type86_Naval": {
+"displayName": "Type 86 Coaxial Machine Gun",
+"firemodes": [
+0
+],
+"iconKey": "coaxialmachinegun",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/coaxialmachinegun.png",
+"maxMags": 4,
+"muzzleVelocity": 85500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 7.0,
+"roundsPerMag": 250,
+"timeBetweenShots": 0.0856
+},
+"BP_ZSL92_ZPT90_AP": {
+"displayName": "25mm Armor Piercing Discarding Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 105000.0,
+"rearmRoundsPerItem": 5,
+"rearmSeconds": 3.0,
+"roundsPerMag": 80,
+"timeBetweenShots": 0.3
+},
+"BP_ZSL92_ZPT90_AP_Desert": {
+"displayName": "25mm Armor Piercing Discarding Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 105000.0,
+"rearmRoundsPerItem": 5,
+"rearmSeconds": 3.0,
+"roundsPerMag": 80,
+"timeBetweenShots": 0.3
+},
+"BP_ZSL92_ZPT90_AP_Naval": {
+"displayName": "25mm Armor Piercing Discarding Sabot",
+"firemodes": [
+0
+],
+"iconKey": "30mm_ap",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_ap.png",
+"maxMags": 1,
+"muzzleVelocity": 105000.0,
+"rearmRoundsPerItem": 5,
+"rearmSeconds": 3.0,
+"roundsPerMag": 80,
+"timeBetweenShots": 0.3
+},
+"BP_ZSL92_ZPT90_HE": {
+"displayName": "25mm Fragmentation Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 105000.0,
+"rearmRoundsPerItem": 6,
+"rearmSeconds": 3.0,
+"roundsPerMag": 120,
+"timeBetweenShots": 0.3
+},
+"BP_ZSL92_ZPT90_HE_Desert": {
+"displayName": "25mm Fragmentation Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 105000.0,
+"rearmRoundsPerItem": 6,
+"rearmSeconds": 3.0,
+"roundsPerMag": 120,
+"timeBetweenShots": 0.3
+},
+"BP_ZSL92_ZPT90_HE_Naval": {
+"displayName": "25mm Fragmentation Tracer",
+"firemodes": [
+0
+],
+"iconKey": "30mm_he",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/30mm_he.png",
+"maxMags": 1,
+"muzzleVelocity": 105000.0,
+"rearmRoundsPerItem": 6,
+"rearmSeconds": 3.0,
+"roundsPerMag": 120,
+"timeBetweenShots": 0.3
+},
+"BP_ZTD05_Smoke": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_ZTD05_Smoke_WoodLand": {
+"displayName": "40mm Smoke Launchers",
+"firemodes": [
+1
+],
+"iconKey": "vehiclesmokelaunchers",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/vehiclesmokelaunchers.png",
+"maxMags": 1,
+"muzzleVelocity": 5000.0,
+"rearmSeconds": 30.0,
+"roundsPerMag": 2,
+"timeBetweenShots": 1.0
+},
+"BP_ZTD05_ZPL-98A_AP": {
+"displayName": "DTC-02 105mm Armor-Piercing Sabot",
+"firemodes": [
+1
+],
+"iconKey": "tank_sabot",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_sabot.png",
+"maxMags": 12,
+"muzzleVelocity": 111000.0,
+"rearmRoundsPerItem": 2,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_ZTD05_ZPL-98A_Frag": {
+"displayName": "DTB-02 105mm Fragmentation",
+"firemodes": [
+1
+],
+"iconKey": "tank_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_frag.png",
+"maxMags": 20,
+"muzzleVelocity": 73000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_ZTD05_ZPL-98A_HEAT": {
+"displayName": "DTP-04 105mm High Explosive Anti-Tank",
+"firemodes": [
+1
+],
+"iconKey": "tank_heat",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_heat.png",
+"maxMags": 8,
+"muzzleVelocity": 73000.0,
+"rearmRoundsPerItem": 1,
+"rearmSeconds": 10.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.0
+},
+"BP_ZTD05_coax": {
+"displayName": "QTJ-02 Coaxial Machine Gun",
+"maxMags": 1,
+"muzzleVelocity": 74500.0,
+"rearmRoundsPerItem": 100,
+"rearmSeconds": 10.0,
+"roundsPerMag": 2500,
+"timeBetweenShots": 0.085
+},
+"BP_ZiS3_Weapon_Frag": {
+"displayName": "76mm Fragmentation",
+"firemodes": [
+1
+],
+"iconKey": "tank_frag",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_frag.png",
+"maxMags": 1,
+"muzzleVelocity": 70000.0,
+"rearmSeconds": 3.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.1
+},
+"BP_ZiS3_Weapon_HEAT": {
+"displayName": "76mm High Explosive Anti-Tank",
+"firemodes": [
+1
+],
+"iconKey": "tank_heat",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_heat.png",
+"maxMags": 1,
+"muzzleVelocity": 70000.0,
+"rearmSeconds": 3.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.1
+},
+"BP_ZiS3_Weapon_Smoke": {
+"displayName": "76mm Smoke",
+"firemodes": [
+1
+],
+"iconKey": "tank_smoke",
+"iconPath": "static/icons/Inventory/Weapons/VehicleWeapons/tank_smoke.png",
+"maxMags": 1,
+"muzzleVelocity": 70000.0,
+"rearmSeconds": 3.0,
+"roundsPerMag": 1,
+"timeBetweenShots": 0.1
+}
+}

@@ -1,0 +1,29 @@
+{
+  "name": "sqreader-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "React + Vite SPA for the sqreader live map viewer",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "build:apple": "tsc --noEmit && vite build --mode apple",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test:kf": "esbuild src/killfeed/diff.test.mts --bundle --platform=node --format=esm --outfile=node_modules/.cache/kf-test.mjs --log-level=warning && node node_modules/.cache/kf-test.mjs",
+    "test:cap": "esbuild src/canvas/capVisibility.test.mts --bundle --platform=node --format=esm --outfile=node_modules/.cache/cap-test.mjs --log-level=warning && node node_modules/.cache/cap-test.mjs"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10"
+  }
+}

@@ -1,0 +1,53 @@
+# Secrets / local config
+.ssh_config.json
+.env
+.env.*
+*.pem
+# Per-machine runtime config (copy sqreader.config.example.json). Machine paths.
+sqreader.config.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist-ssr/
+node_modules/
+# NOTE: frontend/dist/ IS committed (prebuilt SPA) so the tool runs without a
+# Node toolchain. Rebuild with `npm run build` after changing the web UI.
+
+# Editor / OS
+.vscode/
+.idea/
+.claude/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Build artefacts / caches
+build/
+/dist/
+*.log
+
+# Recording captures (large, runtime-generated)
+captures/
+results/
+
+# Offline capzone fetch cache (raw SquadCalc responses + 404 list).
+# The committed artefact is data/static/capzones.json, not this cache.
+scripts/.capzone_cache/
+recordings/
+
+# Server-side scratch
+/tmp/sqr_*.log
+
+# persistent player-stats sqlite db
+stats/

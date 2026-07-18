@@ -1,0 +1,3320 @@
+{
+  "Al Basrah Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "albasrah_minimap_skirmish_v1",
+    "gameMode": "Training",
+    "mapId": "AlBasrah",
+    "mapName": "Al Basrah"
+  },
+  "Al Basrah AAS v1": {
+    "topLeft": {
+      "x": -200000.0,
+      "y": -200000.0
+    },
+    "bottomRight": {
+      "x": 200000.0,
+      "y": 200000.0
+    },
+    "texture": "T_AlBasrah_Minimap",
+    "gameMode": "AAS",
+    "mapId": "AlBasrah",
+    "mapName": "Al Basrah"
+  },
+  "Al Basrah AAS v2": {
+    "topLeft": {
+      "x": -200000.0,
+      "y": -200000.0
+    },
+    "bottomRight": {
+      "x": 200000.0,
+      "y": 200000.0
+    },
+    "texture": "T_AlBasrah_Minimap",
+    "gameMode": "AAS",
+    "mapId": "AlBasrah",
+    "mapName": "Al Basrah"
+  },
+  "Al Basrah AAS v3 CL": {
+    "topLeft": {
+      "x": -200000.0,
+      "y": -200000.0
+    },
+    "bottomRight": {
+      "x": 200000.0,
+      "y": 200000.0
+    },
+    "texture": "T_AlBasrah_Minimap",
+    "gameMode": "AAS",
+    "mapId": "AlBasrah",
+    "mapName": "Al Basrah"
+  },
+  "Al Basrah Invasion v1": {
+    "topLeft": {
+      "x": -200000.0,
+      "y": -200000.0
+    },
+    "bottomRight": {
+      "x": 200000.0,
+      "y": 200000.0
+    },
+    "texture": "T_AlBasrah_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "AlBasrah",
+    "mapName": "Al Basrah"
+  },
+  "Al Basrah Invasion v2": {
+    "topLeft": {
+      "x": -200000.0,
+      "y": -200000.0
+    },
+    "bottomRight": {
+      "x": 200000.0,
+      "y": 200000.0
+    },
+    "texture": "T_AlBasrah_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "AlBasrah",
+    "mapName": "Al Basrah"
+  },
+  "Al Basrah Invasion v3": {
+    "topLeft": {
+      "x": -200000.0,
+      "y": -200000.0
+    },
+    "bottomRight": {
+      "x": 200000.0,
+      "y": 200000.0
+    },
+    "texture": "T_AlBasrah_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "AlBasrah",
+    "mapName": "Al Basrah"
+  },
+  "Al Basrah RAAS v1": {
+    "topLeft": {
+      "x": -200000.0,
+      "y": -200000.0
+    },
+    "bottomRight": {
+      "x": 200000.0,
+      "y": 200000.0
+    },
+    "texture": "T_AlBasrah_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "AlBasrah",
+    "mapName": "Al Basrah"
+  },
+  "Al Basrah RAAS v2": {
+    "topLeft": {
+      "x": -200000.0,
+      "y": -200000.0
+    },
+    "bottomRight": {
+      "x": 200000.0,
+      "y": 200000.0
+    },
+    "texture": "T_AlBasrah_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "AlBasrah",
+    "mapName": "Al Basrah"
+  },
+  "Al Basrah Seed v1": {
+    "topLeft": {
+      "x": -200000.0,
+      "y": -200000.0
+    },
+    "bottomRight": {
+      "x": 200000.0,
+      "y": 200000.0
+    },
+    "texture": "T_AlBasrah_Minimap_Seed_v1",
+    "gameMode": "Seed",
+    "mapId": "AlBasrah",
+    "mapName": "Al Basrah"
+  },
+  "Al Basrah Seed v2": {
+    "topLeft": {
+      "x": -200000.0,
+      "y": -200000.0
+    },
+    "bottomRight": {
+      "x": 200000.0,
+      "y": 200000.0
+    },
+    "texture": "T_AlBasrah_Minimap_Seed_v2",
+    "gameMode": "Seed",
+    "mapId": "AlBasrah",
+    "mapName": "Al Basrah"
+  },
+  "Al Basrah Skirmish v1": {
+    "topLeft": {
+      "x": -200000.0,
+      "y": -200000.0
+    },
+    "bottomRight": {
+      "x": 200000.0,
+      "y": 200000.0
+    },
+    "texture": "T_AlBasrah_Minimap_Skirmish_v1",
+    "gameMode": "Skirmish",
+    "mapId": "AlBasrah",
+    "mapName": "Al Basrah"
+  },
+  "Al Basrah Skirmish v2": {
+    "topLeft": {
+      "x": -200000.0,
+      "y": -200000.0
+    },
+    "bottomRight": {
+      "x": 200000.0,
+      "y": 200000.0
+    },
+    "texture": "T_AlBasrah_Minimap_Skirmish_v2",
+    "gameMode": "Skirmish",
+    "mapId": "AlBasrah",
+    "mapName": "Al Basrah"
+  },
+  "Al Basrah Skirmish v3": {
+    "topLeft": {
+      "x": -200000.0,
+      "y": -200000.0
+    },
+    "bottomRight": {
+      "x": 200000.0,
+      "y": 200000.0
+    },
+    "texture": "T_AlBasrah_Minimap",
+    "gameMode": "Skirmish",
+    "mapId": "AlBasrah",
+    "mapName": "Al Basrah"
+  },
+  "Anvil Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "Anvil_Minimap",
+    "gameMode": "Training",
+    "mapId": "Anvil",
+    "mapName": "Anvil"
+  },
+  "Anvil AAS v1": {
+    "topLeft": {
+      "x": -204000.0,
+      "y": -204000.0
+    },
+    "bottomRight": {
+      "x": 102000.0,
+      "y": 102000.0
+    },
+    "texture": "Anvil_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Anvil",
+    "mapName": "Anvil"
+  },
+  "Anvil Invasion v1": {
+    "topLeft": {
+      "x": -204000.0,
+      "y": -204000.0
+    },
+    "bottomRight": {
+      "x": 102000.0,
+      "y": 102000.0
+    },
+    "texture": "Anvil_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Anvil",
+    "mapName": "Anvil"
+  },
+  "Anvil RAAS v1": {
+    "topLeft": {
+      "x": -204000.0,
+      "y": -204000.0
+    },
+    "bottomRight": {
+      "x": 102000.0,
+      "y": 102000.0
+    },
+    "texture": "Anvil_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Anvil",
+    "mapName": "Anvil"
+  },
+  "Anvil RAAS v2": {
+    "topLeft": {
+      "x": -204000.0,
+      "y": -204000.0
+    },
+    "bottomRight": {
+      "x": 102000.0,
+      "y": 102000.0
+    },
+    "texture": "Anvil_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Anvil",
+    "mapName": "Anvil"
+  },
+  "Anvil Skirmish v1": {
+    "topLeft": {
+      "x": -204000.0,
+      "y": -204000.0
+    },
+    "bottomRight": {
+      "x": 102000.0,
+      "y": 102000.0
+    },
+    "texture": "Anvil_Minimap",
+    "gameMode": "Skirmish",
+    "mapId": "Anvil",
+    "mapName": "Anvil"
+  },
+  "Black Coast Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "Black_Coast_Minimap",
+    "gameMode": "Training",
+    "mapId": "BlackCoast",
+    "mapName": "Black Coast"
+  },
+  "Black Coast AAS v1": {
+    "topLeft": {
+      "x": -229999.515625,
+      "y": -212746.78125
+    },
+    "bottomRight": {
+      "x": 229998.46875,
+      "y": 247251.0625
+    },
+    "texture": "Black_Coast_Minimap",
+    "gameMode": "AAS",
+    "mapId": "BlackCoast",
+    "mapName": "Black Coast"
+  },
+  "Black Coast AAS v2": {
+    "topLeft": {
+      "x": -229999.515625,
+      "y": -212746.78125
+    },
+    "bottomRight": {
+      "x": 229998.46875,
+      "y": 247251.0625
+    },
+    "texture": "Black_Coast_Minimap",
+    "gameMode": "AAS",
+    "mapId": "BlackCoast",
+    "mapName": "Black Coast"
+  },
+  "Black Coast Invasion v1": {
+    "topLeft": {
+      "x": -229999.515625,
+      "y": -212746.78125
+    },
+    "bottomRight": {
+      "x": 229998.46875,
+      "y": 247251.0625
+    },
+    "texture": "Black_Coast_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "BlackCoast",
+    "mapName": "Black Coast"
+  },
+  "Black Coast Invasion v2": {
+    "topLeft": {
+      "x": -229999.515625,
+      "y": -212746.78125
+    },
+    "bottomRight": {
+      "x": 229998.46875,
+      "y": 247251.0625
+    },
+    "texture": "Black_Coast_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "BlackCoast",
+    "mapName": "Black Coast"
+  },
+  "Black Coast Invasion v3": {
+    "topLeft": {
+      "x": -229999.515625,
+      "y": -212746.78125
+    },
+    "bottomRight": {
+      "x": 229998.46875,
+      "y": 247251.0625
+    },
+    "texture": "Black_Coast_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "BlackCoast",
+    "mapName": "Black Coast"
+  },
+  "Black Coast RAAS v1": {
+    "topLeft": {
+      "x": -229999.515625,
+      "y": -212746.78125
+    },
+    "bottomRight": {
+      "x": 229998.46875,
+      "y": 247251.0625
+    },
+    "texture": "Black_Coast_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "BlackCoast",
+    "mapName": "Black Coast"
+  },
+  "Black Coast RAAS v2": {
+    "topLeft": {
+      "x": -229999.515625,
+      "y": -212746.78125
+    },
+    "bottomRight": {
+      "x": 229998.46875,
+      "y": 247251.0625
+    },
+    "texture": "Black_Coast_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "BlackCoast",
+    "mapName": "Black Coast"
+  },
+  "Black Coast Seed v1": {
+    "topLeft": {
+      "x": -95000,
+      "y": -120000
+    },
+    "bottomRight": {
+      "x": 5000,
+      "y": -20000
+    },
+    "texture": "BlackCoast_Seed_v1",
+    "gameMode": "Seed",
+    "mapId": "BlackCoast",
+    "mapName": "Black Coast"
+  },
+  "Black Coast Skirmish v1": {
+    "topLeft": {
+      "x": -229999.515625,
+      "y": -212746.78125
+    },
+    "bottomRight": {
+      "x": 229998.46875,
+      "y": 247251.0625
+    },
+    "texture": "Black_Coast_Minimap",
+    "gameMode": "Skirmish",
+    "mapId": "BlackCoast",
+    "mapName": "Black Coast"
+  },
+  "Chora Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "Chora_Minimap",
+    "gameMode": "Training",
+    "mapId": "Chora",
+    "mapName": "Chora"
+  },
+  "Chora AAS v1": {
+    "topLeft": {
+      "x": -246400,
+      "y": -266400
+    },
+    "bottomRight": {
+      "x": 159990,
+      "y": 140000
+    },
+    "texture": "Chora_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Chora",
+    "mapName": "Chora"
+  },
+  "Chora AAS v2": {
+    "topLeft": {
+      "x": -246400,
+      "y": -266400
+    },
+    "bottomRight": {
+      "x": 159990,
+      "y": 140000
+    },
+    "texture": "Chora_Minimap",
+    "gameMode": "AAS",
+    "mapId": "Chora",
+    "mapName": "Chora"
+  },
+  "Chora AAS v3": {
+    "topLeft": {
+      "x": -246400,
+      "y": -266400
+    },
+    "bottomRight": {
+      "x": 159990,
+      "y": 140000
+    },
+    "texture": "Chora_Minimap",
+    "gameMode": "AAS",
+    "mapId": "Chora",
+    "mapName": "Chora"
+  },
+  "Chora Insurgency v1": {
+    "topLeft": {
+      "x": -246400.0,
+      "y": -246400.0
+    },
+    "bottomRight": {
+      "x": 159990.0,
+      "y": 159990.0
+    },
+    "texture": "Chora_Minimap",
+    "gameMode": "Insurgency",
+    "mapId": "Chora",
+    "mapName": "Chora"
+  },
+  "Chora Invasion v1": {
+    "topLeft": {
+      "x": -246400,
+      "y": -266400
+    },
+    "bottomRight": {
+      "x": 159990,
+      "y": 140000
+    },
+    "texture": "Chora_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Chora",
+    "mapName": "Chora"
+  },
+  "Chora Invasion v2": {
+    "topLeft": {
+      "x": -246400,
+      "y": -266400
+    },
+    "bottomRight": {
+      "x": 159990,
+      "y": 140000
+    },
+    "texture": "Chora_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Chora",
+    "mapName": "Chora"
+  },
+  "Chora RAAS v1": {
+    "topLeft": {
+      "x": -246400,
+      "y": -266400
+    },
+    "bottomRight": {
+      "x": 159990,
+      "y": 140000
+    },
+    "texture": "Chora_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Chora",
+    "mapName": "Chora"
+  },
+  "Chora Skirmish v1": {
+    "topLeft": {
+      "x": -145684.21875,
+      "y": -144201.390625
+    },
+    "bottomRight": {
+      "x": 16315.7890625,
+      "y": 17798.626953125
+    },
+    "texture": "Chora_Minimap_Skirmish_v1",
+    "gameMode": "Skirmish",
+    "mapId": "Chora",
+    "mapName": "Chora"
+  },
+  "Chora TC v1": {
+    "topLeft": {
+      "x": -246400,
+      "y": -266400
+    },
+    "bottomRight": {
+      "x": 159990,
+      "y": 140000
+    },
+    "texture": "Chora_Minimap",
+    "gameMode": "TerritoryControl",
+    "mapId": "Chora",
+    "mapName": "Chora"
+  },
+  "Fallujah Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "Fallujah_Minimap",
+    "gameMode": "Training",
+    "mapId": "Fallujah",
+    "mapName": "Fallujah"
+  },
+  "Fallujah AAS v1": {
+    "topLeft": {
+      "x": -131500,
+      "y": -154500
+    },
+    "bottomRight": {
+      "x": 169000,
+      "y": 146000
+    },
+    "texture": "T_Fallujah_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Fallujah",
+    "mapName": "Fallujah"
+  },
+  "Fallujah Insurgency v1": {
+    "topLeft": {
+      "x": -131500.0,
+      "y": -131500.0
+    },
+    "bottomRight": {
+      "x": 169000.0,
+      "y": 169000.0
+    },
+    "texture": "T_Fallujah_Minimap",
+    "gameMode": "Insurgency",
+    "mapId": "Fallujah",
+    "mapName": "Fallujah"
+  },
+  "Fallujah Invasion v1": {
+    "topLeft": {
+      "x": -131500,
+      "y": -154500
+    },
+    "bottomRight": {
+      "x": 169000,
+      "y": 146000
+    },
+    "texture": "T_Fallujah_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Fallujah",
+    "mapName": "Fallujah"
+  },
+  "Fallujah Invasion v2": {
+    "topLeft": {
+      "x": -131500,
+      "y": -154500
+    },
+    "bottomRight": {
+      "x": 169000,
+      "y": 146000
+    },
+    "texture": "T_Fallujah_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Fallujah",
+    "mapName": "Fallujah"
+  },
+  "Fallujah RAAS v1": {
+    "topLeft": {
+      "x": -131500,
+      "y": -154500
+    },
+    "bottomRight": {
+      "x": 169000,
+      "y": 146000
+    },
+    "texture": "T_Fallujah_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Fallujah",
+    "mapName": "Fallujah"
+  },
+  "Fallujah RAAS v2": {
+    "topLeft": {
+      "x": -131500,
+      "y": -154500
+    },
+    "bottomRight": {
+      "x": 169000,
+      "y": 146000
+    },
+    "texture": "T_Fallujah_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Fallujah",
+    "mapName": "Fallujah"
+  },
+  "Fallujah Seed v1": {
+    "topLeft": {
+      "x": -131500,
+      "y": -154500
+    },
+    "bottomRight": {
+      "x": 169000,
+      "y": 146000
+    },
+    "texture": "Fallujah_Minimap_Skirmish",
+    "gameMode": "Seed",
+    "mapId": "Fallujah",
+    "mapName": "Fallujah"
+  },
+  "Fallujah Skirmish v1": {
+    "topLeft": {
+      "x": -131500,
+      "y": -154500
+    },
+    "bottomRight": {
+      "x": 169000,
+      "y": 146000
+    },
+    "texture": "Fallujah_Minimap_Skirmish",
+    "gameMode": "Skirmish",
+    "mapId": "Fallujah",
+    "mapName": "Fallujah"
+  },
+  "Fallujah Skirmish v2": {
+    "topLeft": {
+      "x": -131500,
+      "y": -154500
+    },
+    "bottomRight": {
+      "x": 169000,
+      "y": 146000
+    },
+    "texture": "T_Fallujah_Minimap",
+    "gameMode": "Skirmish",
+    "mapId": "Fallujah",
+    "mapName": "Fallujah"
+  },
+  "Fallujah TC v1": {
+    "topLeft": {
+      "x": -131500,
+      "y": -154500
+    },
+    "bottomRight": {
+      "x": 169000,
+      "y": 146000
+    },
+    "texture": "T_Fallujah_Minimap",
+    "gameMode": "TerritoryControl",
+    "mapId": "Fallujah",
+    "mapName": "Fallujah"
+  },
+  "FoolsRoad Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "Fools_Road_Minimap",
+    "gameMode": "Training",
+    "mapId": "FoolsRoad",
+    "mapName": "Fool's Road"
+  },
+  "Fool's Road AAS v1": {
+    "topLeft": {
+      "x": -132576.921875,
+      "y": -132576.921875
+    },
+    "bottomRight": {
+      "x": 44805.078125,
+      "y": 44805.078125
+    },
+    "texture": "Fools_Road_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "FoolsRoad",
+    "mapName": "Fool's Road"
+  },
+  "Fool's Road AAS v2": {
+    "topLeft": {
+      "x": -132576.921875,
+      "y": -132576.921875
+    },
+    "bottomRight": {
+      "x": 44805.078125,
+      "y": 44805.078125
+    },
+    "texture": "Fools_Road_Minimap",
+    "gameMode": "AAS",
+    "mapId": "FoolsRoad",
+    "mapName": "Fool's Road"
+  },
+  "Fool's Road Destruction v1": {
+    "topLeft": {
+      "x": -132576.921875,
+      "y": -132576.921875
+    },
+    "bottomRight": {
+      "x": 44805.078125,
+      "y": 44805.078125
+    },
+    "texture": "Fools_Road_Minimap",
+    "gameMode": "Destruction",
+    "mapId": "FoolsRoad",
+    "mapName": "Fool's Road"
+  },
+  "Fool's Road Invasion v1": {
+    "topLeft": {
+      "x": -132576.921875,
+      "y": -132576.921875
+    },
+    "bottomRight": {
+      "x": 44805.078125,
+      "y": 44805.078125
+    },
+    "texture": "Fools_Road_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "FoolsRoad",
+    "mapName": "Fool's Road"
+  },
+  "Fool's Road RAAS v1": {
+    "topLeft": {
+      "x": -132576.921875,
+      "y": -132576.921875
+    },
+    "bottomRight": {
+      "x": 44805.078125,
+      "y": 44805.078125
+    },
+    "texture": "Fools_Road_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "FoolsRoad",
+    "mapName": "Fool's Road"
+  },
+  "Fool's Road Skirmish v1": {
+    "topLeft": {
+      "x": -132576.921875,
+      "y": -132576.921875
+    },
+    "bottomRight": {
+      "x": 44805.078125,
+      "y": 44805.078125
+    },
+    "texture": "Fools_Road_Minimap",
+    "gameMode": "Skirmish",
+    "mapId": "FoolsRoad",
+    "mapName": "Fool's Road"
+  },
+  "Fool's Road Skirmish v2": {
+    "topLeft": {
+      "x": -132576.921875,
+      "y": -132576.921875
+    },
+    "bottomRight": {
+      "x": 44805.078125,
+      "y": 44805.078125
+    },
+    "texture": "Fools_Road_Minimap",
+    "gameMode": "Skirmish",
+    "mapId": "FoolsRoad",
+    "mapName": "Fool's Road"
+  },
+  "Fool's Road TC v1": {
+    "topLeft": {
+      "x": -132576.921875,
+      "y": -132576.921875
+    },
+    "bottomRight": {
+      "x": 44805.078125,
+      "y": 44805.078125
+    },
+    "texture": "Fools_Road_Minimap",
+    "gameMode": "TerritoryControl",
+    "mapId": "FoolsRoad",
+    "mapName": "Fool's Road"
+  },
+  "Goose Bay Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "GooseBay_Minimap",
+    "gameMode": "Training",
+    "mapId": "GooseBay",
+    "mapName": "Goose Bay"
+  },
+  "Goose Bay AAS v1": {
+    "topLeft": {
+      "x": -201657.890625,
+      "y": -201674.84375
+    },
+    "bottomRight": {
+      "x": 201523.078125,
+      "y": 201503.078125
+    },
+    "texture": "GooseBay_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "GooseBay",
+    "mapName": "Goose Bay"
+  },
+  "Goose Bay Invasion v1": {
+    "topLeft": {
+      "x": -201657.890625,
+      "y": -201674.84375
+    },
+    "bottomRight": {
+      "x": 201523.078125,
+      "y": 201503.078125
+    },
+    "texture": "GooseBay_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "GooseBay",
+    "mapName": "Goose Bay"
+  },
+  "Goose Bay Invasion v2": {
+    "topLeft": {
+      "x": -201657.890625,
+      "y": -201674.84375
+    },
+    "bottomRight": {
+      "x": 201523.078125,
+      "y": 201503.078125
+    },
+    "texture": "GooseBay_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "GooseBay",
+    "mapName": "Goose Bay"
+  },
+  "Goose Bay RAAS v1": {
+    "topLeft": {
+      "x": -201657.890625,
+      "y": -201674.84375
+    },
+    "bottomRight": {
+      "x": 201523.078125,
+      "y": 201503.078125
+    },
+    "texture": "GooseBay_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "GooseBay",
+    "mapName": "Goose Bay"
+  },
+  "Goose Bay RAAS v2": {
+    "topLeft": {
+      "x": -201657.890625,
+      "y": -201674.84375
+    },
+    "bottomRight": {
+      "x": 201523.078125,
+      "y": 201503.078125
+    },
+    "texture": "GooseBay_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "GooseBay",
+    "mapName": "Goose Bay"
+  },
+  "Goose Bay Seed v1": {
+    "topLeft": {
+      "x": -68029.203125,
+      "y": 102270.953125
+    },
+    "bottomRight": {
+      "x": 31969.0859375,
+      "y": 202268.84375
+    },
+    "texture": "GooseBay_Minimap_Seed_v1",
+    "gameMode": "Seed",
+    "mapId": "GooseBay",
+    "mapName": "Goose Bay"
+  },
+  "Goose Bay Skirmish v1": {
+    "topLeft": {
+      "x": -201657.890625,
+      "y": -201674.84375
+    },
+    "bottomRight": {
+      "x": 201523.078125,
+      "y": 201503.078125
+    },
+    "texture": "GooseBay_Minimap",
+    "gameMode": "Skirmish",
+    "mapId": "GooseBay",
+    "mapName": "Goose Bay"
+  },
+  "Gorodok Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "gorodok_minimap",
+    "gameMode": "Training",
+    "mapId": "Gorodok",
+    "mapName": "Gorodok"
+  },
+  "Gorodok AAS v1": {
+    "topLeft": {
+      "x": -203199,
+      "y": -203200
+    },
+    "bottomRight": {
+      "x": 203201,
+      "y": 203200
+    },
+    "texture": "gorodok_minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Gorodok",
+    "mapName": "Gorodok"
+  },
+  "Gorodok Destruction v1": {
+    "topLeft": {
+      "x": -203199,
+      "y": -203200
+    },
+    "bottomRight": {
+      "x": 203201,
+      "y": 203200
+    },
+    "texture": "gorodok_minimap",
+    "gameMode": "Destruction",
+    "mapId": "Gorodok",
+    "mapName": "Gorodok"
+  },
+  "Gorodok Insurgency v1": {
+    "topLeft": {
+      "x": -203199.0,
+      "y": -203199.0
+    },
+    "bottomRight": {
+      "x": 203201.0,
+      "y": 203201.0
+    },
+    "texture": "gorodok_minimap",
+    "gameMode": "Insurgency",
+    "mapId": "Gorodok",
+    "mapName": "Gorodok"
+  },
+  "Gorodok Invasion v1": {
+    "topLeft": {
+      "x": -203199,
+      "y": -203200
+    },
+    "bottomRight": {
+      "x": 203201,
+      "y": 203200
+    },
+    "texture": "gorodok_minimap",
+    "gameMode": "Invasion",
+    "mapId": "Gorodok",
+    "mapName": "Gorodok"
+  },
+  "Gorodok Invasion v2": {
+    "topLeft": {
+      "x": -203199,
+      "y": -203200
+    },
+    "bottomRight": {
+      "x": 203201,
+      "y": 203200
+    },
+    "texture": "gorodok_minimap",
+    "gameMode": "Invasion",
+    "mapId": "Gorodok",
+    "mapName": "Gorodok"
+  },
+  "Gorodok Invasion v3": {
+    "topLeft": {
+      "x": -203199,
+      "y": -203200
+    },
+    "bottomRight": {
+      "x": 203201,
+      "y": 203200
+    },
+    "texture": "gorodok_minimap",
+    "gameMode": "Invasion",
+    "mapId": "Gorodok",
+    "mapName": "Gorodok"
+  },
+  "Gorodok RAAS v1": {
+    "topLeft": {
+      "x": -203199,
+      "y": -203200
+    },
+    "bottomRight": {
+      "x": 203201,
+      "y": 203200
+    },
+    "texture": "gorodok_minimap",
+    "gameMode": "RAAS",
+    "mapId": "Gorodok",
+    "mapName": "Gorodok"
+  },
+  "Gorodok RAAS v2": {
+    "topLeft": {
+      "x": -203199,
+      "y": -203200
+    },
+    "bottomRight": {
+      "x": 203201,
+      "y": 203200
+    },
+    "texture": "gorodok_minimap",
+    "gameMode": "RAAS",
+    "mapId": "Gorodok",
+    "mapName": "Gorodok"
+  },
+  "Gorodok Skirmish v1": {
+    "topLeft": {
+      "x": -203199,
+      "y": -203200
+    },
+    "bottomRight": {
+      "x": 203201,
+      "y": 203200
+    },
+    "texture": "Gorodok_Minimap_Skirmish_v1",
+    "gameMode": "Skirmish",
+    "mapId": "Gorodok",
+    "mapName": "Gorodok"
+  },
+  "Gorodok TC v1": {
+    "topLeft": {
+      "x": -203199,
+      "y": -203200
+    },
+    "bottomRight": {
+      "x": 203201,
+      "y": 203200
+    },
+    "texture": "gorodok_minimap",
+    "gameMode": "TerritoryControl",
+    "mapId": "Gorodok",
+    "mapName": "Gorodok"
+  },
+  "Harju Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "Harju_Minimap",
+    "gameMode": "Training",
+    "mapId": "Harju",
+    "mapName": "Harju"
+  },
+  "Harju AAS v1": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Harju_Minimap",
+    "gameMode": "AAS",
+    "mapId": "Harju",
+    "mapName": "Harju"
+  },
+  "Harju AAS v2": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Harju_Minimap",
+    "gameMode": "AAS",
+    "mapId": "Harju",
+    "mapName": "Harju"
+  },
+  "Harju AAS v3": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Harju_Minimap",
+    "gameMode": "AAS",
+    "mapId": "Harju",
+    "mapName": "Harju"
+  },
+  "Harju Invasion v1": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Harju_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Harju",
+    "mapName": "Harju"
+  },
+  "Harju Invasion v2": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Harju_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Harju",
+    "mapName": "Harju"
+  },
+  "Harju Invasion v3": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Harju_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Harju",
+    "mapName": "Harju"
+  },
+  "Harju RAAS v1": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Harju_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Harju",
+    "mapName": "Harju"
+  },
+  "Harju RAAS v2": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Harju_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Harju",
+    "mapName": "Harju"
+  },
+  "Harju RAAS v3 Community Layer": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Harju_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Harju",
+    "mapName": "Harju"
+  },
+  "Harju TC v1": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Harju_Minimap",
+    "gameMode": "TerritoryControl",
+    "mapId": "Harju",
+    "mapName": "Harju"
+  },
+  "Harju Seed v1": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Harju_Minimap",
+    "gameMode": "Seed",
+    "mapId": "Harju",
+    "mapName": "Harju"
+  },
+  "Harju Skirmish v1": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Harju_Minimap",
+    "gameMode": "Skirmish",
+    "mapId": "Harju",
+    "mapName": "Harju"
+  },
+  "Harju Skirmish v2": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Harju_Minimap",
+    "gameMode": "Skirmish",
+    "mapId": "Harju",
+    "mapName": "Harju"
+  },
+  "Kamdesh Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "Kamdesh_Minimap",
+    "gameMode": "Training",
+    "mapId": "Kamdesh",
+    "mapName": "Kamdesh Highlands"
+  },
+  "Kamdesh AAS v1": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Kamdesh_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Kamdesh",
+    "mapName": "Kamdesh Highlands"
+  },
+  "Kamdesh Insurgency v1": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Kamdesh_Minimap",
+    "gameMode": "Insurgency",
+    "mapId": "Kamdesh",
+    "mapName": "Kamdesh Highlands"
+  },
+  "Kamdesh Invasion v1": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Kamdesh_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Kamdesh",
+    "mapName": "Kamdesh Highlands"
+  },
+  "Kamdesh RAAS v1": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Kamdesh_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Kamdesh",
+    "mapName": "Kamdesh Highlands"
+  },
+  "Kamdesh Skirmish v1": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Kamdesh_Minimap",
+    "gameMode": "Skirmish",
+    "mapId": "Kamdesh",
+    "mapName": "Kamdesh Highlands"
+  },
+  "Kamdesh TC v1": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Kamdesh_Minimap",
+    "gameMode": "TerritoryControl",
+    "mapId": "Kamdesh",
+    "mapName": "Kamdesh Highlands"
+  },
+  "Kohat Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "kohat_minimap",
+    "gameMode": "Training",
+    "mapId": "Kohat",
+    "mapName": "Kohat Toi"
+  },
+  "Kohat Toi AAS v1": {
+    "topLeft": {
+      "x": -230000.0,
+      "y": -230000.0
+    },
+    "bottomRight": {
+      "x": 231700.0,
+      "y": 231700.0
+    },
+    "texture": "kohat_minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Kohat",
+    "mapName": "Kohat Toi"
+  },
+  "Kohat Toi RAAS v1": {
+    "topLeft": {
+      "x": -230000.0,
+      "y": -230000.0
+    },
+    "bottomRight": {
+      "x": 231700.0,
+      "y": 231700.0
+    },
+    "texture": "kohat_minimap",
+    "gameMode": "RAAS",
+    "mapId": "Kohat",
+    "mapName": "Kohat Toi"
+  },
+  "Kohat Toi RAAS v2": {
+    "topLeft": {
+      "x": -230000.0,
+      "y": -230000.0
+    },
+    "bottomRight": {
+      "x": 231700.0,
+      "y": 231700.0
+    },
+    "texture": "kohat_minimap",
+    "gameMode": "RAAS",
+    "mapId": "Kohat",
+    "mapName": "Kohat Toi"
+  },
+  "Kohat Toi Skirmish v1": {
+    "topLeft": {
+      "x": -230000.0,
+      "y": -230000.0
+    },
+    "bottomRight": {
+      "x": 231700.0,
+      "y": 231700.0
+    },
+    "texture": "kohat_minimap",
+    "gameMode": "Skirmish",
+    "mapId": "Kohat",
+    "mapName": "Kohat Toi"
+  },
+  "Kohat Toi Insurgency v1": {
+    "topLeft": {
+      "x": -230000.0,
+      "y": -230000.0
+    },
+    "bottomRight": {
+      "x": 231700.0,
+      "y": 231700.0
+    },
+    "texture": "kohat_minimap",
+    "gameMode": "Insurgency",
+    "mapId": "Kohat",
+    "mapName": "Kohat Toi"
+  },
+  "Kohat Toi Invasion v1": {
+    "topLeft": {
+      "x": -230000.0,
+      "y": -230000.0
+    },
+    "bottomRight": {
+      "x": 231700.0,
+      "y": 231700.0
+    },
+    "texture": "kohat_minimap",
+    "gameMode": "Invasion",
+    "mapId": "Kohat",
+    "mapName": "Kohat Toi"
+  },
+  "Kohat Toi Invasion v2": {
+    "topLeft": {
+      "x": -230000.0,
+      "y": -230000.0
+    },
+    "bottomRight": {
+      "x": 231700.0,
+      "y": 231700.0
+    },
+    "texture": "kohat_minimap",
+    "gameMode": "Invasion",
+    "mapId": "Kohat",
+    "mapName": "Kohat Toi"
+  },
+  "Kohat Toi TC v1": {
+    "topLeft": {
+      "x": -230000.0,
+      "y": -230000.0
+    },
+    "bottomRight": {
+      "x": 231700.0,
+      "y": 231700.0
+    },
+    "texture": "kohat_minimap",
+    "gameMode": "TerritoryControl",
+    "mapId": "Kohat",
+    "mapName": "Kohat Toi"
+  },
+  "Kokan Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "Kokan_Valley_Minimap",
+    "gameMode": "Training",
+    "mapId": "Kokan",
+    "mapName": "Kokan"
+  },
+  "Kokan AAS v1": {
+    "topLeft": {
+      "x": -107634.9375,
+      "y": -107566.75
+    },
+    "bottomRight": {
+      "x": 142013.671875,
+      "y": 142013.671875
+    },
+    "texture": "T_Kokan_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Kokan",
+    "mapName": "Kokan"
+  },
+  "Kokan AAS v2": {
+    "topLeft": {
+      "x": -107634.9375,
+      "y": -107566.75
+    },
+    "bottomRight": {
+      "x": 142013.671875,
+      "y": 142013.671875
+    },
+    "texture": "T_Kokan_Minimap",
+    "gameMode": "AAS",
+    "mapId": "Kokan",
+    "mapName": "Kokan"
+  },
+  "Kokan Insurgency v1": {
+    "topLeft": {
+      "x": -107634.9375,
+      "y": -107634.9375
+    },
+    "bottomRight": {
+      "x": 142013.671875,
+      "y": 142013.671875
+    },
+    "texture": "T_Kokan_Minimap",
+    "gameMode": "Insurgency",
+    "mapId": "Kokan",
+    "mapName": "Kokan"
+  },
+  "Kokan Invasion v1": {
+    "topLeft": {
+      "x": -107634.9375,
+      "y": -107566.75
+    },
+    "bottomRight": {
+      "x": 142013.671875,
+      "y": 142013.671875
+    },
+    "texture": "T_Kokan_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Kokan",
+    "mapName": "Kokan"
+  },
+  "Kokan RAAS v1": {
+    "topLeft": {
+      "x": -107634.9375,
+      "y": -107566.75
+    },
+    "bottomRight": {
+      "x": 142013.671875,
+      "y": 142013.671875
+    },
+    "texture": "T_Kokan_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Kokan",
+    "mapName": "Kokan"
+  },
+  "Kokan Skirmish v1": {
+    "topLeft": {
+      "x": -107634.9375,
+      "y": -107566.75
+    },
+    "bottomRight": {
+      "x": 142013.671875,
+      "y": 142013.671875
+    },
+    "texture": "T_Kokan_Minimap",
+    "gameMode": "Skirmish",
+    "mapId": "Kokan",
+    "mapName": "Kokan"
+  },
+  "Kokan TC v1": {
+    "topLeft": {
+      "x": -107634.9375,
+      "y": -107566.75
+    },
+    "bottomRight": {
+      "x": 142013.671875,
+      "y": 142013.671875
+    },
+    "texture": "T_Kokan_Minimap",
+    "gameMode": "TerritoryControl",
+    "mapId": "Kokan",
+    "mapName": "Kokan"
+  },
+  "Lashkar Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "T_Lashkar_Minimap",
+    "gameMode": "Training",
+    "mapId": "Lashkar",
+    "mapName": "Lashkar Valley"
+  },
+  "Lashkar AAS v1": {
+    "topLeft": {
+      "x": -216700.0,
+      "y": -216700.0
+    },
+    "bottomRight": {
+      "x": 216700.0,
+      "y": 216700.0
+    },
+    "texture": "T_Lashkar_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Lashkar",
+    "mapName": "Lashkar Valley"
+  },
+  "Lashkar AAS v2": {
+    "topLeft": {
+      "x": -216700.0,
+      "y": -216700.0
+    },
+    "bottomRight": {
+      "x": 216700.0,
+      "y": 216700.0
+    },
+    "texture": "T_Lashkar_Minimap",
+    "gameMode": "AAS",
+    "mapId": "Lashkar",
+    "mapName": "Lashkar Valley"
+  },
+  "Lashkar Insurgency v1": {
+    "topLeft": {
+      "x": -216700.0,
+      "y": -216700.0
+    },
+    "bottomRight": {
+      "x": 216700.0,
+      "y": 216700.0
+    },
+    "texture": "T_Lashkar_Minimap",
+    "gameMode": "Insurgency",
+    "mapId": "Lashkar",
+    "mapName": "Lashkar Valley"
+  },
+  "Lashkar Invasion v1": {
+    "topLeft": {
+      "x": -216700.0,
+      "y": -216700.0
+    },
+    "bottomRight": {
+      "x": 216700.0,
+      "y": 216700.0
+    },
+    "texture": "T_Lashkar_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Lashkar",
+    "mapName": "Lashkar Valley"
+  },
+  "Lashkar RAAS v1": {
+    "topLeft": {
+      "x": -216700.0,
+      "y": -216700.0
+    },
+    "bottomRight": {
+      "x": 216700.0,
+      "y": 216700.0
+    },
+    "texture": "T_Lashkar_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Lashkar",
+    "mapName": "Lashkar Valley"
+  },
+  "Lashkar Skirmish v1": {
+    "topLeft": {
+      "x": -216700.0,
+      "y": -216700.0
+    },
+    "bottomRight": {
+      "x": 216700.0,
+      "y": 216700.0
+    },
+    "texture": "T_Lashkar_Minimap",
+    "gameMode": "Skirmish",
+    "mapId": "Lashkar",
+    "mapName": "Lashkar Valley"
+  },
+  "Lashkar TC v1": {
+    "topLeft": {
+      "x": -216700.0,
+      "y": -216700.0
+    },
+    "bottomRight": {
+      "x": 216700.0,
+      "y": 216700.0
+    },
+    "texture": "T_Lashkar_Minimap",
+    "gameMode": "TerritoryControl",
+    "mapId": "Lashkar",
+    "mapName": "Lashkar Valley"
+  },
+  "Lashkar TC v2": {
+    "topLeft": {
+      "x": -216700.0,
+      "y": -216700.0
+    },
+    "bottomRight": {
+      "x": 216700.0,
+      "y": 216700.0
+    },
+    "texture": "T_Lashkar_Minimap",
+    "gameMode": "TerritoryControl",
+    "mapId": "Lashkar",
+    "mapName": "Lashkar Valley"
+  },
+  "Logar Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "Logar_Valley_Minimap",
+    "gameMode": "Training",
+    "mapId": "Logar",
+    "mapName": "Logar Valley"
+  },
+  "Logar AAS v1": {
+    "topLeft": {
+      "x": -88145.140625,
+      "y": -113238.7578125
+    },
+    "bottomRight": {
+      "x": 87978.328125,
+      "y": 62921.7109375
+    },
+    "texture": "Logar_Valley_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Logar",
+    "mapName": "Logar Valley"
+  },
+  "Logar Insurgency v1": {
+    "topLeft": {
+      "x": -88145.140625,
+      "y": -88145.140625
+    },
+    "bottomRight": {
+      "x": 87978.328125,
+      "y": 87978.328125
+    },
+    "texture": "Logar_Valley_Minimap",
+    "gameMode": "Insurgency",
+    "mapId": "Logar",
+    "mapName": "Logar Valley"
+  },
+  "Logar RAAS v1": {
+    "topLeft": {
+      "x": -88145.140625,
+      "y": -113238.7578125
+    },
+    "bottomRight": {
+      "x": 87978.328125,
+      "y": 62921.7109375
+    },
+    "texture": "Logar_Valley_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Logar",
+    "mapName": "Logar Valley"
+  },
+  "Logar Seed v1": {
+    "topLeft": {
+      "x": -88145.140625,
+      "y": -113238.7578125
+    },
+    "bottomRight": {
+      "x": 87978.328125,
+      "y": 62921.7109375
+    },
+    "texture": "Logar_Valley_Minimap",
+    "gameMode": "Seed",
+    "mapId": "Logar",
+    "mapName": "Logar Valley"
+  },
+  "Logar Skirmish v1": {
+    "topLeft": {
+      "x": -88145.140625,
+      "y": -113238.7578125
+    },
+    "bottomRight": {
+      "x": 87978.328125,
+      "y": 62921.7109375
+    },
+    "texture": "Logar_Valley_Minimap",
+    "gameMode": "Skirmish",
+    "mapId": "Logar",
+    "mapName": "Logar Valley"
+  },
+  "Logar TC v1": {
+    "topLeft": {
+      "x": -88145.140625,
+      "y": -113238.7578125
+    },
+    "bottomRight": {
+      "x": 87978.328125,
+      "y": 62921.7109375
+    },
+    "texture": "Logar_Valley_Minimap",
+    "gameMode": "TerritoryControl",
+    "mapId": "Logar",
+    "mapName": "Logar Valley"
+  },
+  "Manicouagan Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "T_Manicouagan_Minimap",
+    "gameMode": "Training",
+    "mapId": "Manicouagan",
+    "mapName": "Manicouagan"
+  },
+  "Manicouagan AAS v1": {
+    "topLeft": {
+      "x": -201657.890625,
+      "y": -201674.84375
+    },
+    "bottomRight": {
+      "x": 201523.078125,
+      "y": 201503.078125
+    },
+    "texture": "T_Manicouagan_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Manicouagan",
+    "mapName": "Manicouagan"
+  },
+  "Manicouagan AAS v2": {
+    "topLeft": {
+      "x": -201657.890625,
+      "y": -201674.84375
+    },
+    "bottomRight": {
+      "x": 201523.078125,
+      "y": 201503.078125
+    },
+    "texture": "T_Manicouagan_Minimap",
+    "gameMode": "AAS",
+    "mapId": "Manicouagan",
+    "mapName": "Manicouagan"
+  },
+  "Manicouagan AAS v3": {
+    "topLeft": {
+      "x": -201657.890625,
+      "y": -201674.84375
+    },
+    "bottomRight": {
+      "x": 201523.078125,
+      "y": 201503.078125
+    },
+    "texture": "T_Manicouagan_Minimap",
+    "gameMode": "AAS",
+    "mapId": "Manicouagan",
+    "mapName": "Manicouagan"
+  },
+  "Manicouagan RAAS v1": {
+    "topLeft": {
+      "x": -201657.890625,
+      "y": -201674.84375
+    },
+    "bottomRight": {
+      "x": 201657.890625,
+      "y": 201674.84375
+    },
+    "texture": "T_Manicouagan_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Manicouagan",
+    "mapName": "Manicouagan"
+  },
+  "Manicouagan RAAS v2": {
+    "topLeft": {
+      "x": -201657.890625,
+      "y": -201674.84375
+    },
+    "bottomRight": {
+      "x": 201657.890625,
+      "y": 201674.84375
+    },
+    "texture": "T_Manicouagan_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Manicouagan",
+    "mapName": "Manicouagan"
+  },
+  "Manicouagan Invasion v1": {
+    "topLeft": {
+      "x": -201657.890625,
+      "y": -201674.84375
+    },
+    "bottomRight": {
+      "x": 201523.078125,
+      "y": 201503.078125
+    },
+    "texture": "T_Manicouagan_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Manicouagan",
+    "mapName": "Manicouagan"
+  },
+  "Manicouagan Invasion v2": {
+    "topLeft": {
+      "x": -201657.890625,
+      "y": -201674.84375
+    },
+    "bottomRight": {
+      "x": 201523.078125,
+      "y": 201503.078125
+    },
+    "texture": "T_Manicouagan_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Manicouagan",
+    "mapName": "Manicouagan"
+  },
+  "Manicouagan Seed v1": {
+    "topLeft": {
+      "x": -40119.359375,
+      "y": -40119.359375
+    },
+    "bottomRight": {
+      "x": 136378.75,
+      "y": 136378.75
+    },
+    "texture": "T_Manicouagan_Seed_v1_Minimap",
+    "gameMode": "Seed",
+    "mapId": "Manicouagan",
+    "mapName": "Manicouagan"
+  },
+  "Manicouagan Seed v2 Community Layer": {
+    "topLeft": {
+      "x": -201657.890625,
+      "y": -201657.890625
+    },
+    "bottomRight": {
+      "x": 201523.078125,
+      "y": 201523.078125
+    },
+    "texture": "T_Manicouagan_Minimap",
+    "gameMode": "Seed",
+    "mapId": "Manicouagan",
+    "mapName": "Manicouagan"
+  },
+  "Manicouagan Skirmish v1": {
+    "topLeft": {
+      "x": -201657.890625,
+      "y": -201674.84375
+    },
+    "bottomRight": {
+      "x": 201523.078125,
+      "y": 201503.078125
+    },
+    "texture": "T_Manicouagan_Minimap",
+    "gameMode": "Skirmish",
+    "mapId": "Manicouagan",
+    "mapName": "Manicouagan"
+  },
+  "Manicouagan Skirmish v2": {
+    "topLeft": {
+      "x": -201657.890625,
+      "y": -201674.84375
+    },
+    "bottomRight": {
+      "x": 201523.078125,
+      "y": 201503.078125
+    },
+    "texture": "T_Manicouagan_Minimap",
+    "gameMode": "Skirmish",
+    "mapId": "Manicouagan",
+    "mapName": "Manicouagan"
+  },
+  "Manicouagan Skirmish v3": {
+    "topLeft": {
+      "x": -201657.890625,
+      "y": -201674.84375
+    },
+    "bottomRight": {
+      "x": 201523.078125,
+      "y": 201503.078125
+    },
+    "texture": "T_Manicouagan_Minimap",
+    "gameMode": "Skirmish",
+    "mapId": "Manicouagan",
+    "mapName": "Manicouagan"
+  },
+  "Mestia Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "T_Mestia_Minimap",
+    "gameMode": "Training",
+    "mapId": "Mestia",
+    "mapName": "Mestia"
+  },
+  "Mestia AAS v1": {
+    "topLeft": {
+      "x": -120000,
+      "y": -110000
+    },
+    "bottomRight": {
+      "x": 120000,
+      "y": 130000
+    },
+    "texture": "T_Mestia_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Mestia",
+    "mapName": "Mestia"
+  },
+  "Mestia AAS v2": {
+    "topLeft": {
+      "x": -120000,
+      "y": -110000
+    },
+    "bottomRight": {
+      "x": 120000,
+      "y": 130000
+    },
+    "texture": "T_Mestia_Minimap",
+    "gameMode": "AAS",
+    "mapId": "Mestia",
+    "mapName": "Mestia"
+  },
+  "Mestia Invasion v1": {
+    "topLeft": {
+      "x": -120000,
+      "y": -110000
+    },
+    "bottomRight": {
+      "x": 120000,
+      "y": 130000
+    },
+    "texture": "T_Mestia_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Mestia",
+    "mapName": "Mestia"
+  },
+  "Mestia RAAS v1": {
+    "topLeft": {
+      "x": -120000,
+      "y": -110000
+    },
+    "bottomRight": {
+      "x": 120000,
+      "y": 130000
+    },
+    "texture": "T_Mestia_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Mestia",
+    "mapName": "Mestia"
+  },
+  "Mestia Skirmish v1": {
+    "topLeft": {
+      "x": -120000,
+      "y": -110000
+    },
+    "bottomRight": {
+      "x": 120000,
+      "y": 130000
+    },
+    "texture": "T_Mestia_Minimap",
+    "gameMode": "Skirmish",
+    "mapId": "Mestia",
+    "mapName": "Mestia"
+  },
+  "Mestia TC v1": {
+    "topLeft": {
+      "x": -120000,
+      "y": -110000
+    },
+    "bottomRight": {
+      "x": 120000,
+      "y": 130000
+    },
+    "texture": "T_Mestia_Minimap",
+    "gameMode": "TerritoryControl",
+    "mapId": "Mestia",
+    "mapName": "Mestia"
+  },
+  "Mutaha Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "Mutaha_Minimap",
+    "gameMode": "Training",
+    "mapId": "Mutaha",
+    "mapName": "Mutaha"
+  },
+  "Mutaha AAS v1": {
+    "topLeft": {
+      "x": -93500,
+      "y": -114000
+    },
+    "bottomRight": {
+      "x": 182000,
+      "y": 161500
+    },
+    "texture": "Mutaha_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Mutaha",
+    "mapName": "Mutaha"
+  },
+  "Mutaha AAS v2": {
+    "topLeft": {
+      "x": -93500,
+      "y": -114000
+    },
+    "bottomRight": {
+      "x": 182000,
+      "y": 161500
+    },
+    "texture": "Mutaha_Minimap",
+    "gameMode": "AAS",
+    "mapId": "Mutaha",
+    "mapName": "Mutaha"
+  },
+  "Mutaha Invasion v1": {
+    "topLeft": {
+      "x": -93500,
+      "y": -114000
+    },
+    "bottomRight": {
+      "x": 182000,
+      "y": 161500
+    },
+    "texture": "Mutaha_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Mutaha",
+    "mapName": "Mutaha"
+  },
+  "Mutaha RAAS v1": {
+    "topLeft": {
+      "x": -93500,
+      "y": -114000
+    },
+    "bottomRight": {
+      "x": 182000,
+      "y": 161500
+    },
+    "texture": "Mutaha_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Mutaha",
+    "mapName": "Mutaha"
+  },
+  "Mutaha RAAS v2": {
+    "topLeft": {
+      "x": -93500,
+      "y": -114000
+    },
+    "bottomRight": {
+      "x": 182000,
+      "y": 161500
+    },
+    "texture": "Mutaha_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Mutaha",
+    "mapName": "Mutaha"
+  },
+  "Mutaha Seed v1": {
+    "topLeft": {
+      "x": -30138.701171875,
+      "y": -55846.078125
+    },
+    "bottomRight": {
+      "x": 99858.09375,
+      "y": 74150.875
+    },
+    "texture": "Mutaha_Minimap_Seed_v1",
+    "gameMode": "Seed",
+    "mapId": "Mutaha",
+    "mapName": "Mutaha"
+  },
+  "Mutaha Skirmish v1": {
+    "topLeft": {
+      "x": -84000,
+      "y": -67000
+    },
+    "bottomRight": {
+      "x": 54000,
+      "y": 71000
+    },
+    "texture": "Mutaha_Minimap_Skirmish_v1",
+    "gameMode": "Skirmish",
+    "mapId": "Mutaha",
+    "mapName": "Mutaha"
+  },
+  "Mutaha TC v1": {
+    "topLeft": {
+      "x": -93500,
+      "y": -114000
+    },
+    "bottomRight": {
+      "x": 182000,
+      "y": 161500
+    },
+    "texture": "Mutaha_Minimap",
+    "gameMode": "TerritoryControl",
+    "mapId": "Mutaha",
+    "mapName": "Mutaha"
+  },
+  "Narva Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "Narva_Minimap",
+    "gameMode": "Training",
+    "mapId": "Narva",
+    "mapName": "Narva"
+  },
+  "Narva AAS v1": {
+    "topLeft": {
+      "x": -138970.6875,
+      "y": -140207.4375
+    },
+    "bottomRight": {
+      "x": 141029.375,
+      "y": 139792.515625
+    },
+    "texture": "Narva_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Narva",
+    "mapName": "Narva"
+  },
+  "Narva AAS v2": {
+    "topLeft": {
+      "x": -138970.6875,
+      "y": -140207.4375
+    },
+    "bottomRight": {
+      "x": 141029.375,
+      "y": 139792.515625
+    },
+    "texture": "Narva_Minimap",
+    "gameMode": "AAS",
+    "mapId": "Narva",
+    "mapName": "Narva"
+  },
+  "Narva AAS v3": {
+    "topLeft": {
+      "x": -138970.6875,
+      "y": -140207.4375
+    },
+    "bottomRight": {
+      "x": 141029.375,
+      "y": 139792.515625
+    },
+    "texture": "Narva_Minimap",
+    "gameMode": "AAS",
+    "mapId": "Narva",
+    "mapName": "Narva"
+  },
+  "Narva Destruction v1": {
+    "topLeft": {
+      "x": -138970.6875,
+      "y": -140207.4375
+    },
+    "bottomRight": {
+      "x": 141029.375,
+      "y": 139792.515625
+    },
+    "texture": "Narva_Minimap",
+    "gameMode": "Destruction",
+    "mapId": "Narva",
+    "mapName": "Narva"
+  },
+  "Narva Invasion v1": {
+    "topLeft": {
+      "x": -138970.6875,
+      "y": -140207.4375
+    },
+    "bottomRight": {
+      "x": 141029.375,
+      "y": 139792.515625
+    },
+    "texture": "Narva_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Narva",
+    "mapName": "Narva"
+  },
+  "Narva Invasion v2": {
+    "topLeft": {
+      "x": -138970.6875,
+      "y": -140207.4375
+    },
+    "bottomRight": {
+      "x": 141029.375,
+      "y": 139792.515625
+    },
+    "texture": "Narva_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Narva",
+    "mapName": "Narva"
+  },
+  "Narva RAAS v1": {
+    "topLeft": {
+      "x": -138970.6875,
+      "y": -140207.4375
+    },
+    "bottomRight": {
+      "x": 141029.375,
+      "y": 139792.515625
+    },
+    "texture": "Narva_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Narva",
+    "mapName": "Narva"
+  },
+  "Narva Skirmish v1": {
+    "topLeft": {
+      "x": -138970.6875,
+      "y": -140207.4375
+    },
+    "bottomRight": {
+      "x": 141029.375,
+      "y": 139792.515625
+    },
+    "texture": "Narva_Minimap_Skirmish_v1",
+    "gameMode": "Skirmish",
+    "mapId": "Narva",
+    "mapName": "Narva"
+  },
+  "Narva TC v1": {
+    "topLeft": {
+      "x": -138970.6875,
+      "y": -140207.4375
+    },
+    "bottomRight": {
+      "x": 141029.375,
+      "y": 139792.515625
+    },
+    "texture": "Narva_Minimap",
+    "gameMode": "TerritoryControl",
+    "mapId": "Narva",
+    "mapName": "Narva"
+  },
+  "PacificProvingGrounds AAS v1": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "T_PacificProvingGrounds_V1_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "PacificProvingGrounds",
+    "mapName": "Pacific Proving Grounds"
+  },
+  "PacificProvingGrounds Seed v1": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "T_PacificProvingGrounds_V1_Minimap",
+    "gameMode": "Seed",
+    "mapId": "PacificProvingGrounds",
+    "mapName": "Pacific Proving Grounds"
+  },
+  "Sanxian AAS v1": {
+    "topLeft": {
+      "x": -230000,
+      "y": -205000
+    },
+    "bottomRight": {
+      "x": 230000,
+      "y": 255000
+    },
+    "texture": "T_Sanxian_Minimap_Large",
+    "gameMode": "AAS",
+    "mapId": "Sanxian_Islands",
+    "mapName": "Sanxian Islands"
+  },
+  "Sanxian AAS v2": {
+    "topLeft": {
+      "x": -230000,
+      "y": -205000
+    },
+    "bottomRight": {
+      "x": 230000,
+      "y": 255000
+    },
+    "texture": "T_Sanxian_Minimap_Large",
+    "gameMode": "AAS",
+    "mapId": "Sanxian_Islands",
+    "mapName": "Sanxian Islands"
+  },
+  "Sanxian AAS v3": {
+    "topLeft": {
+      "x": -230000,
+      "y": -205000
+    },
+    "bottomRight": {
+      "x": 230000,
+      "y": 255000
+    },
+    "texture": "T_Sanxian_Minimap_Large",
+    "gameMode": "AAS",
+    "mapId": "Sanxian_Islands",
+    "mapName": "Sanxian Islands"
+  },
+  "Sanxian Invasion v1": {
+    "topLeft": {
+      "x": -230000,
+      "y": -205000
+    },
+    "bottomRight": {
+      "x": 230000,
+      "y": 255000
+    },
+    "texture": "T_Sanxian_Minimap_Large",
+    "gameMode": "Invasion",
+    "mapId": "Sanxian_Islands",
+    "mapName": "Sanxian Islands"
+  },
+  "Sanxian Invasion v2": {
+    "topLeft": {
+      "x": -230000,
+      "y": -205000
+    },
+    "bottomRight": {
+      "x": 230000,
+      "y": 255000
+    },
+    "texture": "T_Sanxian_Minimap_Large",
+    "gameMode": "Invasion",
+    "mapId": "Sanxian_Islands",
+    "mapName": "Sanxian Islands"
+  },
+  "Sanxian Invasion v3": {
+    "topLeft": {
+      "x": -230000,
+      "y": -205000
+    },
+    "bottomRight": {
+      "x": 230000,
+      "y": 255000
+    },
+    "texture": "T_Sanxian_Minimap_Large",
+    "gameMode": "Invasion",
+    "mapId": "Sanxian_Islands",
+    "mapName": "Sanxian Islands"
+  },
+  "Sanxian RAAS v1": {
+    "topLeft": {
+      "x": -230000,
+      "y": -205000
+    },
+    "bottomRight": {
+      "x": 230000,
+      "y": 255000
+    },
+    "texture": "T_Sanxian_Minimap_Large",
+    "gameMode": "RAAS",
+    "mapId": "Sanxian_Islands",
+    "mapName": "Sanxian Islands"
+  },
+  "Sanxian RAAS v2": {
+    "topLeft": {
+      "x": -230000,
+      "y": -205000
+    },
+    "bottomRight": {
+      "x": 230000,
+      "y": 255000
+    },
+    "texture": "T_Sanxian_Minimap_Large",
+    "gameMode": "RAAS",
+    "mapId": "Sanxian_Islands",
+    "mapName": "Sanxian Islands"
+  },
+  "Sanxian RAAS v3 Community Layer": {
+    "topLeft": {
+      "x": -230000.0,
+      "y": -230000.0
+    },
+    "bottomRight": {
+      "x": 230000.0,
+      "y": 230000.0
+    },
+    "texture": "T_Sanxian_Minimap_Large",
+    "gameMode": "RAAS",
+    "mapId": "Sanxian_Islands",
+    "mapName": "Sanxian Islands"
+  },
+  "Sanxian Seed v1": {
+    "topLeft": {
+      "x": -230000,
+      "y": -205000
+    },
+    "bottomRight": {
+      "x": 230000,
+      "y": 255000
+    },
+    "texture": "T_Sanxian_Minimap_Large",
+    "gameMode": "Seed",
+    "mapId": "Sanxian_Islands",
+    "mapName": "Sanxian Islands"
+  },
+  "Sanxian Skirmish v1": {
+    "topLeft": {
+      "x": -230000,
+      "y": -205000
+    },
+    "bottomRight": {
+      "x": 230000,
+      "y": 255000
+    },
+    "texture": "T_Sanxian_Minimap_Large",
+    "gameMode": "Skirmish",
+    "mapId": "Sanxian_Islands",
+    "mapName": "Sanxian Islands"
+  },
+  "Skorpo Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "Skorpo_Minimap",
+    "gameMode": "Training",
+    "mapId": "Skorpo",
+    "mapName": "Skorpo"
+  },
+  "Skorpo Invasion v1": {
+    "topLeft": {
+      "x": -360150,
+      "y": -329300
+    },
+    "bottomRight": {
+      "x": 324850,
+      "y": 357608
+    },
+    "texture": "Skorpo_Minimap_RAAS_v3",
+    "gameMode": "Invasion",
+    "mapId": "Skorpo",
+    "mapName": "Skorpo"
+  },
+  "Skorpo Invasion v2": {
+    "topLeft": {
+      "x": -360150,
+      "y": -329300
+    },
+    "bottomRight": {
+      "x": 324850,
+      "y": 357608
+    },
+    "texture": "Skorpo_Minimap_RAAS_v3",
+    "gameMode": "Invasion",
+    "mapId": "Skorpo",
+    "mapName": "Skorpo"
+  },
+  "Skorpo Invasion v3": {
+    "topLeft": {
+      "x": -360150,
+      "y": -329300
+    },
+    "bottomRight": {
+      "x": 324850,
+      "y": 357608
+    },
+    "texture": "Skorpo_Minimap_RAAS_v3",
+    "gameMode": "Invasion",
+    "mapId": "Skorpo",
+    "mapName": "Skorpo"
+  },
+  "Skorpo RAAS v1": {
+    "topLeft": {
+      "x": -360150,
+      "y": -329300
+    },
+    "bottomRight": {
+      "x": 324850,
+      "y": 357608
+    },
+    "texture": "Skorpo_Minimap_RAAS_v3",
+    "gameMode": "Fireteam",
+    "mapId": "Skorpo",
+    "mapName": "Skorpo"
+  },
+  "Skorpo Skirmish v1": {
+    "topLeft": {
+      "x": 0,
+      "y": -90000
+    },
+    "bottomRight": {
+      "x": 142000,
+      "y": 52000
+    },
+    "texture": "Skorpo_Minimap_Skirmish_v1",
+    "gameMode": "Skirmish",
+    "mapId": "Skorpo",
+    "mapName": "Skorpo"
+  },
+  "Sumari Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "Sumari_Minimap",
+    "gameMode": "Training",
+    "mapId": "Sumari",
+    "mapName": "Sumari Bala"
+  },
+  "Sumari Bala AAS v1": {
+    "topLeft": {
+      "x": -63973.92578125,
+      "y": -44728.078125
+    },
+    "bottomRight": {
+      "x": 66033.578125,
+      "y": 85297.234375
+    },
+    "texture": "Sumari_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Sumari",
+    "mapName": "Sumari Bala"
+  },
+  "Sumari Bala AAS v2": {
+    "topLeft": {
+      "x": -63973.92578125,
+      "y": -44728.078125
+    },
+    "bottomRight": {
+      "x": 66033.578125,
+      "y": 85297.234375
+    },
+    "texture": "Sumari_Minimap",
+    "gameMode": "AAS",
+    "mapId": "Sumari",
+    "mapName": "Sumari Bala"
+  },
+  "Sumari Bala AAS v3": {
+    "topLeft": {
+      "x": -63973.92578125,
+      "y": -44728.078125
+    },
+    "bottomRight": {
+      "x": 66033.578125,
+      "y": 85297.234375
+    },
+    "texture": "Sumari_Minimap",
+    "gameMode": "AAS",
+    "mapId": "Sumari",
+    "mapName": "Sumari Bala"
+  },
+  "Sumari Bala Insurgency v1": {
+    "topLeft": {
+      "x": -63973.0,
+      "y": -63973.0
+    },
+    "bottomRight": {
+      "x": 66033.0,
+      "y": 66033.0
+    },
+    "texture": "Sumari_Minimap",
+    "gameMode": "Insurgency",
+    "mapId": "Sumari",
+    "mapName": "Sumari Bala"
+  },
+  "Sumari Bala Invasion v1": {
+    "topLeft": {
+      "x": -63973.92578125,
+      "y": -44728.078125
+    },
+    "bottomRight": {
+      "x": 66033.578125,
+      "y": 85297.234375
+    },
+    "texture": "Sumari_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Sumari",
+    "mapName": "Sumari Bala"
+  },
+  "Sumari Bala RAAS v1": {
+    "topLeft": {
+      "x": -63973.92578125,
+      "y": -44728.078125
+    },
+    "bottomRight": {
+      "x": 66033.578125,
+      "y": 85297.234375
+    },
+    "texture": "Sumari_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Sumari",
+    "mapName": "Sumari Bala"
+  },
+  "Sumari Bala Seed v1": {
+    "topLeft": {
+      "x": -63973,
+      "y": -44728
+    },
+    "bottomRight": {
+      "x": 66033,
+      "y": 85297
+    },
+    "texture": "Sumari_Minimap",
+    "gameMode": "Seed",
+    "mapId": "Sumari",
+    "mapName": "Sumari Bala"
+  },
+  "Sumari Bala Skirmish v1": {
+    "topLeft": {
+      "x": -63973,
+      "y": -44728
+    },
+    "bottomRight": {
+      "x": 66033,
+      "y": 85297
+    },
+    "texture": "Sumari_Minimap",
+    "gameMode": "Skirmish",
+    "mapId": "Sumari",
+    "mapName": "Sumari Bala"
+  },
+  "Sumari Bala TC v1": {
+    "topLeft": {
+      "x": -63973.92578125,
+      "y": -44728.078125
+    },
+    "bottomRight": {
+      "x": 66033.578125,
+      "y": 85297.234375
+    },
+    "texture": "Sumari_Minimap",
+    "gameMode": "TerritoryControl",
+    "mapId": "Sumari",
+    "mapName": "Sumari Bala"
+  },
+  "Tallil Outskirts AAS v1": {
+    "topLeft": {
+      "x": -234000.015625,
+      "y": -234000.015625
+    },
+    "bottomRight": {
+      "x": 234000.0,
+      "y": 234000.0
+    },
+    "texture": "Tallil_Outskirts_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Tallil",
+    "mapName": "Tallil Outskirts"
+  },
+  "Tallil Outskirts Invasion v1": {
+    "topLeft": {
+      "x": -234000.015625,
+      "y": -234000.015625
+    },
+    "bottomRight": {
+      "x": 234000.0,
+      "y": 234000.0
+    },
+    "texture": "Tallil_Outskirts_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Tallil",
+    "mapName": "Tallil Outskirts"
+  },
+  "Tallil Outskirts RAAS v1": {
+    "topLeft": {
+      "x": -234000.015625,
+      "y": -234000.015625
+    },
+    "bottomRight": {
+      "x": 234000.0,
+      "y": 234000.0
+    },
+    "texture": "Tallil_Outskirts_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Tallil",
+    "mapName": "Tallil Outskirts"
+  },
+  "Tallil Outskirts RAAS v2": {
+    "topLeft": {
+      "x": -234000.015625,
+      "y": -234000.015625
+    },
+    "bottomRight": {
+      "x": 234000.0,
+      "y": 234000.0
+    },
+    "texture": "Tallil_Outskirts_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Tallil",
+    "mapName": "Tallil Outskirts"
+  },
+  "Tallil Outskirts Seed v1": {
+    "topLeft": {
+      "x": 35000,
+      "y": -119207.9765625
+    },
+    "bottomRight": {
+      "x": 148000,
+      "y": -6207.98193359375
+    },
+    "texture": "Tallil_Outskirts_Minimap_Skirmish_v1",
+    "gameMode": "Seed",
+    "mapId": "Tallil",
+    "mapName": "Tallil Outskirts"
+  },
+  "Tallil Outskirts Skirmish v1": {
+    "topLeft": {
+      "x": 35000,
+      "y": -119207.9765625
+    },
+    "bottomRight": {
+      "x": 148000,
+      "y": -6207.98193359375
+    },
+    "texture": "Tallil_Outskirts_Minimap_Skirmish_v1",
+    "gameMode": "Skirmish",
+    "mapId": "Tallil",
+    "mapName": "Tallil Outskirts"
+  },
+  "Tallil Outskirts Skirmish v2": {
+    "topLeft": {
+      "x": -165987.5,
+      "y": -32000
+    },
+    "bottomRight": {
+      "x": 64012.4453125,
+      "y": 198000
+    },
+    "texture": "Tallil_Outskirts_Minimap_Skirmish_v2",
+    "gameMode": "Skirmish",
+    "mapId": "Tallil",
+    "mapName": "Tallil Outskirts"
+  },
+  "Tallil Outskirts Skirmish v3": {
+    "topLeft": {
+      "x": -234000.015625,
+      "y": -234000.015625
+    },
+    "bottomRight": {
+      "x": 234000.0,
+      "y": 234000.0
+    },
+    "texture": "Tallil_Outskirts_Minimap",
+    "gameMode": "Skirmish",
+    "mapId": "Tallil",
+    "mapName": "Tallil Outskirts"
+  },
+  "Tallil Outskirts TC v1": {
+    "topLeft": {
+      "x": -234000.015625,
+      "y": -234000.015625
+    },
+    "bottomRight": {
+      "x": 234000.0,
+      "y": 234000.0
+    },
+    "texture": "Tallil_Outskirts_Minimap",
+    "gameMode": "TerritoryControl",
+    "mapId": "Tallil",
+    "mapName": "Tallil Outskirts"
+  },
+  "Tallil Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "Tallil_Outskirts_Minimap",
+    "gameMode": "Training",
+    "mapId": "Tallil",
+    "mapName": "Tallil Outskirts"
+  },
+  "Yehorivka AAS v1": {
+    "topLeft": {
+      "x": -330197.40625,
+      "y": -330199.5
+    },
+    "bottomRight": {
+      "x": 304803,
+      "y": 304800
+    },
+    "texture": "Yehorivka_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Yehorivka",
+    "mapName": "Yehorivka"
+  },
+  "Yehorivka AAS v2": {
+    "topLeft": {
+      "x": -330197.40625,
+      "y": -330199.5
+    },
+    "bottomRight": {
+      "x": 304803,
+      "y": 304800
+    },
+    "texture": "Yehorivka_Minimap",
+    "gameMode": "AAS",
+    "mapId": "Yehorivka",
+    "mapName": "Yehorivka"
+  },
+  "Yehorivka Destruction v1": {
+    "topLeft": {
+      "x": -330197.40625,
+      "y": -330199.5
+    },
+    "bottomRight": {
+      "x": 304803,
+      "y": 304800
+    },
+    "texture": "Yehorivka_Minimap",
+    "gameMode": "Destruction",
+    "mapId": "Yehorivka",
+    "mapName": "Yehorivka"
+  },
+  "Yehorivka Invasion v1": {
+    "topLeft": {
+      "x": -330197.40625,
+      "y": -330199.5
+    },
+    "bottomRight": {
+      "x": 304803,
+      "y": 304800
+    },
+    "texture": "Yehorivka_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Yehorivka",
+    "mapName": "Yehorivka"
+  },
+  "Yehorivka Invasion v2": {
+    "topLeft": {
+      "x": -330197.40625,
+      "y": -330199.5
+    },
+    "bottomRight": {
+      "x": 304803,
+      "y": 304800
+    },
+    "texture": "Yehorivka_Minimap",
+    "gameMode": "Invasion",
+    "mapId": "Yehorivka",
+    "mapName": "Yehorivka"
+  },
+  "Yehorivka RAAS v1": {
+    "topLeft": {
+      "x": -330197.40625,
+      "y": -330199.5
+    },
+    "bottomRight": {
+      "x": 304803,
+      "y": 304800
+    },
+    "texture": "Yehorivka_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Yehorivka",
+    "mapName": "Yehorivka"
+  },
+  "Yehorivka RAAS v2": {
+    "topLeft": {
+      "x": -330197.40625,
+      "y": -330199.5
+    },
+    "bottomRight": {
+      "x": 304803,
+      "y": 304800
+    },
+    "texture": "Yehorivka_Minimap",
+    "gameMode": "RAAS",
+    "mapId": "Yehorivka",
+    "mapName": "Yehorivka"
+  },
+  "Yehorivka Skirmish v1": {
+    "topLeft": {
+      "x": -330197.40625,
+      "y": -330199.5
+    },
+    "bottomRight": {
+      "x": 304803,
+      "y": 304800
+    },
+    "texture": "Yehorivka_Minimap_Skirmish_v1",
+    "gameMode": "Skirmish",
+    "mapId": "Yehorivka",
+    "mapName": "Yehorivka"
+  },
+  "Yehorivka Skirmish v2": {
+    "topLeft": {
+      "x": -330197.40625,
+      "y": -330199.5
+    },
+    "bottomRight": {
+      "x": 304803,
+      "y": 304800
+    },
+    "texture": "Yehorivka_Minimap_Skirmish_v2",
+    "gameMode": "Skirmish",
+    "mapId": "Yehorivka",
+    "mapName": "Yehorivka"
+  },
+  "Yehorivka TC v1": {
+    "topLeft": {
+      "x": -330197.40625,
+      "y": -330199.5
+    },
+    "bottomRight": {
+      "x": 304803,
+      "y": 304800
+    },
+    "texture": "Yehorivka_Minimap",
+    "gameMode": "TerritoryControl",
+    "mapId": "Yehorivka",
+    "mapName": "Yehorivka"
+  },
+  "Yehorivka TC v2": {
+    "topLeft": {
+      "x": -330197.40625,
+      "y": -330199.5
+    },
+    "bottomRight": {
+      "x": 304803,
+      "y": 304800
+    },
+    "texture": "Yehorivka_Minimap",
+    "gameMode": "TerritoryControl",
+    "mapId": "Yehorivka",
+    "mapName": "Yehorivka"
+  },
+  "Yehorivka Automation": {
+    "topLeft": {
+      "x": -51924.43359375,
+      "y": -51924.43359375
+    },
+    "bottomRight": {
+      "x": 73075.4921875,
+      "y": 73075.4921875
+    },
+    "texture": "Yehorivka_Minimap",
+    "gameMode": "Training",
+    "mapId": "Yehorivka",
+    "mapName": "Yehorivka"
+  },
+  "Back Alley Backstab": {
+    "topLeft": {
+      "x": -63973.92578125,
+      "y": -63973.92578125
+    },
+    "bottomRight": {
+      "x": 66033.578125,
+      "y": 66033.578125
+    },
+    "texture": "Sumari_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Sumari",
+    "mapName": "Sumari Bala"
+  },
+  "Poseidon's Trident": {
+    "topLeft": {
+      "x": -131500.0,
+      "y": -131500.0
+    },
+    "bottomRight": {
+      "x": 169000.0,
+      "y": 169000.0
+    },
+    "texture": "T_Fallujah_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Fallujah",
+    "mapName": "Fallujah"
+  },
+  "Urban Bushwhacker": {
+    "topLeft": {
+      "x": -93500.0,
+      "y": -93500.0
+    },
+    "bottomRight": {
+      "x": 182000.0,
+      "y": 182000.0
+    },
+    "texture": "Mutaha_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Mutaha",
+    "mapName": "Mutaha"
+  },
+  "Deadly Crossing": {
+    "topLeft": {
+      "x": -138970.6875,
+      "y": -138970.6875
+    },
+    "bottomRight": {
+      "x": 141029.375,
+      "y": 141029.375
+    },
+    "texture": "Narva_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Narva",
+    "mapName": "Narva"
+  },
+  "Raiders on the Storm": {
+    "topLeft": {
+      "x": -200000.0,
+      "y": -200000.0
+    },
+    "bottomRight": {
+      "x": 200000.0,
+      "y": 200000.0
+    },
+    "texture": "T_AlBasrah_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "AlBasrah",
+    "mapName": "Al Basrah"
+  },
+  "[EXP] Council Decapitation": {
+    "topLeft": {
+      "x": -203199.0,
+      "y": -203199.0
+    },
+    "bottomRight": {
+      "x": 203201.0,
+      "y": 203201.0
+    },
+    "texture": "gorodok_minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Gorodok",
+    "mapName": "Gorodok"
+  },
+  "[EXP] High Noon": {
+    "topLeft": {
+      "x": -131500.0,
+      "y": -131500.0
+    },
+    "bottomRight": {
+      "x": 169000.0,
+      "y": 169000.0
+    },
+    "texture": "T_Fallujah_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Fallujah",
+    "mapName": "Fallujah"
+  },
+  "[EXP] SuperFOB": {
+    "topLeft": {
+      "x": -200000.0,
+      "y": -200000.0
+    },
+    "bottomRight": {
+      "x": 200000.0,
+      "y": 200000.0
+    },
+    "texture": "T_AlBasrah_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "AlBasrah",
+    "mapName": "Al Basrah"
+  },
+  "Reactor Secure": {
+    "topLeft": {
+      "x": -230000.0,
+      "y": -230000.0
+    },
+    "bottomRight": {
+      "x": 230000.0,
+      "y": 230000.0
+    },
+    "texture": "T_Sanxian_Minimap_Large",
+    "gameMode": "Fireteam",
+    "mapId": "Sanxian_Islands",
+    "mapName": "Sanxian Islands"
+  },
+  "Sand In Your TOWs": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "T_PacificProvingGrounds_V1_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "PacificProvingGrounds",
+    "mapName": "Pacific Proving Grounds"
+  },
+  "AlBasrah AAS v1": {
+    "topLeft": {
+      "x": -200000.0,
+      "y": -200000.0
+    },
+    "bottomRight": {
+      "x": 200000.0,
+      "y": 200000.0
+    },
+    "texture": "T_AlBasrah_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "AlBasrah",
+    "mapName": "Al Basrah"
+  },
+  "Black Coast Coop Template": {
+    "topLeft": {
+      "x": -229999.515625,
+      "y": -229999.515625
+    },
+    "bottomRight": {
+      "x": 229998.46875,
+      "y": 229998.46875
+    },
+    "texture": "Black_Coast_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "BlackCoast",
+    "mapName": "Black Coast"
+  },
+  "Harju Coop Template": {
+    "topLeft": {
+      "x": -201600.0,
+      "y": -201600.0
+    },
+    "bottomRight": {
+      "x": 201600.0,
+      "y": 201600.0
+    },
+    "texture": "Harju_Minimap",
+    "gameMode": "Fireteam",
+    "mapId": "Harju",
+    "mapName": "Harju"
+  },
+  "Sanxian Coop Template": {
+    "topLeft": {
+      "x": -230000.0,
+      "y": -230000.0
+    },
+    "bottomRight": {
+      "x": 230000.0,
+      "y": 230000.0
+    },
+    "texture": "T_Sanxian_Minimap_Large",
+    "gameMode": "Fireteam",
+    "mapId": "Sanxian_Islands",
+    "mapName": "Sanxian Islands"
+  }
+}

@@ -1,0 +1,26 @@
+sqreader
+Copyright (C) 2026 sqreader contributors
+
+This program is free software licensed under the GNU Affero General Public
+License, version 3 or later. See the LICENSE file for the full terms.
+
+===============================================================================
+Third-party assets and data bundled in this repository
+===============================================================================
+
+The following are NOT covered by the AGPL. They remain the property of their
+respective owners and are included only so the tool interoperates with Squad:
+
+  icons/        Squad in-game art (role, marker, weapon and related textures).
+                Property of Offworld Industries.
+
+  sqmaps/       Squad map minimap textures.
+                Property of Offworld Industries.
+
+  data/static/  Layer bounds, map config, vehicle factions, capture-zone and
+                squad-pool metadata derived from public Squad data via
+                squadreplay.com and squadcalc.app.
+
+"Squad" and its assets are trademarks/property of Offworld Industries. This
+project is not affiliated with or endorsed by Offworld Industries. If you are a
+rights holder and want any bundled asset removed, please open an issue.

@@ -1,0 +1,81 @@
+[project]
+name = "sqreader"
+version = "1.1.0"
+description = "Read live Squad dedicated-server game state from /proc/<pid>/mem and emit NDJSON snapshots."
+readme = "README.md"
+license = { text = "AGPL-3.0-or-later" }
+requires-python = ">=3.10"
+classifiers = [
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "zstandard>=0.22,<1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.11", "cryptography>=42"]
+# Optional central push (`sqreader enroll` + `serve --push`). Only needed if you
+# report finished matches to a central platform; the base install stays lean.
+push = ["cryptography>=42"]
+
+[project.scripts]
+sqreader = "sqreader.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+# 100, not 88: the code is already written to ~100 and reflowing it would
+# churn hundreds of lines for no correctness gain. At 88 there were 44
+# violations, at 100 there are 2, at 110 none.
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "UP"]
+ignore = [
+    # B023 fires on every `_safe(lambda: pm.read_u64(x + off))` inside a loop,
+    # but _safe() invokes the callable immediately (snapshot.py: `return call()`),
+    # so the loop variable cannot have moved by the time the lambda runs. All
+    # hits are this idiom, which is the core read pattern of the whole reader.
+    "B023",
+    # `Optional[X]` -> `X | None` and friends: ~78 hits, pure annotation churn
+    # with zero correctness value. Deferred to its own commit so it does not
+    # bury real findings in a rename diff.
+    "UP035",
+    "UP037",
+    "UP045",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# The module docstring quotes real Squad server log lines verbatim so they can
+# be diffed against the regexes below them. Wrapping them would destroy that.
+"sqreader/squad/logtail.py" = ["E501"]
+# Stats test fixtures must use full-length valid EOS/UUID ids (>=32 chars —
+# stats._valid_eos rejects short keys as torn reads), which pushes some inline
+# fixture-construction lines past 100. Reflowing scaffolding is pure churn.
+"tests/*.py" = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+# The reader only ever runs on Linux (it needs /proc/<pid>/mem + CAP_SYS_PTRACE),
+# so check against Linux even when someone runs mypy from Windows — otherwise
+# os.pread, which does not exist on win32, is reported as missing.
+platform = "linux"
+# Deliberately lenient to start. The code is fully annotated but has never been
+# checked, so this is a ratchet: tighten module-by-module via overrides rather
+# than blocking the whole repo on a big-bang cleanup.
+ignore_missing_imports = true
+warn_redundant_casts = true
+no_implicit_optional = false
+exclude = ["^scripts/", "^tests/", "^frontend/"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sqreader*"]

@@ -1,0 +1,29 @@
+{
+  "_comment": [
+    "Copy this file to sqreader.config.json (gitignored) and edit as needed.",
+    "Every value here is a DEFAULT; a matching CLI flag always wins over it.",
+    "On a standard single-instance box you usually need NO config at all: the",
+    "Squad server is found by its process name and output dirs default next to",
+    "the repo. Only non-standard setups need to change anything below.",
+    "The file is loaded from $SQREADER_CONFIG, else ./sqreader.config.json."
+  ],
+
+  "squad_process_name": "SquadGameServer",
+  "squad_binary_pattern": "/home/.*/serverfiles/.*SquadGameServer",
+  "squad_log_glob": "/home/*/serverfiles/SquadGame/Saved/Logs/SquadGame.log",
+  "server_id": "squad",
+
+  "_push_comment": [
+    "Optional central push (OFF by default). Report FINISHED matches (stats +",
+    ".sqrx replays; never the live map) to a central platform. Enroll first:",
+    "`sqreader enroll <token> --central-url https://your-central`. The secret",
+    "is stored in a 0600 .env.agent, NOT here. See PRIVACY.md.",
+    "push_enabled: master switch (or pass `serve --push`).",
+    "push_replay: also upload the match replay (set false for stats-only).",
+    "push_backlog_dir: pending-push queue (default: next to the stats DB)."
+  ],
+  "central_url": null,
+  "push_enabled": false,
+  "push_replay": true,
+  "push_backlog_dir": null
+}

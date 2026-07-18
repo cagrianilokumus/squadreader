@@ -1,0 +1,1629 @@
+{
+  "BP_2A6_Desert_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_2A6_Desert_Cage_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_2A6_Woodland_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_2A6_Woodland_Cage_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_AAVP7A1_C": [
+    "usmc"
+  ],
+  "BP_AAVP7A1_Logi_C": [
+    "usmc"
+  ],
+  "BP_AAVP7A1_Woodland_C": [
+    "usmc"
+  ],
+  "BP_AAVP7A1_Woodland_Logi_C": [
+    "usmc"
+  ],
+  "BP_ACV-15_C": [
+    "tlf"
+  ],
+  "BP_ACV-15_Desert_C": [
+    "tlf"
+  ],
+  "BP_ACV-15_M2_C": [
+    "tlf"
+  ],
+  "BP_ACV-15_M2_Desert_C": [
+    "tlf"
+  ],
+  "BP_ACV-15_MG3_C": [
+    "tlf"
+  ],
+  "BP_ACV-15_MG3_Desert_C": [
+    "tlf"
+  ],
+  "BP_ASLAV_C": [
+    "adf"
+  ],
+  "BP_AUS_M1A1_C": [
+    "adf"
+  ],
+  "BP_Armored_Technical2Seater_Camo_AGS17_C": [
+    "ins",
+    "mil",
+    "imf"
+  ],
+  "BP_Armored_Technical2Seater_Camo_DSHK_C": [
+    "ins",
+    "mil",
+    "imf"
+  ],
+  "BP_Armored_Technical2Seater_Camo_M2_C": [
+    "ins",
+    "mil",
+    "imf"
+  ],
+  "BP_Armored_Technical2Seater_Camo_SPG9_C": [
+    "imf"
+  ],
+  "BP_Armored_Technical2Seater_White_AGS17_C": [
+    "ins",
+    "mil",
+    "imf"
+  ],
+  "BP_Armored_Technical4Seater_Logi_Camo_C": [
+    "imf"
+  ],
+  "BP_Armored_Technical4Seater_Transport_Camo_C": [
+    "ins",
+    "mil",
+    "imf"
+  ],
+  "BP_Armored_Ural_375_Logi_MIL_C": [
+    "imf"
+  ],
+  "BP_Armored_Ural_375_MIL_C": [
+    "mil",
+    "imf"
+  ],
+  "BP_Aussie_Util_Truck_C": [
+    "adf"
+  ],
+  "BP_Aussie_Util_Truck_Logi_C": [
+    "adf"
+  ],
+  "BP_BFV_C": [
+    "usa"
+  ],
+  "BP_BFV_Woodland_C": [
+    "usa"
+  ],
+  "BP_BMD1M_C": [
+    "vdv"
+  ],
+  "BP_BMD1M_Desert_C": [
+    "vdv"
+  ],
+  "BP_BMD4M_C": [
+    "vdv"
+  ],
+  "BP_BMD4M_Desert_C": [
+    "vdv"
+  ],
+  "BP_BMP1AM_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_BMP1AM_Desert_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_BMP1TS_AFU_C": [
+    "afu"
+  ],
+  "BP_BMP1_AFU_C": [
+    "afu"
+  ],
+  "BP_BMP1_GFI_C": [
+    "gfi"
+  ],
+  "BP_BMP1_INS_C": [
+    "ins"
+  ],
+  "BP_BMP1_INS_ZU23_C": [
+    "mei"
+  ],
+  "BP_BMP1_MIL_C": [
+    "mil",
+    "imf"
+  ],
+  "BP_BMP1_MIL_ZU23_C": [
+    "imf"
+  ],
+  "BP_BMP2M_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_BMP2M_Desert_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_BMP2_AFU_C": [
+    "afu"
+  ],
+  "BP_BMP2_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_BMP2_Desert_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_BMP2_GFI_C": [
+    "gfi"
+  ],
+  "BP_BMP2_IMF_C": [
+    "imf"
+  ],
+  "BP_BMP3M_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_BMP3M_Desert_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_BRDM-2L1_AFU_C": [
+    "afu"
+  ],
+  "BP_BRDM-2_GFI_C": [
+    "gfi"
+  ],
+  "BP_BRDM-2_GFI_Spandrel_C": [
+    "gfi"
+  ],
+  "BP_BRDM-2_Insurgents_C": [
+    "mei"
+  ],
+  "BP_BRDM-2_MIL_C": [
+    "imf"
+  ],
+  "BP_BRDM-2_RUS_C": [
+    "vdv",
+    "rgf"
+  ],
+  "BP_BRDM-2_RUS_Desert_C": [
+    "vdv",
+    "rgf"
+  ],
+  "BP_BRDM-2_Spandrel_RUS_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_BRDM-2_Spandrel_RUS_Desert_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_BTR-D_AGS17_C": [
+    "vdv"
+  ],
+  "BP_BTR-D_AGS17_Desert_C": [
+    "vdv"
+  ],
+  "BP_BTR-D_Kord_C": [
+    "vdv"
+  ],
+  "BP_BTR-D_Kord_Desert_C": [
+    "vdv"
+  ],
+  "BP_BTR-D_PKM_C": [
+    "vdv"
+  ],
+  "BP_BTR-D_PKM_Desert_C": [
+    "vdv"
+  ],
+  "BP_BTR-D_Transport_C": [
+    "vdv"
+  ],
+  "BP_BTR-D_Transport_Desert_C": [
+    "vdv"
+  ],
+  "BP_BTR-DG_Logistics_C": [
+    "vdv"
+  ],
+  "BP_BTR-DG_Logistics_Desert_C": [
+    "vdv"
+  ],
+  "BP_BTR-ZD_C": [
+    "vdv"
+  ],
+  "BP_BTR-ZD_Desert_C": [
+    "vdv"
+  ],
+  "BP_BTR4_AFU_C": [
+    "afu"
+  ],
+  "BP_BTR80_Militia_C": [
+    "mil",
+    "imf"
+  ],
+  "BP_BTR80_RUS_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_BTR80_RUS_Desert_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_BTR82A_RUS_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_BTR82A_RUS_Desert_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_BTRMDM_PKT_RWS_C": [
+    "vdv"
+  ],
+  "BP_BTRMDM_PKT_RWS_Desert_C": [
+    "vdv"
+  ],
+  "BP_Brit_Util_Truck_C": [
+    "baf"
+  ],
+  "BP_Brit_Util_Truck_Logi_C": [
+    "baf"
+  ],
+  "BP_Brit_Util_Truck_Logi_Woodland_C": [
+    "baf"
+  ],
+  "BP_Brit_Util_Truck_Woodland_C": [
+    "baf"
+  ],
+  "BP_CAF_Util_Desert_C": [
+    "caf"
+  ],
+  "BP_CAF_Util_Desert_Logi_C": [
+    "caf"
+  ],
+  "BP_CAF_Util_Woodland_C": [
+    "caf"
+  ],
+  "BP_CAF_Util_Woodland_Logi_C": [
+    "caf"
+  ],
+  "BP_CH146_C": [
+    "caf"
+  ],
+  "BP_CH146_CAS_C": [
+    "caf"
+  ],
+  "BP_CH146_Desert_C": [
+    "caf"
+  ],
+  "BP_CH146_Desert_CAS_C": [
+    "caf"
+  ],
+  "BP_CH146_Raven_C": [
+    "caf"
+  ],
+  "BP_CH178_C": [
+    "caf"
+  ],
+  "BP_CPV_M134_Blue_C": [
+    "wpmc"
+  ],
+  "BP_CPV_M134_C": [
+    "wpmc"
+  ],
+  "BP_CPV_M134_Red_C": [
+    "wpmc"
+  ],
+  "BP_CPV_Transport_Blue_C": [
+    "wpmc"
+  ],
+  "BP_CPV_Transport_C": [
+    "wpmc"
+  ],
+  "BP_CPV_Transport_CRF_C": [
+    "crf"
+  ],
+  "BP_CPV_Transport_Red_C": [
+    "wpmc"
+  ],
+  "BP_CSK131_HJ-8ATGM_C": [
+    "pla",
+    "plaagf"
+  ],
+  "BP_CSK131_HJ-8ATGM_Naval_C": [
+    "planmc"
+  ],
+  "BP_CSK131_HJ8ATGM_Desert_C": [
+    "pla",
+    "plaagf"
+  ],
+  "BP_CSK131_QJY88_C": [
+    "pla",
+    "plaagf",
+    "planmc"
+  ],
+  "BP_CSK131_QJY88_Desert_C": [
+    "pla",
+    "plaagf",
+    "planmc"
+  ],
+  "BP_CSK131_QJY88_Naval_C": [
+    "pla",
+    "plaagf",
+    "planmc"
+  ],
+  "BP_CSK131_QJZ89_C": [
+    "pla",
+    "plaagf"
+  ],
+  "BP_CSK131_QJZ89_Desert_C": [
+    "pla",
+    "plaagf"
+  ],
+  "BP_CSK131_QJZ89_Naval_C": [
+    "planmc"
+  ],
+  "BP_CSK131_QLZ87_C": [
+    "pla"
+  ],
+  "BP_CSK131_QLZ87_Desert_C": [
+    "pla"
+  ],
+  "BP_CSK131_RWS_C": [
+    "planmc",
+    "pla"
+  ],
+  "BP_CSK131_RWS_Desert_C": [
+    "planmc",
+    "pla"
+  ],
+  "BP_CSK131_RWS_Naval_C": [
+    "planmc",
+    "pla"
+  ],
+  "BP_CTM131_C": [
+    "plaagf",
+    "pla"
+  ],
+  "BP_CTM131_Desert_C": [
+    "plaagf",
+    "pla"
+  ],
+  "BP_CTM131_Logistic_C": [
+    "plaagf",
+    "pla"
+  ],
+  "BP_CTM131_Logistic_Desert_C": [
+    "plaagf",
+    "pla"
+  ],
+  "BP_CTM131_Logistic_Naval_C": [
+    "planmc"
+  ],
+  "BP_CTM131_Naval_C": [
+    "planmc"
+  ],
+  "BP_CTM131_QJZ89_C": [
+    "plaagf",
+    "pla"
+  ],
+  "BP_CTM131_QJZ89_Desert_C": [
+    "plaagf",
+    "pla"
+  ],
+  "BP_CTM131_QJZ89_Naval_C": [
+    "planmc"
+  ],
+  "BP_Cobra2_M2_C": [
+    "tlf"
+  ],
+  "BP_Cobra2_M2_Desert_C": [
+    "tlf"
+  ],
+  "BP_Cobra2_MG3_C": [
+    "tlf"
+  ],
+  "BP_Cobra2_MG3_Desert_C": [
+    "tlf"
+  ],
+  "BP_Cobra2_RWS_M2_C": [
+    "tlf"
+  ],
+  "BP_Cobra2_RWS_M2_Desert_C": [
+    "tlf"
+  ],
+  "BP_Cobra2_RWS_MG3_C": [
+    "tlf"
+  ],
+  "BP_Cobra2_RWS_MG3_Desert_C": [
+    "tlf"
+  ],
+  "BP_FV107_C": [
+    "baf"
+  ],
+  "BP_FV107_Woodland_C": [
+    "baf"
+  ],
+  "BP_FV4034_C": [
+    "baf"
+  ],
+  "BP_FV4034_Woodland_C": [
+    "baf"
+  ],
+  "BP_FV432_C": [
+    "baf"
+  ],
+  "BP_FV432_L37A2_RWS_C": [
+    "baf"
+  ],
+  "BP_FV432_L37A2_RWS_Woodland_C": [
+    "baf"
+  ],
+  "BP_FV432_M2_RWS_C": [
+    "baf"
+  ],
+  "BP_FV432_M2_RWS_Woodland_C": [
+    "baf"
+  ],
+  "BP_FV432_woodland_C": [
+    "baf"
+  ],
+  "BP_FV510UA_C": [
+    "baf"
+  ],
+  "BP_FV510UA_Woodland_C": [
+    "baf"
+  ],
+  "BP_FV510_C": [
+    "baf"
+  ],
+  "BP_FV510_Woodland_C": [
+    "baf"
+  ],
+  "BP_Kamaz_5350_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_Kamaz_5350_Desert_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_Kamaz_5350_Logi_C": [
+    "vdv",
+    "rgf"
+  ],
+  "BP_Kamaz_5350_Logi_Desert_C": [
+    "vdv",
+    "rgf"
+  ],
+  "BP_Kozak_2M1_AGS_C": [
+    "afu"
+  ],
+  "BP_Kozak_2M1_Kord_C": [
+    "afu"
+  ],
+  "BP_Kraz_6322_BM21Grad_C": [
+    "afu"
+  ],
+  "BP_Kraz_6322_C": [
+    "afu"
+  ],
+  "BP_Kraz_6322_Logi_C": [
+    "afu"
+  ],
+  "BP_LAV25_C": [
+    "usmc"
+  ],
+  "BP_LAV25_Woodland_C": [
+    "usmc"
+  ],
+  "BP_LAV2_Coyote_C": [
+    "caf"
+  ],
+  "BP_LAV2_Coyote_CRF_C": [
+    "crf"
+  ],
+  "BP_LAV2_Coyote_Woodland_C": [
+    "caf"
+  ],
+  "BP_LAV6_Desert_C": [
+    "caf"
+  ],
+  "BP_LAV6_Woodland_C": [
+    "caf"
+  ],
+  "BP_LAV_RWS_C6_C": [
+    "caf"
+  ],
+  "BP_LAV_RWS_C6_Desert_C": [
+    "caf"
+  ],
+  "BP_LAV_RWS_M2_C": [
+    "caf"
+  ],
+  "BP_LAV_RWS_M2_Desert_C": [
+    "caf"
+  ],
+  "BP_LPPV_C": [
+    "baf"
+  ],
+  "BP_LPPV_M2RWS_C": [
+    "baf"
+  ],
+  "BP_LPPV_M2RWS_Woodland_C": [
+    "baf"
+  ],
+  "BP_LPPV_Woodland_C": [
+    "baf"
+  ],
+  "BP_LUVW_C": [
+    "caf"
+  ],
+  "BP_LUVW_C6_C": [
+    "caf"
+  ],
+  "BP_LUVW_C6_Desert_C": [
+    "caf"
+  ],
+  "BP_LUVW_CRF_C": [
+    "crf"
+  ],
+  "BP_LUVW_Desert_C": [
+    "caf"
+  ],
+  "BP_LUVW_Logi_C": [
+    "caf"
+  ],
+  "BP_LUVW_Logi_Desert_C": [
+    "caf"
+  ],
+  "BP_LUVW_M2_C": [
+    "caf"
+  ],
+  "BP_LUVW_M2_Desert_C": [
+    "caf"
+  ],
+  "BP_Loach_C": [
+    "baf"
+  ],
+  "BP_Loach_CAS_C": [
+    "baf"
+  ],
+  "BP_Loach_CAS_Large_C": [
+    "baf"
+  ],
+  "BP_Loach_CAS_Small_C": [
+    "baf"
+  ],
+  "BP_LynxATV_C": [
+    "pla",
+    "planmc",
+    "plaagf"
+  ],
+  "BP_LynxATV_Logistic_C": [
+    "pla",
+    "planmc",
+    "plaagf"
+  ],
+  "BP_LynxATV_Rollcage_QJZ89_C": [
+    "pla",
+    "planmc",
+    "plaagf"
+  ],
+  "BP_LynxATV_Rollcage_QLZ87_C": [
+    "pla",
+    "planmc",
+    "plaagf"
+  ],
+  "BP_M-Gator_Logistics_ARID_C": [
+    "caf"
+  ],
+  "BP_M-Gator_Logistics_C": [
+    "caf"
+  ],
+  "BP_M-Gator_Transport_ARID_C": [
+    "caf"
+  ],
+  "BP_M-Gator_Transport_C": [
+    "caf"
+  ],
+  "BP_M1064A3_M121_C": [
+    "usa"
+  ],
+  "BP_M1064A3_M121_Desert_C": [
+    "usa"
+  ],
+  "BP_M1064_M121_TLF_C": [
+    "tlf"
+  ],
+  "BP_M1064_M121_TLF_Desert_C": [
+    "tlf"
+  ],
+  "BP_M1117_C": [
+    "wpmc"
+  ],
+  "BP_M1126_C": [
+    "usa"
+  ],
+  "BP_M1126_M240_C": [
+    "usa"
+  ],
+  "BP_M1126_M240_Woodland_C": [
+    "usa"
+  ],
+  "BP_M1126_Woodland_C": [
+    "usa"
+  ],
+  "BP_M1128_C": [
+    "usa"
+  ],
+  "BP_M1128_Woodland_C": [
+    "usa"
+  ],
+  "BP_M113A2T_Logistics_TLF_C": [
+    "tlf"
+  ],
+  "BP_M113A2T_Logistics_TLF_Desert_C": [
+    "tlf"
+  ],
+  "BP_M113A2T_MK19_TLF_C": [
+    "tlf"
+  ],
+  "BP_M113A2T_MK19_TLF_Desert_C": [
+    "tlf"
+  ],
+  "BP_M113A2T_M2_TLF_C": [
+    "tlf"
+  ],
+  "BP_M113A2T_M2_TLF_Desert_C": [
+    "tlf"
+  ],
+  "BP_M113A3_CAF_C6_C": [
+    "caf"
+  ],
+  "BP_M113A3_CAF_C6_Desert_C": [
+    "caf"
+  ],
+  "BP_M113A3_CAF_M2_C": [
+    "caf"
+  ],
+  "BP_M113A3_CAF_M2_Desert_C": [
+    "caf"
+  ],
+  "BP_M113A3_CAF_TLAV_C": [
+    "caf"
+  ],
+  "BP_M113A3_CAF_TLAV_Desert_C": [
+    "caf"
+  ],
+  "BP_M113A3_Logistics_C": [
+    "usa",
+    "caf",
+    "tlf"
+  ],
+  "BP_M113A3_Logistics_Desert_C": [
+    "usa",
+    "caf",
+    "tlf"
+  ],
+  "BP_M113A3_MK19_C": [
+    "usa"
+  ],
+  "BP_M113A3_MK19_Desert_C": [
+    "usa"
+  ],
+  "BP_M113A3_MK19_Desert_Cage_C": [
+    "usa"
+  ],
+  "BP_M113A3_MSV_WPMC_C": [
+    "wpmc"
+  ],
+  "BP_M113A3_M2_C": [
+    "usa"
+  ],
+  "BP_M113A3_M2_CRF_C": [
+    "crf"
+  ],
+  "BP_M113A3_M2_Desert_C": [
+    "usa"
+  ],
+  "BP_M113A3_M2_Desert_Cage_C": [
+    "usa"
+  ],
+  "BP_M113A3_WPMC_M2_C": [
+    "wpmc"
+  ],
+  "BP_M1151_C": [
+    "usa",
+    "usmc"
+  ],
+  "BP_M1151_CROWS_C": [
+    "usa",
+    "usmc"
+  ],
+  "BP_M1151_CROWS_Woodland_C": [
+    "usa",
+    "usmc"
+  ],
+  "BP_M1151_GFI_C": [
+    "gfi"
+  ],
+  "BP_M1151_Light_C": [
+    "usa",
+    "usmc"
+  ],
+  "BP_M1151_Light_M240_C": [
+    "usa",
+    "usmc"
+  ],
+  "BP_M1151_Light_M240_Woodland_C": [
+    "usa",
+    "usmc"
+  ],
+  "BP_M1151_Light_Mk19_C": [
+    "usa",
+    "usmc"
+  ],
+  "BP_M1151_Light_Mk19_Woodland_C": [
+    "usa",
+    "usmc"
+  ],
+  "BP_M1151_Light_TOW_C": [
+    "usa",
+    "usmc",
+    "adf",
+    "caf",
+    "baf"
+  ],
+  "BP_M1151_Light_TOW_Woodland_C": [
+    "usa",
+    "usmc",
+    "adf",
+    "caf",
+    "baf"
+  ],
+  "BP_M1151_Light_TOW_Woodland_CRF_C": [
+    "crf"
+  ],
+  "BP_M1151_Light_Woodland_C": [
+    "usa",
+    "usmc"
+  ],
+  "BP_M1151_Light_Woodland_CRF_C": [
+    "crf"
+  ],
+  "BP_M1151_M240_C": [
+    "usa",
+    "usmc"
+  ],
+  "BP_M1151_M240_WPMC_C": [
+    "wpmc"
+  ],
+  "BP_M1151_M240_Woodland_C": [
+    "usa",
+    "usmc"
+  ],
+  "BP_M1151_Mk19_C": [
+    "usa",
+    "usmc"
+  ],
+  "BP_M1151_Mk19_Woodland_C": [
+    "usa",
+    "usmc"
+  ],
+  "BP_M1151_TOW_GFI_C": [
+    "gfi"
+  ],
+  "BP_M1151_TOW_WPMC_C": [
+    "wpmc"
+  ],
+  "BP_M1151_Technical_AGS17_C": [
+    "mei"
+  ],
+  "BP_M1151_Technical_C": [
+    "mei"
+  ],
+  "BP_M1151_WPMC_C": [
+    "wpmc"
+  ],
+  "BP_M1151_Woodland_C": [
+    "usa",
+    "usmc"
+  ],
+  "BP_M1A1_USMC_C": [
+    "usmc"
+  ],
+  "BP_M1A1_USMC_Woodland_C": [
+    "usmc"
+  ],
+  "BP_M1A2_C": [
+    "usa"
+  ],
+  "BP_M1A2_Woodland_C": [
+    "usa"
+  ],
+  "BP_M60T_C": [
+    "tlf"
+  ],
+  "BP_M60T_Desert_C": [
+    "tlf"
+  ],
+  "BP_M60T_WPMC_C": [
+    "wpmc"
+  ],
+  "BP_M7A3_IFV_C": [
+    "usa"
+  ],
+  "BP_M7A3_IFV_Woodland_C": [
+    "usa"
+  ],
+  "BP_MATV_C": [
+    "usa"
+  ],
+  "BP_MATV_CROWS_C": [
+    "usa"
+  ],
+  "BP_MATV_CROWS_M240_C": [
+    "usa"
+  ],
+  "BP_MATV_CROWS_M240_Woodland_C": [
+    "usa"
+  ],
+  "BP_MATV_CROWS_Woodland_C": [
+    "usa"
+  ],
+  "BP_MATV_M240_C": [
+    "usa"
+  ],
+  "BP_MATV_M240_Woodland_C": [
+    "usa"
+  ],
+  "BP_MATV_Mk19_C": [
+    "usa"
+  ],
+  "BP_MATV_Mk19_USMC_C": [
+    "usmc"
+  ],
+  "BP_MATV_Mk19_USMC_Woodland_C": [
+    "usmc"
+  ],
+  "BP_MATV_Mk19_Woodland_C": [
+    "usa"
+  ],
+  "BP_MATV_TOW_C": [
+    "usa"
+  ],
+  "BP_MATV_TOW_Woodland_C": [
+    "usa"
+  ],
+  "BP_MATV_USMC_C": [
+    "usmc"
+  ],
+  "BP_MATV_USMC_CROWS_C": [
+    "usmc",
+    "usa"
+  ],
+  "BP_MATV_USMC_CROWS_Woodland_C": [
+    "usmc",
+    "usa"
+  ],
+  "BP_MATV_USMC_TOW_C": [
+    "usmc"
+  ],
+  "BP_MATV_USMC_TOW_Woodland_C": [
+    "usmc"
+  ],
+  "BP_MATV_USMC_Woodland_C": [
+    "usmc"
+  ],
+  "BP_MATV_Woodland_C": [
+    "usa"
+  ],
+  "BP_MI8_AFU_C": [
+    "afu"
+  ],
+  "BP_MI8_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_MI8_VDV_C": [
+    "vdv"
+  ],
+  "BP_MRH90_Mag58_C": [
+    "adf"
+  ],
+  "BP_MTLBM_6MA_GFI_C": [
+    "gfi"
+  ],
+  "BP_MTLBM_6MA_RUS_C": [
+    "rgf"
+  ],
+  "BP_MTLBM_6MA_RUS_Desert_C": [
+    "rgf"
+  ],
+  "BP_MTLBM_6MB_MIL_C": [
+    "imf"
+  ],
+  "BP_MTLBM_6MB_RUS_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_MTLBM_6MB_RUS_Desert_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_MTLB_AFU_C": [
+    "afu"
+  ],
+  "BP_MTLB_INS_C": [
+    "mei"
+  ],
+  "BP_MTLB_LOGI_AFU_C": [
+    "afu"
+  ],
+  "BP_MTLB_LOGI_GFI_C": [
+    "gfi"
+  ],
+  "BP_MTLB_LOGI_IMF_C": [
+    "imf"
+  ],
+  "BP_MTLB_LOGI_INS_C": [
+    "mei"
+  ],
+  "BP_MTLB_LOGI_RUS_C": [
+    "rgf"
+  ],
+  "BP_MTLB_LOGI_RUS_Desert_C": [
+    "rgf"
+  ],
+  "BP_MTLB_RGF_C": [
+    "rgf"
+  ],
+  "BP_MTLB_RGF_Desert_C": [
+    "rgf"
+  ],
+  "BP_MTLB_VMK_GFI_C": [
+    "gfi"
+  ],
+  "BP_MTLB_VMK_MIL_C": [
+    "imf"
+  ],
+  "BP_MTLB_VMK_RUS_C": [
+    "rgf"
+  ],
+  "BP_MTLB_VMK_RUS_Desert_C": [
+    "rgf"
+  ],
+  "BP_MTLB_ZU23_AFU_C": [
+    "afu"
+  ],
+  "BP_MTLB_ZU23_INS_C": [
+    "mei"
+  ],
+  "BP_MTLB_ZU23_MIL_C": [
+    "imf"
+  ],
+  "BP_Minsk_black_C": [
+    "ins",
+    "imf",
+    "mei"
+  ],
+  "BP_Minsk_blue_C": [
+    "ins",
+    "imf",
+    "mei"
+  ],
+  "BP_Minsk_green_C": [
+    "ins",
+    "imf",
+    "mei"
+  ],
+  "BP_PARS3_C": [
+    "tlf"
+  ],
+  "BP_PARS3_Desert_C": [
+    "tlf"
+  ],
+  "BP_PARS3_M2_C": [
+    "tlf"
+  ],
+  "BP_PARS3_M2_Desert_C": [
+    "tlf"
+  ],
+  "BP_PARS3_MG3_C": [
+    "tlf"
+  ],
+  "BP_PARS3_MG3_Desert_C": [
+    "tlf"
+  ],
+  "BP_PARS3_MK19_C": [
+    "tlf"
+  ],
+  "BP_PARS3_MK19_Desert_C": [
+    "tlf"
+  ],
+  "BP_PMV_Mag58_C": [
+    "adf"
+  ],
+  "BP_PMV_Mag58x3_C": [
+    "adf"
+  ],
+  "BP_PMV_RWS_C": [
+    "adf"
+  ],
+  "BP_Quadbike_Desert_C": [
+    "wpmc",
+    "usmc",
+    "usa",
+    "crf",
+    "afu"
+  ],
+  "BP_Quadbike_Woodland_C": [
+    "wpmc",
+    "usmc",
+    "usa",
+    "crf",
+    "afu"
+  ],
+  "BP_RHIB_AGS17_C": [
+    "vdv",
+    "afu",
+    "rgf"
+  ],
+  "BP_RHIB_DSHK_C": [
+    "afu",
+    "mei",
+    "imf"
+  ],
+  "BP_RHIB_GFI_MG3_C": [
+    "tlf",
+    "gfi"
+  ],
+  "BP_RHIB_Logistics_C": [
+    "usa",
+    "usmc",
+    "gb",
+    "baf",
+    "caf",
+    "aus",
+    "adf",
+    "rus",
+    "rgf",
+    "vdv",
+    "mea",
+    "mei",
+    "ins",
+    "mil",
+    "imf",
+    "pla",
+    "planmc",
+    "plaagf",
+    "tlf",
+    "gfi",
+    "afu",
+    "wpmc",
+    "crf"
+  ],
+  "BP_RHIB_PKM_C": [
+    "afu",
+    "mei",
+    "imf"
+  ],
+  "BP_RHIB_QJY88_C": [
+    "pla",
+    "planmc",
+    "plaagf"
+  ],
+  "BP_RHIB_QJZ89_C": [
+    "pla",
+    "planmc",
+    "plaagf"
+  ],
+  "BP_RHIB_RUS_NSV_C": [
+    "vdv",
+    "rgf",
+    "gfi"
+  ],
+  "BP_RHIB_RUS_PKP_C": [
+    "vdv",
+    "rgf"
+  ],
+  "BP_RHIB_US_M134_C": [
+    "wpmc"
+  ],
+  "BP_RHIB_US_M2_C": [
+    "wpmc",
+    "usmc",
+    "usa",
+    "tlf",
+    "crf",
+    "adf",
+    "caf",
+    "baf"
+  ],
+  "BP_RHIB_US_M240_C": [
+    "usmc",
+    "usa",
+    "crf",
+    "adf",
+    "caf",
+    "baf"
+  ],
+  "BP_RHIB_US_Mk19_C": [
+    "wpmc",
+    "usmc"
+  ],
+  "BP_SA330_C": [
+    "baf"
+  ],
+  "BP_Safir_AGS-17_C": [
+    "gfi"
+  ],
+  "BP_Safir_C": [
+    "gfi"
+  ],
+  "BP_Safir_Kord_C": [
+    "gfi"
+  ],
+  "BP_Safir_Kornet_C": [
+    "gfi"
+  ],
+  "BP_Safir_MG3_C": [
+    "gfi"
+  ],
+  "BP_Sprut_C": [
+    "vdv"
+  ],
+  "BP_Sprut_Desert_C": [
+    "vdv"
+  ],
+  "BP_T62_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_T62_GFI_C": [
+    "gfi"
+  ],
+  "BP_T62_MIL_C": [
+    "mil",
+    "imf"
+  ],
+  "BP_T64BM2_Cage_C": [
+    "afu"
+  ],
+  "BP_T72A_IMF_C": [
+    "imf"
+  ],
+  "BP_T72B3_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_T72B3_Desert_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_T72S_GFI_C": [
+    "gfi"
+  ],
+  "BP_T90A_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_T90A_Desert_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_TAPV_C16_C": [
+    "caf"
+  ],
+  "BP_TAPV_C16_Desert_C": [
+    "caf"
+  ],
+  "BP_TLF_Util_Truck_C": [
+    "tlf"
+  ],
+  "BP_TLF_Util_Truck_Desert_C": [
+    "tlf"
+  ],
+  "BP_TLF_Util_Truck_Logi_C": [
+    "tlf"
+  ],
+  "BP_TLF_Util_Truck_Logi_Desert_C": [
+    "tlf"
+  ],
+  "BP_Technical2Seater_AFU_Kornet_C": [
+    "afu",
+    "imf"
+  ],
+  "BP_Technical2Seater_Camo_AGS17_C": [
+    "ins",
+    "mil",
+    "imf"
+  ],
+  "BP_Technical2Seater_Camo_DSHK_C": [
+    "ins",
+    "mil",
+    "imf"
+  ],
+  "BP_Technical2Seater_Camo_Kornet_C": [
+    "afu",
+    "imf"
+  ],
+  "BP_Technical2Seater_Camo_M2_C": [
+    "ins",
+    "mil",
+    "imf"
+  ],
+  "BP_Technical2Seater_Camo_M2_CRF_C": [
+    "crf"
+  ],
+  "BP_Technical2Seater_Camo_SPG9_C": [
+    "imf"
+  ],
+  "BP_Technical2Seater_Camo_UB32_C": [
+    "imf"
+  ],
+  "BP_Technical2Seater_M134_Black_C": [
+    "wpmc"
+  ],
+  "BP_Technical2Seater_M134_Grey_C": [
+    "wpmc"
+  ],
+  "BP_Technical2Seater_M134_Tan_C": [
+    "wpmc"
+  ],
+  "BP_Technical2Seater_M2_Black_C": [
+    "wpmc"
+  ],
+  "BP_Technical2Seater_M2_Grey_C": [
+    "wpmc"
+  ],
+  "BP_Technical2Seater_M2_Tan_C": [
+    "wpmc"
+  ],
+  "BP_Technical2Seater_Mortar_Black_C": [
+    "wpmc"
+  ],
+  "BP_Technical2Seater_Mortar_Grey_C": [
+    "wpmc"
+  ],
+  "BP_Technical2Seater_Mortar_Tan_C": [
+    "wpmc"
+  ],
+  "BP_Technical2Seater_White_AGS17_C": [
+    "mei"
+  ],
+  "BP_Technical2Seater_White_BMP1_C": [
+    "mei"
+  ],
+  "BP_Technical2Seater_White_Dshk_C": [
+    "ins",
+    "mil",
+    "imf"
+  ],
+  "BP_Technical2Seater_White_Kornet_C": [
+    "mei"
+  ],
+  "BP_Technical2Seater_White_M2_C": [
+    "ins",
+    "mil",
+    "imf"
+  ],
+  "BP_Technical2Seater_White_SPG9_C": [
+    "mei"
+  ],
+  "BP_Technical2Seater_White_ZU23_C": [
+    "mei"
+  ],
+  "BP_Technical4Seater_Logi_Black_C": [
+    "wpmc"
+  ],
+  "BP_Technical4Seater_Logi_Camo_C": [
+    "imf"
+  ],
+  "BP_Technical4Seater_Logi_Camo_CRF_C": [
+    "crf"
+  ],
+  "BP_Technical4Seater_Logi_C": [
+    "mei"
+  ],
+  "BP_Technical4Seater_Logi_Grey_C": [
+    "ins",
+    "mil",
+    "imf"
+  ],
+  "BP_Technical4Seater_Logi_Tan_C": [
+    "wpmc"
+  ],
+  "BP_Technical4Seater_M134_Black_C": [
+    "wpmc"
+  ],
+  "BP_Technical4Seater_M134_Grey_C": [
+    "wpmc"
+  ],
+  "BP_Technical4Seater_M134_Tan_C": [
+    "wpmc"
+  ],
+  "BP_Technical4Seater_Transport_Black_C": [
+    "ins",
+    "mil",
+    "imf"
+  ],
+  "BP_Technical4Seater_Transport_C": [
+    "ins",
+    "mil",
+    "imf"
+  ],
+  "BP_Technical4Seater_Transport_CRF_C": [
+    "crf"
+  ],
+  "BP_Technical4Seater_Transport_Camo_C": [
+    "ins",
+    "mil",
+    "imf"
+  ],
+  "BP_Technical4Seater_Transport_Grey_C": [
+    "ins",
+    "mil",
+    "imf"
+  ],
+  "BP_Technical4Seater_Transport_Tan_C": [
+    "ins",
+    "mil",
+    "imf"
+  ],
+  "BP_Technical_Dshk_INS_Armoured_C": [
+    "mei"
+  ],
+  "BP_Technical_SPG9_INS_Armoured_C": [
+    "mei"
+  ],
+  "BP_Tigr_AGS17_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_Tigr_AGS17_Desert_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_Tigr_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_Tigr_Desert_C": [
+    "rgf",
+    "vdv"
+  ],
+  "BP_Tigr_MIL_C": [
+    "imf"
+  ],
+  "BP_Tigr_RWS_C": [
+    "rgf"
+  ],
+  "BP_Tigr_RWS_Desert_C": [
+    "rgf"
+  ],
+  "BP_UH1H_GFI_C": [
+    "gfi"
+  ],
+  "BP_UH1Y_C": [
+    "usmc"
+  ],
+  "BP_UH60_AUS_C": [
+    "adf"
+  ],
+  "BP_UH60_C": [
+    "usa"
+  ],
+  "BP_UH60_TLF_PKM_C": [
+    "tlf"
+  ],
+  "BP_US_Util_Desert_C": [
+    "usa"
+  ],
+  "BP_US_Util_Desert_Logi_C": [
+    "usa"
+  ],
+  "BP_US_Util_USMC_Desert_C": [
+    "usmc"
+  ],
+  "BP_US_Util_USMC_Desert_Logi_C": [
+    "usmc"
+  ],
+  "BP_US_Util_USMC_Woodland_C": [
+    "usmc"
+  ],
+  "BP_US_Util_USMC_Woodland_Logi_C": [
+    "usmc"
+  ],
+  "BP_US_Util_Woodland_C": [
+    "usa"
+  ],
+  "BP_US_Util_Woodland_Logi_C": [
+    "usa"
+  ],
+  "BP_US_Util_Woodland_Logi_CRF_C": [
+    "crf"
+  ],
+  "BP_Ural_375_INS_C": [
+    "ins",
+    "mei"
+  ],
+  "BP_Ural_375_Logi_INS_C": [
+    "mei"
+  ],
+  "BP_Ural_375_Logi_MIL_C": [
+    "imf"
+  ],
+  "BP_Ural_375_MIL_C": [
+    "mil",
+    "imf"
+  ],
+  "BP_Ural_375_ZU23_C": [
+    "mei"
+  ],
+  "BP_Ural_375_ZU23_MIL_C": [
+    "imf"
+  ],
+  "BP_Ural_4320_GFI_C": [
+    "gfi"
+  ],
+  "BP_Ural_4320_logi_GFI_C": [
+    "gfi"
+  ],
+  "BP_WPMC_Util_Black_C": [
+    "wpmc"
+  ],
+  "BP_WPMC_Util_Black_Logi_C": [
+    "wpmc"
+  ],
+  "BP_WZ551A_C": [
+    "pla",
+    "planmc",
+    "plaagf"
+  ],
+  "BP_WZ551A_Desert_C": [
+    "pla",
+    "planmc",
+    "plaagf"
+  ],
+  "BP_WZ551B_C": [
+    "pla",
+    "planmc",
+    "plaagf"
+  ],
+  "BP_WZ551B_Desert_C": [
+    "pla",
+    "planmc",
+    "plaagf"
+  ],
+  "BP_WZ551B_QLZ-87_C": [
+    "pla",
+    "planmc",
+    "plaagf"
+  ],
+  "BP_WZ551B_QLZ-87_Desert_C": [
+    "pla",
+    "planmc",
+    "plaagf"
+  ],
+  "BP_Z8G_C": [
+    "pla",
+    "planmc",
+    "plaagf"
+  ],
+  "BP_Z8J_C": [
+    "pla",
+    "planmc",
+    "plaagf"
+  ],
+  "BP_Z9A_C": [
+    "pla",
+    "planmc",
+    "plaagf"
+  ],
+  "BP_ZBD04A_C": [
+    "pla",
+    "plaagf"
+  ],
+  "BP_ZBD04A_Desert_C": [
+    "pla",
+    "plaagf"
+  ],
+  "BP_ZBD05_HJ73C_C": [
+    "planmc"
+  ],
+  "BP_ZBD05_HJ73C_Woodland_C": [
+    "planmc"
+  ],
+  "BP_ZBL08_HJ73C_C": [
+    "pla",
+    "plaagf"
+  ],
+  "BP_ZBL08_HJ73C_Desert_C": [
+    "pla",
+    "plaagf"
+  ],
+  "BP_ZBL08_HJ73C_Naval_C": [
+    "planmc"
+  ],
+  "BP_ZSD05_Logi_C": [
+    "planmc"
+  ],
+  "BP_ZSD05_Logi_Woodland_C": [
+    "plaagf"
+  ],
+  "BP_ZSD05_QJZ-89_C": [
+    "planmc"
+  ],
+  "BP_ZSD05_QJZ-89_Woodland_C": [
+    "plaagf"
+  ],
+  "BP_ZSD89II_C": [
+    "pla",
+    "plaagf"
+  ],
+  "BP_ZSD89II_Desert_C": [
+    "pla",
+    "plaagf"
+  ],
+  "BP_ZSD89_C": [
+    "pla",
+    "plaagf"
+  ],
+  "BP_ZSD89_Desert_C": [
+    "pla",
+    "plaagf"
+  ],
+  "BP_ZSD89_QLZ-87_C": [
+    "pla",
+    "plaagf"
+  ],
+  "BP_ZSD89_QLZ-87_Desert_C": [
+    "pla",
+    "plaagf"
+  ],
+  "BP_ZSL10_QJZ-89_C": [
+    "pla",
+    "plaagf"
+  ],
+  "BP_ZSL10_QJZ-89_Desert_C": [
+    "pla",
+    "plaagf"
+  ],
+  "BP_ZSL10_QJZ-89_Naval_C": [
+    "planmc"
+  ],
+  "BP_ZSL10_QLZ-87_C": [
+    "pla",
+    "plaagf"
+  ],
+  "BP_ZTD05_C": [
+    "planmc"
+  ],
+  "BP_ZTD05_WoodLand_C": [
+    "planmc"
+  ],
+  "BP_ZTZ99_Desert_wCage_C": [
+    "pla",
+    "plaagf"
+  ],
+  "BP_ZTZ99_wCage_C": [
+    "pla",
+    "plaagf"
+  ],
+  "BP_minsk_C": [
+    "ins",
+    "imf",
+    "mei"
+  ]
+}

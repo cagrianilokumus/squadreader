@@ -1,0 +1,4 @@
+node_modules
+# dist is committed (prebuilt SPA so the tool runs without a Node toolchain)
+*.tsbuildinfo
+.DS_Store
