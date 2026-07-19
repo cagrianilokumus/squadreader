@@ -134,6 +134,8 @@
   color: var(--ink); text-decoration: none;
 }
 :root[data-site="1"] #player-stats .ps-brand span { color: var(--ink-faint); font-weight: 400; }
+:root[data-site="1"] #player-stats .ps-brand { display: inline-flex; align-items: center; }
+:root[data-site="1"] #player-stats .ps-logo { height: 36px; width: auto; display: block; }
 :root[data-site="1"] #player-stats h2 {
   font-size: 1.05rem; font-weight: 600; letter-spacing: -0.02em; color: var(--ink);
 }
@@ -146,6 +148,21 @@
 }
 :root[data-site="1"] #player-stats .ps-back:hover,
 :root[data-site="1"] #player-stats .ps-back-home:hover { color: var(--accent-2); }
+
+/* site nav links in the /stats header — identical to the homepage nav-links */
+:root[data-site="1"] #player-stats .ps-sitenav { display: flex; align-items: center; gap: 22px; margin-left: 8px; }
+:root[data-site="1"] #player-stats .ps-sitenav a { color: var(--ink-mute); font-size: .86rem; font-weight: 500; text-decoration: none; }
+:root[data-site="1"] #player-stats .ps-sitenav a:hover,
+:root[data-site="1"] #player-stats .ps-sitenav a.act { color: var(--ink); }
+/* the "Apply on Discord" CTA (mirrors .btn.primary.sm) */
+:root[data-site="1"] #player-stats .ps-apply {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; text-decoration: none;
+  font-family: inherit; font-weight: 500; font-size: .85rem; letter-spacing: -.01em;
+  border-radius: var(--radius-chip); padding: 7px 15px;
+  background: var(--accent); color: #fff; border: 1px solid transparent; transition: .2s ease;
+}
+:root[data-site="1"] #player-stats .ps-apply:hover { background: var(--accent-2); color: #fff; }
+@media (max-width: 900px) { :root[data-site="1"] #player-stats .ps-sitenav { display: none; } }
 :root[data-site="1"] #player-stats .pill.beta-pill {
   background: var(--surface-2); color: var(--ink-faint);
   border: 1px solid var(--border); border-radius: var(--radius-chip);

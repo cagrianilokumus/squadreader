@@ -19,6 +19,7 @@ const VehiclePanel = lazy(() =>
   import("./ui/VehiclePanel").then((m) => ({ default: m.VehiclePanel })));
 import { KillFeed } from "./ui/KillFeed";
 import { Scoreboard } from "./ui/Scoreboard";
+import { TicketTimeline } from "./ui/TicketTimeline";
 import { TimelineBar } from "./ui/TimelineBar";
 import { RecordingPicker } from "./ui/RecordingPicker";
 import { PlayerStats } from "./ui/PlayerStats";
@@ -78,6 +79,8 @@ export default function App() {
   const setSelectedInfo = useViewerStore((s) => s.setSelectedInfo);
   const toggleScoreboard     = useViewerStore((s) => s.toggleScoreboard);
   const setScoreboardVisible = useViewerStore((s) => s.setScoreboardVisible);
+  const toggleTimeline       = useViewerStore((s) => s.toggleTimeline);
+  const setTimelineVisible   = useViewerStore((s) => s.setTimelineVisible);
 
   const onHover = useCallback((hit: Hit | null, x: number, y: number) => {
     setTooltip({ hit, x, y });
@@ -122,9 +125,14 @@ export default function App() {
         setSelectedPlayerKey(null);
         setSelectedInfo(null);
         setScoreboardVisible(false);
+        setTimelineVisible(false);
       } else if (e.key === "Tab") {
         e.preventDefault();
         toggleScoreboard();
+      } else if (e.key === "g" || e.key === "G") {
+        // Ticket-loss timeline (replay only).
+        const s = useViewerStore.getState();
+        if (s.mode === "replay" && s.replay.frames.length) toggleTimeline();
       } else if (e.key === " " || e.code === "Space") {
         // Space toggles play/pause in replay mode; ignored in live.
         const s = useViewerStore.getState();
@@ -143,7 +151,7 @@ export default function App() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [setSelectedVehicleId, setSelectedPlayerKey, setSelectedInfo,
-      setScoreboardVisible, toggleScoreboard]);
+      setScoreboardVisible, toggleScoreboard, toggleTimeline, setTimelineVisible]);
 
   // squadreader.com /stats: the rich stats view IS the page (a site-themed
   // full-page render), not the agent's command-panel landing. Everywhere else
@@ -181,6 +189,7 @@ export default function App() {
           The stats <dialog> is skipped on /stats, where <PlayerStats inline/>
           above already renders the same view as the page (one id per document). */}
       <Scoreboard />
+      <TicketTimeline />
       <RecordingPicker />
       {!statsRoute && <PlayerStats />}
     </div>

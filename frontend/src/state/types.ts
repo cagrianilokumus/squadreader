@@ -195,6 +195,12 @@ export interface Deployable {
   owningFobAddr: string | null;
   position: Vec3 | null;
   yaw: number | null;
+  // Who placed this deployable (mine / FOB radio / HAB / emplacement). Captured
+  // at placement time and cached agent-side — the memory link goes stale once
+  // the placer despawns, so this is null for anything placed before the reader
+  // first saw it with a live placer.
+  placer?: string | null;
+  placerEosId?: string | null;
   // FOB-only fields (present when isFob === true). Read from
   // BP_BaseFobCreator_C overlay on the same actor address.
   ammo?: number | null;
@@ -492,6 +498,11 @@ export interface RecordingMeta {
   layerName: string | null;
   matchId: string | null;
   peakPlayers: number | null;
+  team1Tickets?: number | null;
+  team2Tickets?: number | null;
+  team1Faction?: string | null;
+  team2Faction?: string | null;
+  winnerTeam?: number | null;
   recordingState?: "active" | "finalized" | "unverified";
   inProgress: boolean;
 }
@@ -631,6 +642,7 @@ export interface MatchSummaryRow {
   team1_tickets: number | null; team2_tickets: number | null;
   peak_players: number | null;
   players: number;
+  has_replay?: number | null;
 }
 export interface MatchDetailPlayer {
   eos_id: string; name: string | null; clan_tag: string | null;
@@ -652,6 +664,7 @@ export interface MatchDetail {
   team1_faction: string | null; team2_faction: string | null;
   team1_tickets: number | null; team2_tickets: number | null;
   peak_players: number | null;
+  has_replay?: number | null;
   players: MatchDetailPlayer[];
 }
 

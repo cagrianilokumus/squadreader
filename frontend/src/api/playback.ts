@@ -83,6 +83,16 @@ export function useReplayPlayback() {
                       && replayClock.ms >= fa && replayClock.ms < fb)
           ? replayClock.ms : fa;
         s.setReplay((rr) => ({ ...rr, baseWallMs, baseSnapMs }));
+        // A seek WHILE PLAYING lands here with a changed currentIdx but the
+        // rebase tick itself won't advance idx (targetSnap == fa), so the
+        // advance branch below never runs. Push the seeked frame and sync the
+        // idx mirror right here: otherwise curSnap (TeamBar tickets, etc.) stays
+        // on the old frame AND the next tick keeps seeing a stale lastIdxRef,
+        // re-rebasing every frame — which froze playback until a manual
+        // pause/play. (Harmless on a normal play/speed rebase: currentIdx is
+        // unchanged, so this just re-ingests the frame already showing.)
+        s.ingestLive(r.frames[r.currentIdx]!);
+        lastIdxRef.current = r.currentIdx;
       }
       const wallElapsed = (now - baseWallMs) * r.speed;
       const targetSnap = baseSnapMs + wallElapsed;

@@ -108,6 +108,9 @@ function DeployableBody({ e, worldTimeSec }: {
     <>
       <Row label="TEAM">{e.team ?? "—"}{e.isFob ? " · FOB" : ""}</Row>
       <Bar label="HP" cur={e.health} max={e.maxHealth} />
+      <Row label="PLACED BY">
+        {e.placer ? <b>{e.placer}</b> : <span className="info-mute">—</span>}
+      </Row>
       {e.isFob && <>
         <Bar label="AMMO" cur={e.ammo} max={e.maxAmmo} color="var(--accent)" />
         <Bar label="BUILD" cur={e.construction} max={e.maxConstruction} color="var(--accent-2)" />

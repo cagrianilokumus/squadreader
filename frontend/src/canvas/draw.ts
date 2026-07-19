@@ -2,7 +2,7 @@
 // and emits pixels. No React, no store access. The map texture and
 // icon helpers do their own caching; everything else is per-frame.
 
-import type { CapGeometry, Deployable, Snapshot, ViewState } from "../state/types";
+import type { CapGeometry, Deployable, Player, Snapshot, Vehicle, ViewState } from "../state/types";
 import {
   drawIcon, drawIconCentered, deployableIconUrl, icon, iconBbox, mapTexture,
   markerIconUrl, roleIconUrl, tintedIcon, colorizedIcon, vehicleIconUrl,
@@ -868,8 +868,66 @@ function drawVehicleBadge(ctx: CanvasRenderingContext2D,
   }
 }
 
+// A squad leader — the role FName carries the `_SL_` token (crewman / pilot
+// SL variants included). Mirrors the SL match in icons.ts:roleIconUrl.
+function isSquadLeader(p: { roleId: string | null }): boolean {
+  const rid = (p.roleId ?? "").toLowerCase();
+  return rid.includes("_sl_") || rid.endsWith("_sl");
+}
+
+// Small rounded pill showing a number, centred horizontally at `cx` with its
+// TOP edge at `topY`. Dark fill + team-coloured border + white text — the same
+// visual treatment as the rally-point squad label so the map reads uniformly.
+function drawNumberBadge(ctx: CanvasRenderingContext2D, cx: number, topY: number,
+                         text: string, borderCol: string, fontSize: number,
+                         cs: CanvasSize) {
+  ctx.font = `bold ${fontSize}px system-ui, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const m = ctx.measureText(text);
+  const padX = 5 * cs.dpr;
+  const padY = 2 * cs.dpr;
+  const w = Math.max(m.width + padX * 2, fontSize + padX * 2);
+  const h = fontSize + padY * 2;
+  const lx = cx - w / 2;
+  const ly = topY;
+  const rad = 3 * cs.dpr;
+  ctx.beginPath();
+  ctx.moveTo(lx + rad, ly);
+  ctx.lineTo(lx + w - rad, ly);
+  ctx.arcTo(lx + w, ly, lx + w, ly + rad, rad);
+  ctx.lineTo(lx + w, ly + h - rad);
+  ctx.arcTo(lx + w, ly + h, lx + w - rad, ly + h, rad);
+  ctx.lineTo(lx + rad, ly + h);
+  ctx.arcTo(lx, ly + h, lx, ly + h - rad, rad);
+  ctx.lineTo(lx, ly + rad);
+  ctx.arcTo(lx, ly, lx + rad, ly, rad);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(15,18,22,0.88)";
+  ctx.fill();
+  ctx.lineWidth = 1 * cs.dpr;
+  ctx.strokeStyle = borderCol;
+  ctx.stroke();
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(text, cx, ly + h / 2 + 0.5 * cs.dpr);
+}
+
+// A vehicle carries no squad of its own, so its "number" is derived from the
+// crew: the driver's squad (seat idx 0), falling back to the lowest-index
+// crewed seat. Returns null for an empty vehicle or an unsquadded crew.
+function vehicleSquadNumber(v: Vehicle,
+                           eosSquad: Map<string, number>): number | null {
+  const seats = [...(v.seats ?? [])].sort((a, b) => a.idx - b.idx);
+  for (const seat of seats) {
+    const eos = seat.occupantEosId;
+    if (eos && eosSquad.has(eos)) return eosSquad.get(eos)!;
+  }
+  return null;
+}
+
 function drawVehicles(ctx: CanvasRenderingContext2D, snap: Snapshot,
-                      view: ViewState, cs: CanvasSize) {
+                      view: ViewState, cs: CanvasSize,
+                      showAllNumbers: boolean) {
   for (const v of snap.vehicles ?? []) {
     if (!v.position) continue;
     const [x, y] = worldToScreen(view, cs, v.position.x, v.position.y);
@@ -935,6 +993,24 @@ function drawVehicles(ctx: CanvasRenderingContext2D, snap: Snapshot,
     ctx.strokeStyle = v.attached ? "#fff" : "#0e1116";
     ctx.stroke();
     ctx.restore();
+  }
+
+  // Second pass — driver-squad number labels on top of every badge (Squad #s
+  // layer only). Drawn after the badge loop so a later vehicle never overdraws
+  // an earlier one's number.
+  if (showAllNumbers) {
+    const eosSquad = new Map<string, number>();
+    for (const p of snap.players ?? [])
+      if (p.eosId && p.squadId != null) eosSquad.set(p.eosId, p.squadId);
+    for (const v of snap.vehicles ?? []) {
+      if (!v.position) continue;
+      const sq = vehicleSquadNumber(v, eosSquad);
+      if (sq == null) continue;
+      const [x, y] = worldToScreen(view, cs, v.position.x, v.position.y);
+      const size = (v.kind === "Heli" ? 40 : 34) * cs.dpr;
+      drawNumberBadge(ctx, x, y + size * 0.5 + 2 * cs.dpr,
+                      String(sq), teamColor(v.team), size * 0.38, cs);
+    }
   }
 }
 
@@ -1248,9 +1324,47 @@ function isAdminCam(s: { classShort: string | null }): boolean {
   return (s.classShort ?? "").includes("DeveloperAdminCam");
 }
 
+// Identity key for the followed player — must match MapCanvas.pKey /
+// PlayerPanel.playerKey exactly (eosId, else pid:<id>, else name:<name>).
+function pKey(p: { eosId: string | null; playerId: number | null; name: string | null }): string {
+  return p.eosId ?? (p.playerId != null ? `pid:${p.playerId}` : `name:${p.name ?? "?"}`);
+}
+
+// The followed player's squad, resolved per frame. When set, drawPlayers spot-
+// lights that squad — an amber ring on members, a brighter glowing ring on the
+// followed player — and fades every non-member pin back.
+export interface FollowHighlight {
+  key: string;              // pKey of the followed player
+  teamId: number | null;
+  squadId: number;
+}
+
+// Ring around a player pin, just outside the team disc — the follow-squad
+// highlight. `glow` adds a soft halo (used for the followed player).
+function drawSquadRing(ctx: CanvasRenderingContext2D, cx: number, cy: number,
+                       size: number, color: string, lineWidth: number,
+                       glow: boolean) {
+  ctx.save();
+  if (glow) { ctx.shadowColor = color; ctx.shadowBlur = size * 0.28; }
+  ctx.beginPath();
+  ctx.arc(cx, cy, size * 0.55, 0, 2 * Math.PI);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawPlayers(ctx: CanvasRenderingContext2D, snap: Snapshot,
-                     view: ViewState, cs: CanvasSize) {
-  for (const p of snap.players ?? []) {
+                     view: ViewState, cs: CanvasSize,
+                     showSLNumbers: boolean, showAllNumbers: boolean,
+                     follow: FollowHighlight | null) {
+  const players = snap.players ?? [];
+  // Members of the followed squad (the followed player counts as one).
+  const inFollowSquad = (p: Player) =>
+    !!follow && p.teamId === follow.teamId && p.squadId === follow.squadId;
+
+  // Pass 1 — the pins themselves.
+  for (const p of players) {
     const s = p.soldier;
     if (!s?.position || s.stale) continue;
     const admin = isAdminCam(s);
@@ -1266,16 +1380,48 @@ function drawPlayers(ctx: CanvasRenderingContext2D, snap: Snapshot,
     const ready = !!(roleImg && roleImg.complete && roleImg.naturalWidth > 0);
     const col = admin ? ADMIN_CAM_COLOR : teamColor(p.teamId);
     const downed = isDowned(s);
-    if (downed) {
-      // Dimmed pin + revive marker — the body stays visible for medics.
-      ctx.save();
-      ctx.globalAlpha = 0.4;
-      drawPlayerPin(ctx, x, y, s.yaw, size, col, ready ? roleImg : null);
-      ctx.restore();
-      drawDownedMarker(ctx, x, y, size, col);
-    } else {
-      drawPlayerPin(ctx, x, y, s.yaw, size, col, ready ? roleImg : null);
+    const squad = inFollowSquad(p);
+    // Follow spotlight: while a squad is followed, non-members fade back so the
+    // tracked squad reads at a glance.
+    const dim = !!follow && !squad;
+
+    ctx.save();
+    if (dim) ctx.globalAlpha = 0.3;
+    else if (downed) ctx.globalAlpha = 0.4;   // revivable body stays visible
+    drawPlayerPin(ctx, x, y, s.yaw, size, col, ready ? roleImg : null);
+    ctx.restore();
+    if (downed) drawDownedMarker(ctx, x, y, size, col);
+
+    // Squad-highlight rings, at full opacity (squad members are never dimmed).
+    if (squad) {
+      if (pKey(p) === follow!.key)
+        drawSquadRing(ctx, x, y, size, "#ffffff", 2.6 * cs.dpr, true);
+      else
+        drawSquadRing(ctx, x, y, size, "#ffcc33", 2 * cs.dpr, false);
     }
+  }
+
+  // Pass 2 — squad-number labels on top of every pin. A squad leader shows its
+  // number when SL-numbers are on; everyone else only when the all-numbers
+  // option is on (which also covers SLs). Second pass so a neighbouring pin
+  // never buries a number.
+  for (const p of players) {
+    const s = p.soldier;
+    if (!s?.position || s.stale) continue;
+    if (s.attached && !isAdminCam(s)) continue;
+    if (p.squadId == null) continue;             // unsquadded / admin cam
+    const sl = isSquadLeader(p);
+    if (!((sl && showSLNumbers) || showAllNumbers)) continue;
+    const [x, y] = worldToScreen(view, cs, s.position.x, s.position.y);
+    const size = 28 * cs.dpr;
+    // SL numbers a touch larger so leaders read at a glance in a cluster.
+    const fontSize = size * (sl ? 0.46 : 0.4);
+    // Keep numbers consistent with the pin spotlight: fade non-squad labels.
+    ctx.save();
+    if (follow && !inFollowSquad(p)) ctx.globalAlpha = 0.3;
+    drawNumberBadge(ctx, x, y + size * 0.5 + 2 * cs.dpr,
+                    String(p.squadId), teamColor(p.teamId), fontSize, cs);
+    ctx.restore();
   }
 }
 
@@ -1355,12 +1501,19 @@ export interface LayerVisibility {
   projectiles?: boolean;
   spawners?: boolean;
   rallies?: boolean;
+  slNumbers?: boolean;
+  squadNumbers?: boolean;
 }
 
 export function renderScene(ctx: CanvasRenderingContext2D, snap: Snapshot,
                             view: ViewState, cs: CanvasSize,
-                            layers?: LayerVisibility) {
+                            layers?: LayerVisibility,
+                            follow?: FollowHighlight | null) {
   const on = (k: keyof LayerVisibility) => !layers || layers[k] !== false;
+  // SL numbers default ON (absent = show, like the entity layers); the
+  // all-numbers option defaults OFF (opt-in declutter, absent = hide).
+  const showSLNumbers = layers?.slNumbers !== false;
+  const showAllNumbers = layers?.squadNumbers === true;
   ctx.clearRect(0, 0, cs.width, cs.height);
   const hadTex = drawMapTexture(ctx, snap, view, cs);
   // Background overlays first — FOB radii are giant translucent discs
@@ -1375,9 +1528,9 @@ export function renderScene(ctx: CanvasRenderingContext2D, snap: Snapshot,
   if (on("spawners")) drawSpawners(ctx, snap, view, cs);
   if (on("deployables")) drawDeployables(ctx, snap, view, cs);
   drawCaps(ctx, snap, view, cs);
-  if (on("vehicles")) drawVehicles(ctx, snap, view, cs);
+  if (on("vehicles")) drawVehicles(ctx, snap, view, cs, showAllNumbers);
   if (on("markers")) drawMarkers(ctx, snap, view, cs);
   if (on("rallies")) drawRallyPoints(ctx, snap, view, cs);
-  if (on("players")) drawPlayers(ctx, snap, view, cs);
+  if (on("players")) drawPlayers(ctx, snap, view, cs, showSLNumbers, showAllNumbers, follow ?? null);
   if (on("projectiles")) drawProjectiles(ctx, snap, view, cs);
 }

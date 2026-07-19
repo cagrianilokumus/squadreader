@@ -48,6 +48,12 @@ function modeHue(mode: string | null): string {
   if (!mode) return "#8b98ab";
   return MODE_HUE[mode.toUpperCase().replace(/[^A-Z]/g, "")] ?? "#8b98ab";
 }
+// Faction setup ids look like "USA_LO_CombinedArms" / "RGF_LO_Armored" — the
+// team's faction is the first token. Show that short code instead of "Team 1/2".
+function facAbbr(f: string | null | undefined): string | null {
+  const s = (f ?? "").split("_")[0].trim();
+  return s || null;
+}
 
 export function RecordingPicker() {
   const dlgRef = useRef<HTMLDialogElement | null>(null);
@@ -165,7 +171,9 @@ export function RecordingPicker() {
             <thead>
               <tr>
                 <th>Match</th>
+                <th>Teams</th>
                 <th>Mode</th>
+                <th>Tickets</th>
                 <th className="rp-num">Duration</th>
                 <th className="rp-num">Players</th>
                 <th className="rp-num">Size</th>
@@ -187,11 +195,33 @@ export function RecordingPicker() {
                         {date}{time && <span className="rp-time"> · {time}</span>}
                       </span>
                     </td>
+                    <td className="rp-teams">
+                      {(r.team1Faction || r.team2Faction)
+                        ? <span className="rp-vs">
+                            <span className={"rp-fac" + (r.winnerTeam === 1 ? " rp-fac-win" : "")}>
+                              {facAbbr(r.team1Faction) ?? "?"}</span>
+                            <span className="rp-vs-x">vs</span>
+                            <span className={"rp-fac" + (r.winnerTeam === 2 ? " rp-fac-win" : "")}>
+                              {facAbbr(r.team2Faction) ?? "?"}</span>
+                          </span>
+                        : <span className="rp-dash">—</span>}
+                    </td>
                     <td>
                       {r.gameMode
                         ? <span className="rp-mode"
                                 style={{ ["--hue" as string]: hue }}>
                             {r.gameMode}
+                          </span>
+                        : <span className="rp-dash">—</span>}
+                    </td>
+                    <td className="rp-tickets">
+                      {(r.team1Tickets != null || r.team2Tickets != null)
+                        ? <span className="rp-scoreline">
+                            <span className={"rp-tix" + (r.winnerTeam === 1 ? " rp-tix-win" : "")}>
+                              {r.team1Tickets ?? "–"}</span>
+                            <span className="rp-tix-sep">–</span>
+                            <span className={"rp-tix" + (r.winnerTeam === 2 ? " rp-tix-win" : "")}>
+                              {r.team2Tickets ?? "–"}</span>
                           </span>
                         : <span className="rp-dash">—</span>}
                     </td>

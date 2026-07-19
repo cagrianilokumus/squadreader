@@ -31,10 +31,13 @@ export const RENDER_DELAY_MS = 6_000;
 // full survivable stall, with generous margin.
 const SNAP_BUFFER_CAP = 16;
 
-// Toggleable map layers (show/hide entity families for decluttering).
+// Toggleable map layers (show/hide entity families for decluttering) plus the
+// number-label options. Both are stored in the same `layers` map and driven by
+// the settings menu; NUMBER_ORDER / LAYER_ORDER just group them for display.
 export type LayerKey =
   | "players" | "vehicles" | "deployables" | "markers"
-  | "projectiles" | "spawners" | "rallies";
+  | "projectiles" | "spawners" | "rallies"
+  | "slNumbers" | "squadNumbers";
 
 // Generic click-selection for every map entity that gets the shared InfoPanel
 // (everything EXCEPT player/vehicle, which keep their dedicated panels + follow).
@@ -43,10 +46,14 @@ export type InfoKind =
   | "rally" | "capzone" | "projectile";
 export interface SelectedInfo { kind: InfoKind; id: string; }
 
+// Entity-family layers (icons on the map).
 export const LAYER_ORDER: LayerKey[] = [
   "players", "vehicles", "deployables", "markers",
   "projectiles", "spawners", "rallies",
 ];
+
+// Number-label options — shown as their own group in the settings menu.
+export const NUMBER_ORDER: LayerKey[] = ["slNumbers", "squadNumbers"];
 
 export const LAYER_LABELS: Record<LayerKey, string> = {
   players: "Players",
@@ -56,12 +63,40 @@ export const LAYER_LABELS: Record<LayerKey, string> = {
   projectiles: "Projectiles",
   spawners: "Spawn Points",
   rallies: "Rallies",
+  slNumbers: "Squad leader numbers",
+  squadNumbers: "All player & vehicle numbers",
 };
 
 const DEFAULT_LAYERS: Record<LayerKey, boolean> = {
   players: true, vehicles: true, deployables: true, markers: true,
   projectiles: true, spawners: false, rallies: true,
+  slNumbers: true, squadNumbers: false,
 };
+
+const LAYERS_LS_KEY = "sqr.mapLayers";
+
+// Persist the settings-menu choices across reloads. Absent/unknown keys fall
+// back to DEFAULT_LAYERS, so a newly added option shows at its intended default
+// even for returning users. Wrapped in try/catch — a disabled or quota'd
+// localStorage must never break the viewer.
+function loadLayers(): Record<LayerKey, boolean> {
+  try {
+    const raw = localStorage.getItem(LAYERS_LS_KEY);
+    if (!raw) return { ...DEFAULT_LAYERS };
+    const saved = JSON.parse(raw) as Partial<Record<LayerKey, boolean>>;
+    const merged = { ...DEFAULT_LAYERS };
+    for (const k of Object.keys(merged) as LayerKey[])
+      if (typeof saved[k] === "boolean") merged[k] = saved[k] as boolean;
+    return merged;
+  } catch {
+    return { ...DEFAULT_LAYERS };
+  }
+}
+
+function saveLayers(layers: Record<LayerKey, boolean>): void {
+  try { localStorage.setItem(LAYERS_LS_KEY, JSON.stringify(layers)); }
+  catch { /* ignore quota / disabled storage */ }
+}
 
 interface ReplaySlice {
   id: string | null;
@@ -133,6 +168,9 @@ interface Store {
   // When set, the map camera keeps this player (same key scheme)
   // centred each frame. Cleared by any manual pan/zoom or on deselect.
   followKey: string | null;
+  // When set, the camera keeps this vehicle (by id) centred each frame.
+  // Mutually exclusive with followKey; cleared the same way.
+  followVehicleId: string | null;
 
   // Generic selection for the non-player/non-vehicle entities (marker, FOB/
   // deployable, spawner, rally, capture zone, projectile) — drives the shared
@@ -151,6 +189,8 @@ interface Store {
   // stores the user-collapsed squad ids per team (default expanded).
   scoreboardVisible: boolean;
   scoreboardClosedSquads: { 1: number[]; 2: number[] };
+  // Ticket-timeline overlay (replay-only) — the match-long ticket-loss analysis.
+  timelineVisible: boolean;
 
   // Map layer visibility — which entity families the canvas draws.
   layers: Record<LayerKey, boolean>;
@@ -170,12 +210,15 @@ interface Store {
   setSelectedPlayerKey(key: string | null): void;
   setSelectedInfo(info: SelectedInfo | null): void;
   setFollowKey(key: string | null): void;
+  setFollowVehicleId(id: string | null): void;
   pushKillFeed(entries: KillFeedEntry[]): void;
   clearKillFeed(): void;
   toggleKillFeed(): void;
   toggleScoreboard(): void;
   setScoreboardVisible(v: boolean): void;
   toggleScoreboardSquad(team: 1 | 2, sqId: number): void;
+  toggleTimeline(): void;
+  setTimelineVisible(v: boolean): void;
   toggleLayer(key: LayerKey): void;
   resetView(): void;
 }
@@ -212,11 +255,13 @@ export const useViewerStore = create<Store>((set) => ({
   selectedPlayerKey: null,
   selectedInfo: null,
   followKey: null,
+  followVehicleId: null,
   killFeed: [],
   killFeedVisible: true,
   scoreboardVisible: false,
+  timelineVisible: false,
   scoreboardClosedSquads: { 1: [], 2: [] },
-  layers: { ...DEFAULT_LAYERS },
+  layers: loadLayers(),
 
   setMode(m) {
     // Everything that remembers state ACROSS ticks has to be dropped here, or the
@@ -309,8 +354,10 @@ export const useViewerStore = create<Store>((set) => ({
     set({ recordingsError: e });
   },
   setSelectedVehicleId(id) {
-    // Opening the vehicle panel closes any info panel.
+    // Opening the vehicle panel closes any info panel; closing it stops any
+    // follow on that vehicle.
     set((s) => ({ selectedVehicleId: id,
+                  followVehicleId: id == null ? null : s.followVehicleId,
                   selectedInfo: id == null ? s.selectedInfo : null }));
   },
   setSelectedPlayerKey(key) {
@@ -325,10 +372,15 @@ export const useViewerStore = create<Store>((set) => ({
     set((s) => ({ selectedInfo: info,
                   selectedVehicleId: info == null ? s.selectedVehicleId : null,
                   selectedPlayerKey: info == null ? s.selectedPlayerKey : null,
-                  followKey: info == null ? s.followKey : null }));
+                  followKey: info == null ? s.followKey : null,
+                  followVehicleId: info == null ? s.followVehicleId : null }));
   },
   setFollowKey(key) {
-    set({ followKey: key });
+    // Following a player cancels any vehicle-follow (one camera target).
+    set((s) => ({ followKey: key, followVehicleId: key ? null : s.followVehicleId }));
+  },
+  setFollowVehicleId(id) {
+    set((s) => ({ followVehicleId: id, followKey: id ? null : s.followKey }));
   },
   pushKillFeed(entries) {
     if (!entries.length) return;
@@ -351,6 +403,12 @@ export const useViewerStore = create<Store>((set) => ({
   setScoreboardVisible(v) {
     set({ scoreboardVisible: v });
   },
+  toggleTimeline() {
+    set((s) => ({ timelineVisible: !s.timelineVisible }));
+  },
+  setTimelineVisible(v) {
+    set({ timelineVisible: v });
+  },
   toggleScoreboardSquad(team, sqId) {
     set((s) => {
       const list = s.scoreboardClosedSquads[team];
@@ -363,7 +421,11 @@ export const useViewerStore = create<Store>((set) => ({
     });
   },
   toggleLayer(key) {
-    set((s) => ({ layers: { ...s.layers, [key]: !s.layers[key] } }));
+    set((s) => {
+      const layers = { ...s.layers, [key]: !s.layers[key] };
+      saveLayers(layers);
+      return { layers };
+    });
   },
   resetView() {
     set((s) => ({

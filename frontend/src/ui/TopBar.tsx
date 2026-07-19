@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { useViewerStore } from "../state/viewerStore";
 import { ClipRecorder } from "./ClipRecorder";
+import { SettingsMenu } from "./SettingsMenu";
 
 export function TopBar() {
   const status = useViewerStore((s) => s.status);
@@ -15,6 +16,8 @@ export function TopBar() {
   const toggleScoreboard = useViewerStore((s) => s.toggleScoreboard);
   const mode = useViewerStore((s) => s.mode);
   const replayId = useViewerStore((s) => s.replay.id);
+  const timelineVisible = useViewerStore((s) => s.timelineVisible);
+  const toggleTimeline = useViewerStore((s) => s.toggleTimeline);
 
   // Rate + latency are derived display state, recomputed cheaply on each
   // store tick (player viewer is desktop, no need for memoization).
@@ -113,7 +116,13 @@ export function TopBar() {
         <button onClick={() => resetView()} title="reset view (F)">Fit</button>
         <button onClick={() => toggleScoreboard()}
                 title="scoreboard (Tab)">score</button>
+        {mode === "replay" && (
+          <button className={timelineVisible ? "on" : ""}
+                  onClick={() => toggleTimeline()}
+                  title="ticket-loss timeline (G)">Tickets</button>
+        )}
         <ClipRecorder />
+        <SettingsMenu />
       </div>
     </>
   );

@@ -128,6 +128,8 @@ export function VehiclePanel() {
   const id = useViewerStore((s) => s.selectedVehicleId);
   const snap = useViewerStore((s) => s.curSnap);
   const close = useViewerStore((s) => s.setSelectedVehicleId);
+  const followVehicleId = useViewerStore((s) => s.followVehicleId);
+  const setFollowVehicle = useViewerStore((s) => s.setFollowVehicleId);
 
   if (!id) return null;
   const v = snap?.vehicles?.find((x) => x.id === id) ?? null;
@@ -199,7 +201,14 @@ export function VehiclePanel() {
           <span className="dot" style={{ background: teamColor(v.team) }} />
           {vehicleDisplayName(v.classShort)}
         </h2>
-        <button onClick={() => close(null)} title="close (esc)">✕</button>
+        <div className="vp-head-actions">
+          <button className={"vp-follow" + (followVehicleId === v.id ? " on" : "")}
+                  onClick={() => setFollowVehicle(followVehicleId === v.id ? null : v.id)}
+                  title="follow this vehicle">
+            {followVehicleId === v.id ? "FOLLOW ✓" : "FOLLOW"}
+          </button>
+          <button onClick={() => close(null)} title="close (esc)">✕</button>
+        </div>
       </header>
       <div className="body">
         {(() => {

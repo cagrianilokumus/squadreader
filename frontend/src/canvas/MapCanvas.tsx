@@ -4,7 +4,7 @@
 // store; tooltip state is passed in (App owns it for layout reasons).
 
 import { useEffect, useRef, type CSSProperties } from "react";
-import { renderScene } from "./draw";
+import { renderScene, type FollowHighlight } from "./draw";
 import { lerpSnap } from "./interpolation";
 import { autoFit, refitAspect, screenToWorld, viewWindow } from "./worldToScreen";
 import { hitTest, type Hit } from "./hitTest";
@@ -28,10 +28,12 @@ function pKey(p: { eosId: string | null; playerId: number | null; name: string |
 // centre of the view. Zoom stays whatever the user set. Returns the view
 // unchanged when not following or the player has no position.
 function followView(view: ViewState, followKey: string | null,
+                    followVehicleId: string | null,
                     snap: Snapshot | null): ViewState {
-  if (!followKey || !snap) return view;
-  const p = (snap.players ?? []).find((pl) => pKey(pl) === followKey);
-  const pos = p?.soldier?.position;
+  if (!snap || (!followKey && !followVehicleId)) return view;
+  const pos = followKey
+    ? (snap.players ?? []).find((pl) => pKey(pl) === followKey)?.soldier?.position
+    : (snap.vehicles ?? []).find((v) => v.id === followVehicleId)?.position;
   if (!pos) return view;
   const cx0 = (view.minX + view.maxX) / 2;
   const cy0 = (view.minY + view.maxY) / 2;
@@ -198,8 +200,18 @@ export function MapCanvas({ onHover, onLeave, onClick }: Props) {
         const shown = display ?? cur;
         // FOLLOW camera: centre on the tracked player in the SHOWN frame so
         // camera + icon agree. No store write — computed per frame.
-        const rview = followView(s.view, s.followKey, shown);
-        renderScene(ctx, shown, rview, cs, s.layers);
+        const rview = followView(s.view, s.followKey, s.followVehicleId, shown);
+        // Follow spotlight: when following a player, highlight their whole
+        // squad. Resolved from the shown frame so it tracks live as the squad
+        // moves / reshuffles. No highlight when following a vehicle or a
+        // squadless player.
+        let followHl: FollowHighlight | null = null;
+        if (s.followKey) {
+          const fp = (shown.players ?? []).find((pl) => pKey(pl) === s.followKey);
+          if (fp && fp.squadId != null)
+            followHl = { key: s.followKey, teamId: fp.teamId, squadId: fp.squadId };
+        }
+        renderScene(ctx, shown, rview, cs, s.layers, followHl);
         displayRef.current = { snap: shown, view: rview };
       } else {
         ctx.clearRect(0, 0, cs.width, cs.height);
@@ -221,11 +233,11 @@ export function MapCanvas({ onHover, onLeave, onClick }: Props) {
       // Manual pan releases FOLLOW — but commit the current follow
       // position into the view first so the drag continues smoothly from
       // where the camera was, not from the stale stored pan.
-      if (st.followKey) {
+      if (st.followKey || st.followVehicleId) {
         // Commit the exact rendered (follow-adjusted) view so the drag
         // continues from where the camera actually was on screen.
         st.setView(() => displayRef.current.view);
-        st.setFollowKey(null);
+        st.setFollowKey(null); st.setFollowVehicleId(null);
       }
       const v = useViewerStore.getState().view;
       dragRef.current = { x0: e.clientX, y0: e.clientY, panX0: v.panX, panY0: v.panY };
@@ -295,7 +307,7 @@ export function MapCanvas({ onHover, onLeave, onClick }: Props) {
       // zoom level and keep the player centred. followView overrides pan every
       // frame, so a cursor-anchored pan here would fight it (and get discarded);
       // we intentionally skip it and leave followKey set.
-      if (st.followKey) {
+      if (st.followKey || st.followVehicleId) {
         setView((vv) => ({ ...vv, zoom: newZoom, userInteracted: true }));
         return;
       }
@@ -342,9 +354,9 @@ export function MapCanvas({ onHover, onLeave, onClick }: Props) {
       if (e.touches.length === 1) {
         // A one-finger drag takes over the camera — release follow, committing
         // the rendered follow view so the pan continues from where it looked.
-        if (st.followKey) {
+        if (st.followKey || st.followVehicleId) {
           st.setView(() => displayRef.current.view);
-          st.setFollowKey(null);
+          st.setFollowKey(null); st.setFollowVehicleId(null);
         }
         const v = useViewerStore.getState().view;
         const p = local(e.touches[0]!);
@@ -374,7 +386,7 @@ export function MapCanvas({ onHover, onLeave, onClick }: Props) {
         const st = useViewerStore.getState();
         const ratio = dist(e.touches[0]!, e.touches[1]!) / Math.max(1, cur.startDist!);
         const newZoom = Math.max(0.2, Math.min(40, cur.startZoom! * ratio));
-        if (st.followKey) {
+        if (st.followKey || st.followVehicleId) {
           setView((vv) => ({ ...vv, zoom: newZoom, userInteracted: true }));
           return;
         }

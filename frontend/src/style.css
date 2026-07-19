@@ -152,10 +152,68 @@ html, body, #root {
   border-color: color-mix(in srgb, var(--accent) 45%, var(--glass-brd));
 }
 #controls .tb-back:hover { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+/* Active toggle (e.g. the open settings gear) — accent-filled so its on-state
+   is unmistakable. */
+#controls button.on,
+#controls button.on:hover {
+  background: var(--accent); color: var(--on-accent); border-color: var(--accent);
+}
+
+/* ----- Settings menu (gear popover in #controls) ----- */
+.settings-wrap { position: relative; display: flex; }
+#controls .settings-btn {
+  display: grid; place-items: center;
+  padding: 4px; width: 28px; height: 26px;
+}
+.settings-menu {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  z-index: 20;
+  min-width: 210px;
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-brd);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md, var(--shadow-sm));
+  padding: 7px;
+  display: flex; flex-direction: column; gap: 1px;
+  cursor: default;
+}
+.settings-menu .settings-group {
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--ink-mute);
+  padding: 8px 8px 4px;
+}
+.settings-menu .settings-group:first-child { padding-top: 3px; }
+.settings-menu .settings-row {
+  display: flex; align-items: center; gap: 9px;
+  padding: 6px 8px; border-radius: var(--radius-chip);
+  font-size: 12px; font-weight: 500; color: var(--ink);
+  cursor: pointer; user-select: none;
+  transition: background 0.1s;
+}
+.settings-menu .settings-row:hover { background: var(--surface-2); }
+.settings-menu .settings-row input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none;
+  width: 15px; height: 15px; flex: none; margin: 0;
+  border: 1px solid var(--glass-brd); border-radius: 4px;
+  background: var(--surface-3); cursor: pointer;
+  display: grid; place-items: center;
+  transition: background 0.1s, border-color 0.1s;
+}
+.settings-menu .settings-row input[type="checkbox"]:checked {
+  background: var(--accent); border-color: var(--accent);
+}
+.settings-menu .settings-row input[type="checkbox"]:checked::after {
+  content: ""; width: 4px; height: 8px;
+  border: solid var(--on-accent); border-width: 0 2px 2px 0;
+  transform: translateY(-1px) rotate(45deg);
+}
 
 /* ----- PlayerSearch (top-left) ----- */
+/* Top-right, under the controls row — the left column is now the detail
+   panels' home, so the search moves opposite them to stay fully visible. */
 .player-search {
-  position: absolute; top: 62px; left: var(--sp-2);
+  position: absolute; top: 62px; right: var(--sp-2);
   z-index: 9; width: 270px;
 }
 .player-search .ps-input {
@@ -271,7 +329,7 @@ html, body, #root {
 #player-panel {
   position: absolute;
   top: 60px;
-  right: 12px;
+  left: 12px;
   width: 360px;
   max-height: calc(100% - 80px);
   overflow-y: auto;
@@ -281,7 +339,9 @@ html, body, #root {
   border-radius: var(--radius);
   font-size: 13px;
   color: var(--ink);
-  z-index: 8;
+  /* Above the player-search box (z-index 9): the panels share the left
+     column with it, so an open panel should sit over the search, not under. */
+  z-index: 10;
   box-shadow: var(--shadow);
 }
 .detail-panel header,
@@ -331,6 +391,26 @@ html, body, #root {
   color: var(--bad);
   border-color: color-mix(in srgb, var(--bad) 45%, transparent);
   background: rgba(255,91,82,0.10);
+}
+#vehicle-panel header .vp-head-actions {
+  display: flex; align-items: center; gap: 8px; flex: none;
+}
+/* Follow pill — override the generic 28px-square header-button rule above. */
+#vehicle-panel header button.vp-follow {
+  width: auto; height: 28px; padding: 0 12px;
+  border-radius: var(--radius-chip);
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em;
+  color: var(--ink-mute);
+}
+#vehicle-panel header button.vp-follow:hover {
+  color: var(--ink); border-color: var(--accent);
+  background: var(--surface-2);
+}
+#vehicle-panel header button.vp-follow.on {
+  background: var(--accent); color: var(--on-accent); border-color: var(--accent);
+}
+#vehicle-panel header button.vp-follow.on:hover {
+  color: var(--on-accent);
 }
 .detail-panel .body,
 #vehicle-panel .body,
@@ -765,19 +845,10 @@ html, body, #root {
   flex-direction: column;
   z-index: 7;
   overflow: hidden;
-  transition: right 0.18s ease;
 }
-/* When a detail panel (player / vehicle / info) is open on the right it used to
-   cover the kill feed (both are pinned right, panel has the higher z-index).
-   Slide the feed left of the panel while one is open. Pure CSS: those panels
-   render as EARLIER siblings of #killfeed inside #stage only while open, so the
-   general-sibling combinator matches exactly then. 384px = the panel's 12px
-   right offset + its 360px width + a 12px gap. */
-#player-panel ~ #killfeed,
-#vehicle-panel ~ #killfeed,
-#info-panel ~ #killfeed {
-  right: 384px;
-}
+/* The kill feed stays pinned bottom-right at all times. The detail panels
+   (player / vehicle / info) now open on the LEFT, so the feed no longer needs
+   to slide out of their way — the two never overlap. */
 #killfeed.kf-collapsed { max-height: 28px; }
 #killfeed > header {
   display: flex; align-items: center; gap: 8px;
@@ -1437,6 +1508,16 @@ html, body, #root {
   white-space: nowrap;
 }
 #recording-picker .rp-dash { color: var(--ink-mute); opacity: 0.6; }
+/* separate Teams + Tickets columns; the winning faction + its tickets are green */
+#recording-picker .rp-teams, #recording-picker .rp-tickets { white-space: nowrap; }
+#recording-picker .rp-vs { display: inline-flex; align-items: baseline; gap: 6px; }
+#recording-picker .rp-vs-x { font-size: 10px; color: var(--ink-mute); opacity: 0.7; }
+#recording-picker .rp-fac { font-size: 12px; font-weight: 600; color: var(--ink-mute); letter-spacing: 0.02em; }
+#recording-picker .rp-fac-win { color: var(--good); font-weight: 700; }
+#recording-picker .rp-scoreline { display: inline-flex; align-items: baseline; gap: 5px; }
+#recording-picker .rp-tix { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 12.5px; color: var(--ink-mute); }
+#recording-picker .rp-tix-win { color: var(--good); }
+#recording-picker .rp-tix-sep { color: var(--ink-mute); opacity: 0.6; }
 
 #recording-picker .rp-num {
   text-align: right; font-variant-numeric: tabular-nums;
@@ -2175,6 +2256,22 @@ html, body, #root {
 #player-stats .ps-row { cursor: pointer; }
 #player-stats .ps-row:hover td { background: var(--accent-weak); }
 #player-stats .ps-pname { font-weight: 600; }
+/* Match-list "Watch" action — only the last-N matches keep a replay; the rest
+   are stats-only ("archive"). */
+#player-stats .ps-watch-cell { text-align: right; white-space: nowrap; }
+#player-stats .ps-watch-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  color: var(--accent); border-radius: var(--radius-chip);
+  padding: 4px 12px; font-size: 11.5px; font-weight: 700; line-height: 1.4;
+  cursor: pointer; text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+#player-stats .ps-watch-btn:hover {
+  background: color-mix(in srgb, var(--accent) 30%, transparent); border-color: var(--accent);
+}
+#player-stats .ps-arch { font-size: 11px; }
 #player-stats .ps-clan { color: var(--ink-mute); font-weight: 600; margin-right: 5px; }
 
 #player-stats .ps-profile { padding: 16px 18px 24px; }
@@ -2428,3 +2525,121 @@ html, body, #root {
 #home .hm-foot { margin-top: 30px; text-align: center; font-size: 12px; color: var(--ink-faint); }
 
 @media (max-width: 720px) { #home .hm-cols { grid-template-columns: 1fr; } }
+
+/* ===== Ticket Timeline overlay (replay-only) ========================= */
+#tt-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex; align-items: flex-start; justify-content: center;
+  z-index: 21; padding: 40px 16px; overflow-y: auto;
+}
+#ticket-timeline {
+  width: min(1180px, 100%);
+  background: var(--glass-2);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-brd);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: flex; flex-direction: column;
+  padding: 16px 18px 18px;
+}
+#ticket-timeline > header {
+  display: flex; align-items: center; gap: 14px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--glass-brd);
+}
+#ticket-timeline .tt-title {
+  font-size: 15px; font-weight: 700; color: var(--accent); letter-spacing: 0.01em;
+}
+#ticket-timeline .tt-legend {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--ink-mute);
+}
+#ticket-timeline .tt-legend i {
+  width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-left: 6px;
+}
+#ticket-timeline .tt-legend b { color: var(--ink); margin-left: 6px; }
+#ticket-timeline .tt-note {
+  margin-left: auto; font-size: 11px; color: var(--ink-faint);
+  text-transform: uppercase; letter-spacing: 0.06em; cursor: help;
+}
+#ticket-timeline .tt-close {
+  background: var(--surface-2); color: var(--ink-mute);
+  border: 1px solid var(--glass-brd); border-radius: var(--radius-sm);
+  width: 26px; height: 26px; font-size: 13px; cursor: pointer; flex: none;
+}
+#ticket-timeline .tt-close:hover { color: var(--bad); border-color: var(--bad); }
+
+#ticket-timeline .tt-graph-wrap { position: relative; width: 100%; margin-top: 12px; }
+#ticket-timeline .tt-graph {
+  display: block; width: 100%;
+  background: var(--surface); border: 1px solid var(--glass-brd);
+  border-radius: var(--radius-sm); cursor: crosshair;
+}
+#ticket-timeline .tt-grid { stroke: var(--glass-brd); stroke-width: 1; }
+#ticket-timeline .tt-ylabel {
+  fill: var(--ink-mute); font-size: 10px; text-anchor: end;
+  font-variant-numeric: tabular-nums;
+}
+#ticket-timeline .tt-xlabel { fill: var(--ink-mute); font-size: 10px; }
+#ticket-timeline .tt-playhead {
+  stroke: var(--accent); stroke-width: 1.5; opacity: 0.85;
+}
+#ticket-timeline .tt-marker {
+  cursor: pointer; stroke: rgba(255,255,255,0.85); stroke-width: 0.8;
+  transition: stroke-width 0.1s;
+}
+#ticket-timeline .tt-marker:hover { stroke-width: 2; }
+
+#ticket-timeline .tt-lower {
+  display: flex; gap: 22px; margin-top: 14px; flex-wrap: wrap;
+}
+#ticket-timeline .tt-breakdown {
+  display: flex; flex-direction: column; gap: 8px; min-width: 320px; flex: 1;
+}
+#ticket-timeline .tt-bk-row { display: flex; align-items: center; gap: 12px; }
+#ticket-timeline .tt-bk-team {
+  display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: 13px;
+  min-width: 90px;
+}
+#ticket-timeline .tt-bk-team i { width: 11px; height: 11px; border-radius: 3px; }
+#ticket-timeline .tt-bk-cells {
+  font-size: 12.5px; color: var(--ink-mute); font-variant-numeric: tabular-nums;
+}
+#ticket-timeline .tt-bk-cells b { color: var(--ink); font-size: 14px; }
+#ticket-timeline .tt-bk-sep { margin: 0 7px; color: var(--ink-faint); }
+
+#ticket-timeline .tt-events {
+  display: flex; flex-direction: column; flex: 1; min-width: 300px;
+}
+#ticket-timeline .tt-events-head {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-mute); margin-bottom: 6px;
+}
+#ticket-timeline .tt-events-list {
+  max-height: 190px; overflow-y: auto; display: flex; flex-direction: column; gap: 1px;
+}
+#ticket-timeline .tt-ev-row {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 5px 8px; border-radius: var(--radius-chip);
+  background: none; border: none; cursor: pointer; text-align: left;
+  color: var(--ink); font-size: 12.5px;
+}
+#ticket-timeline .tt-ev-row:hover { background: var(--surface-2); }
+#ticket-timeline .tt-ev-time {
+  color: var(--ink-mute); font-variant-numeric: tabular-nums; width: 44px; flex: none;
+}
+#ticket-timeline .tt-ev-dot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+#ticket-timeline .tt-ev-label { flex: 1; }
+#ticket-timeline .tt-ev-amt {
+  color: var(--bad); font-weight: 700; font-variant-numeric: tabular-nums;
+}
+#ticket-timeline .tt-empty, #ticket-timeline .tt-empty2 {
+  color: var(--ink-mute); font-size: 12px; padding: 24px 8px; text-align: center;
+}
+.tt-tooltip {
+  position: fixed; z-index: 30; pointer-events: none;
+  background: var(--glass-2); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-brd); border-radius: var(--radius-sm);
+  padding: 5px 9px; font-size: 12px; color: var(--ink);
+  box-shadow: var(--shadow-sm); white-space: nowrap;
+}

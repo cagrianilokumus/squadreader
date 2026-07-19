@@ -241,10 +241,19 @@ export function PlayerStats({ inline = false }: { inline?: boolean } = {}) {
             : matchDetail
             ? <button className="ps-back" onClick={() => setMatchDetail(null)}>← Back</button>
             : inline
-            ? <a className="ps-brand" href="/">squadreader<span>.com</span></a>
+            ? <a className="ps-brand" href="/"><img className="ps-logo" src="/logo.svg" alt="squadreader.com" /></a>
             : <h2>Player Stats</h2>}
           <span className="pill beta-pill"
                 title="System in beta — send feedback to your server admin">BETA</span>
+          {inline && (
+            <nav className="ps-sitenav">
+              <a href="/#feats">Features</a>
+              <a href="/#nasil">How it works</a>
+              <a href="/setup">Setup</a>
+              <a href="/servers">Servers</a>
+              <a href="/stats/" className="act">Stats</a>
+            </nav>
+          )}
         </div>
         <div className="ps-head-actions">
           {inline && servers.length > 0 && (
@@ -264,10 +273,8 @@ export function PlayerStats({ inline = false }: { inline?: boolean } = {}) {
             {q && <button className="ps-search-clear" onClick={() => setQ("")}>✕</button>}
           </label>
           {inline
-            ? <>
-                <a className="ps-back-home" href="/servers">Servers</a>
-                <a className="ps-back-home" href="/">Home →</a>
-              </>
+            ? <a className="ps-apply" href="https://discord.gg/3mQytyAwJd"
+                 target="_blank" rel="noopener">Apply on Discord</a>
             : <button className="ps-close" onClick={close} title="close (Esc)">✕</button>}
         </div>
       </header>
@@ -462,6 +469,7 @@ function MatchListTable({ rows, onOpen }: {
           <th className="ps-num">Duration</th>
           <th>Winner</th>
           <th className="ps-num">Date</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -478,6 +486,14 @@ function MatchListTable({ rows, onOpen }: {
               <td className="ps-num">{fmtPlaytime(m.duration_sec)}</td>
               <td className={"ps-res " + cls}>{txt}</td>
               <td className="ps-num ps-dim">{fmtDate(m.started_at).slice(0, 16)}</td>
+              <td className="ps-watch-cell">
+                {m.has_replay
+                  ? <a className="ps-watch-btn"
+                       href={`/replay/?mode=replay&id=${encodeURIComponent(m.match_id)}`}
+                       target="_blank" rel="noopener noreferrer"
+                       onClick={(e) => e.stopPropagation()}>▶ Watch</a>
+                  : <span className="ps-dim ps-arch">archive</span>}
+              </td>
             </tr>
           );
         })}
@@ -509,6 +525,11 @@ function MatchDetailView({ m, onPick }: {
           {" · "}{m.team1_faction ?? "T1"} {m.team1_tickets ?? "—"}
           {" – "}{m.team2_tickets ?? "—"} {m.team2_faction ?? "T2"}
         </span>
+        {m.has_replay ? (
+          <a className="ps-tab ps-watch-btn"
+             href={`/replay/?mode=replay&id=${encodeURIComponent(m.match_id)}`}
+             target="_blank" rel="noopener noreferrer">▶ Watch replay</a>
+        ) : null}
         <button className="ps-tab" onClick={toggleHeat}>
           {showHeat ? "Scoreboard" : "Heatmap"}
         </button>
