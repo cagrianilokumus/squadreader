@@ -51,3 +51,14 @@ recordings/
 
 # persistent player-stats sqlite db
 stats/
+
+# Remote-update: signing keys (NEVER commit) + runtime state
+*.pem
+signing_key.pem
+.env.agent
+sqreader.config.json
+push_queue/
+offsets.active.json
+pending_release.json
+staged/
+.sqr_restarts

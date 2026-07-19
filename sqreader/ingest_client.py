@@ -23,16 +23,23 @@ import platform
 import sqlite3
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any
 
-from . import agent_creds
+from . import __version__, agent_creds
 from .crypto_envelope import EnvelopeError, seal_json
 
 SCHEMA_MATCH = "sqr-match-1"
 SCHEMA_REPLAY = "sqr-replay-1"
-_UA = "sqreader-push/1"
+SCHEMA_CHECKIN = "sqr-checkin-1"
+SCHEMA_OFFSETS_REQ = "sqr-offsets-req-1"
+SCHEMA_MANIFEST_REQ = "sqr-manifest-req-1"
+# Version + platform ride on the UA of EVERY request, so central learns an
+# agent's version from an ordinary match push — no separate call needed. Central
+# parses `sqreader-push/<version> (<platform>)`.
+_UA = f"sqreader-push/{__version__} ({platform.system()})"
 _STATS_TABLES = ("matches", "player_matches", "kill_events", "vehicle_session")
 
 
@@ -123,6 +130,63 @@ def push_match(creds: dict[str, str], bundle: dict[str, Any], *, seq: int,
     env = seal_json(bundle, secret=_secret(creds),
                     agent_id=creds["SQREADER_AGENT_ID"], seq=seq)
     _post_json(_push_base(creds) + "/ingest/match", env, timeout=timeout)
+
+
+def checkin(creds: dict[str, str], payload: dict[str, Any], *, seq: int,
+            timeout: float = 15.0) -> dict[str, Any]:
+    """Seal + POST a fleet check-in to ``/agent/checkin``.
+
+    Same per-agent AES envelope + auth as a match push (central authenticates by
+    decrypting under the agent's secret). Returns the plain-JSON ack. Phase 0's
+    ack is just ``{ok:true}``; later phases may add an ADVISORY update hint the
+    agent independently verifies (Ed25519) before trusting — so the ack itself
+    never needs to be trusted. Best-effort: callers wrap this, a failure is
+    logged and forgotten, the live reader is untouched.
+    """
+    env = seal_json(payload, secret=_secret(creds),
+                    agent_id=creds["SQREADER_AGENT_ID"], seq=seq)
+    return _post_json(_push_base(creds) + "/agent/checkin", env, timeout=timeout)
+
+
+def fetch_offsets(creds: dict[str, str], squad_build: str, channel: str, *,
+                  seq: int, timeout: float = 15.0) -> dict[str, Any] | None:
+    """Ask central for the current SIGNED offset pack for our Squad build +
+    channel. Returns the raw (still-UNVERIFIED) signed pack dict, or None if none
+    is offered. The caller (offset_client.accept) verifies the Ed25519 signature
+    before trusting it — the sealed request authenticates us, but the response is
+    only trusted via its own signature."""
+    req = {"schema": SCHEMA_OFFSETS_REQ, "squad_build": squad_build,
+           "channel": channel}
+    env = seal_json(req, secret=_secret(creds),
+                    agent_id=creds["SQREADER_AGENT_ID"], seq=seq)
+    resp = _post_json(_push_base(creds) + "/agent/offsets", env, timeout=timeout)
+    pack = resp.get("pack") if isinstance(resp, dict) else None
+    return pack if isinstance(pack, dict) else None
+
+
+def fetch_manifest(creds: dict[str, str], platform_tok: str, channel: str, *,
+                   seq: int, timeout: float = 15.0) -> dict[str, Any] | None:
+    """Ask central for the current SIGNED release manifest for our platform +
+    channel. Returns the raw (still-UNVERIFIED) manifest dict, or None. The caller
+    (updater.accept) verifies the Ed25519 signature before trusting it."""
+    req = {"schema": SCHEMA_MANIFEST_REQ, "platform": platform_tok,
+           "channel": channel}
+    env = seal_json(req, secret=_secret(creds),
+                    agent_id=creds["SQREADER_AGENT_ID"], seq=seq)
+    resp = _post_json(_push_base(creds) + "/agent/manifest", env, timeout=timeout)
+    m = resp.get("manifest") if isinstance(resp, dict) else None
+    return m if isinstance(m, dict) else None
+
+
+def download_artifact(creds: dict[str, str], file: str, *,
+                      timeout: float = 300.0) -> bytes | None:
+    """GET a signed release artifact by filename from central. Raw bytes (the
+    caller verifies sha256). Public endpoint — the artifact is sha256-pinned by
+    the signed manifest, so no envelope is needed."""
+    url = (_push_base(creds) + "/agent/download?file="
+           + urllib.parse.quote(file, safe=""))
+    req = urllib.request.Request(url, method="GET", headers={"User-Agent": _UA})
+    return _send(req, timeout=timeout)
 
 
 def push_replay(creds: dict[str, str], match_id: str, server_id: str,
@@ -316,7 +380,9 @@ def current_creds() -> dict[str, str] | None:
 
 
 __all__ = [
-    "PushError", "SCHEMA_MATCH", "SCHEMA_REPLAY",
-    "build_match_bundle", "enroll", "push_match", "push_replay",
-    "enqueue", "flush_backlog", "default_backlog_dir", "current_creds",
+    "PushError", "SCHEMA_MATCH", "SCHEMA_REPLAY", "SCHEMA_CHECKIN",
+    "SCHEMA_OFFSETS_REQ", "SCHEMA_MANIFEST_REQ",
+    "build_match_bundle", "enroll", "push_match", "push_replay", "checkin",
+    "fetch_offsets", "fetch_manifest", "download_artifact", "enqueue",
+    "flush_backlog", "default_backlog_dir", "current_creds",
 ]

@@ -82,6 +82,31 @@ def _uobject_class_name(pm: ProcessMemory, addr: int,
     return name
 
 
+def _tag_char_is_junk(o: int) -> bool:
+    """A codepoint a torn/stale PlayerNamePrefix read produces but a real clan
+    tag never uses: control chars, private-use, replacement char, and
+    misread-UTF-16 garbage (CJK/Hangul/Kana ideographs, block elements ▇, zalgo
+    combining marks). Genuine stylized tags use symbols, brackets (『』〖〗),
+    fullwidth and Latin/Greek/Cyrillic — none of which are here. MUST stay in
+    sync with stats._tag_char_is_junk (and central's clean_clan_tag)."""
+    return (
+        o < 0x20 or o == 0x7F
+        or 0x0300 <= o <= 0x036F              # combining diacritics (zalgo)
+        or 0x1100 <= o <= 0x11FF              # Hangul Jamo
+        or 0x2580 <= o <= 0x259F              # block elements
+        or 0x3040 <= o <= 0x30FF              # Hiragana + Katakana
+        or 0x3130 <= o <= 0x318F              # Hangul Compatibility Jamo
+        or 0x3400 <= o <= 0x4DBF              # CJK Extension A
+        or 0x4E00 <= o <= 0x9FFF              # CJK Unified Ideographs
+        or 0xA960 <= o <= 0xA97F              # Hangul Jamo Extended-A
+        or 0xAC00 <= o <= 0xD7FF              # Hangul Syllables (+ Jamo Ext-B)
+        or 0xE000 <= o <= 0xF8FF              # private-use area
+        or 0xF900 <= o <= 0xFAFF              # CJK Compatibility Ideographs
+        or o == 0xFFFD                        # UTF-16 replacement char
+        or 0x20000 <= o <= 0x3FFFF            # CJK Extension B+ (astral)
+    )
+
+
 def _safe(call):
     """Call a read; on any failure, return None (no-guess policy).
 
@@ -279,6 +304,93 @@ MARKER_ITEM_OFFSETS = {
     "Position":    0x20,  # FVector (3 doubles, 24 bytes)
     "MarkerClass": 0x50,  # UObject* — BP class instance whose name is the type
 }
+
+
+# --------------------------------------------------------------------------
+# Remote offset overrides (Phase 1: rebuild-less self-heal)
+#
+# When a Squad patch drifts a hardcoded offset, central serves a signed offset
+# pack and the agent applies it AT RUNTIME instead of shipping new code. A pack
+# is {key: int} where key is either a scalar constant NAME (e.g.
+# "SQ_VEHICLE_TURRETS_OFFSET") or "DICT.KEY" (e.g. "DEPLOYABLE_OFFSETS.Team").
+#
+# The overridable set is derived by NAMING CONVENTION over this module's globals
+# (…_OFFSET/_OFF/_SIZE ints and …_OFFSETS int-dicts), evaluated at call time —
+# so every offset constant defined anywhere in this module is covered, new ones
+# are covered automatically, and a pack can NEVER touch a non-offset attribute
+# (functions, classes, resolved addresses). Only EXISTING dict keys can be
+# patched (a pack cannot invent fields); unknown/malformed keys are ignored
+# (forward-compat). Baked-in originals are captured once so a pack applies
+# reversibly — a doctor-failed apply rolls back exactly.
+# --------------------------------------------------------------------------
+_BAKED_OFFSETS: dict[str, Any] | None = None
+
+
+def _overridable_offsets() -> tuple[set[str], set[str]]:
+    """(scalar constant names, offset-dict names) a signed pack may override."""
+    scalars: set[str] = set()
+    dicts: set[str] = set()
+    for name, val in globals().items():
+        if not (isinstance(name, str) and name.isupper()):
+            continue
+        if isinstance(val, bool):
+            continue
+        if isinstance(val, int) and name.endswith(("_OFFSET", "_OFF", "_SIZE")):
+            scalars.add(name)
+        elif (isinstance(val, dict) and name.endswith("_OFFSETS") and val
+              and all(isinstance(v, int) for v in val.values())):
+            dicts.add(name)
+    return scalars, dicts
+
+
+def _bake_offsets() -> None:
+    """Snapshot the baked-in offset values once, for exact rollback."""
+    global _BAKED_OFFSETS
+    if _BAKED_OFFSETS is not None:
+        return
+    scalars, dicts = _overridable_offsets()
+    g = globals()
+    _BAKED_OFFSETS = {"scalars": {n: g[n] for n in scalars},
+                      "dicts": {n: dict(g[n]) for n in dicts}}
+
+
+def apply_offset_overrides(pack: dict[str, int]) -> list[str]:
+    """Override offset constants from an ALREADY signature-verified pack. Returns
+    the keys actually applied; unknown / forbidden / malformed keys are skipped
+    (never raises, so a partially-recognised pack degrades gracefully)."""
+    _bake_offsets()
+    scalars, dicts = _overridable_offsets()
+    g = globals()
+    applied: list[str] = []
+    for key, raw in pack.items():
+        try:
+            val = int(raw)
+        except (TypeError, ValueError):
+            continue
+        if "." in key:
+            dname, _, dkey = key.partition(".")
+            d = g.get(dname)
+            if dname in dicts and isinstance(d, dict) and dkey in d:
+                d[dkey] = val
+                applied.append(key)
+        elif key in scalars:
+            g[key] = val
+            applied.append(key)
+    return applied
+
+
+def revert_offset_overrides() -> None:
+    """Restore every offset constant to its baked-in original value."""
+    if _BAKED_OFFSETS is None:
+        return
+    g = globals()
+    for n, v in _BAKED_OFFSETS["scalars"].items():
+        g[n] = v
+    for n, baked in _BAKED_OFFSETS["dicts"].items():
+        d = g.get(n)
+        if isinstance(d, dict):
+            d.clear()
+            d.update(baked)
 
 
 # AmmoWep_*_C — the "weapon-shaped" resource pool actors a vehicle owns.
@@ -559,6 +671,16 @@ class SnapshotCaches:
     # populated server is ~95 %.
     player_names:   dict[int, str | None] = field(default_factory=dict)
     player_eos_ids: dict[int, str | None] = field(default_factory=dict)
+    # Deployable placer: actorName -> {"name", "eos", "ep"}. Captured the first
+    # tick the placer link is live and replayed after it goes stale (the
+    # Instigator / direct-PS pointer nulls once the placer despawns / disconnects).
+    # Keyed by the game actor's STABLE instance name (e.g. BP_FOBRadio_RGF_C_2111986534)
+    # — NOT our memory address — so cli.py can persist it to disk and re-attach
+    # placers after a reader restart. `ep` = last-seen placer_epoch; entries aged
+    # out after ~1000 ticks unseen. NOT cleared by _light_reset (a captured FOB
+    # placer can't be re-read once its link is stale).
+    placer_cache: dict[str, dict[str, Any]] = field(default_factory=dict)
+    placer_epoch: int = 0
     # slot_idx -> (serial_number, class_addr). When a GUObjectArray slot
     # is reused (UObject freed, slot allocated to a different object),
     # the serial bumps — we detect the bump and re-read class_addr;
@@ -804,6 +926,20 @@ class SnapshotPaths:
     # blink in and out. read_deployable falls back to the module
     # constant for any field reflection can't resolve.
     deployable_offsets: dict[str, int] = field(default_factory=dict)
+    # ----- Placer attribution (who placed a deployable / mine / FOB) -----
+    # AActor.Instigator (reflected) + SQPawn.PlayerState (reflected) resolve the
+    # transient pawn path; pc_playerstate_off resolves the controller path.
+    actor_instigator_off: int | None = None
+    pawn_playerstate_off: int | None = None
+    # The direct placer slots on SQDeployable are UNNAMED private fields —
+    # reflection can't see them (the named neighbours end at +0x500 ErrorTable),
+    # so they're hardcoded from a live probe (current Squad build): +0x0518 =
+    # SQPlayerState* (durable), +0x0510 = its APlayerController*. If a Squad
+    # update drifts them, re-derive with a read-only memory probe: scan a live
+    # deployable's fields for a pointer that resolves (directly, or via
+    # actor_instigator/pawn_playerstate) to a current player's name.
+    deployable_placer_ps_off: int = 0x0518
+    deployable_placer_ctrl_off: int = 0x0510
     # Reflection-derived FOB resource-pool offsets (Ammo / Construction /
     # MaxAmmo / bSieged / …) off BP_BaseFobCreator_C. Also drifted (by a
     # DIFFERENT amount than the SQDeployable block — +0x38 vs +0x18),
@@ -1091,6 +1227,10 @@ def resolve_paths(pm: ProcessMemory, arr: GUObjectArray,
         soldier_movement_offsets=grab(smv_layout, ["Stamina", "StaminaMax"]),
         gs_team_states_off=team_states_off,
         actor_root_component_off=actor_layout["RootComponent"].offset,
+        actor_instigator_off=(actor_layout["Instigator"].offset
+                              if "Instigator" in actor_layout else None),
+        pawn_playerstate_off=(pawn_layout["PlayerState"].offset
+                              if "PlayerState" in pawn_layout else None),
         scene_relative_location_off=scene_layout["RelativeLocation"].offset,
         scene_relative_rotation_off=scene_layout["RelativeRotation"].offset,
         scene_attach_parent_off=scene_layout["AttachParent"].offset,
@@ -1460,6 +1600,57 @@ def read_rally_point(pm: ProcessMemory, alloc: FNameEntryAllocator,
     return out
 
 
+# Names the Instigator chain sometimes lands on when a deployable has no real
+# placer link (e.g. TOW/Kornet emplacements whose Instigator points at an EOS
+# subsystem object). Rejected so we never surface these as a "placer".
+_INVALID_PLACER_NAMES = frozenset({
+    "productuserid", "epicaccountid", "none", "null", "?",
+})
+
+
+def _valid_placer_name(nm: str | None) -> bool:
+    s = (nm or "").strip()
+    return bool(1 <= len(s) <= 40 and s.lower() not in _INVALID_PLACER_NAMES)
+
+
+def _read_placer_ps(pm: ProcessMemory, paths: SnapshotPaths,
+                    d_addr: int) -> tuple[int, str] | None:
+    """Resolve a deployable's placer to (playerstate_addr, name), or None.
+
+    Tries three slots, most-durable first: the direct SQPlayerState* (+0x0518),
+    then AActor.Instigator (pawn) -> PlayerState, then the placer controller
+    (+0x0510) -> PlayerState. Every step is null-guarded — a wrong offset or a
+    stale/despawned placer just yields None (no guess). The caller caches the
+    first live hit because these links null out once the placer despawns.
+    """
+    name_off = paths.ps_offsets.get("PlayerNamePrivate")
+    if name_off is None:
+        return None
+
+    def try_ps(ps: int | None) -> tuple[int, str] | None:
+        if not ps or ps < 0x10000 or ps > 0x7FFF_FFFF_FFFF:
+            return None
+        nm = _safe(lambda: read_fstring(pm, ps + name_off))
+        return (ps, nm.strip()) if (nm and _valid_placer_name(nm)) else None
+
+    r = try_ps(_safe(lambda: pm.read_u64(d_addr + paths.deployable_placer_ps_off)))
+    if r:
+        return r
+    if paths.actor_instigator_off is not None and paths.pawn_playerstate_off is not None:
+        pawn = _safe(lambda: pm.read_u64(d_addr + paths.actor_instigator_off))
+        if pawn:
+            r = try_ps(_safe(lambda: pm.read_u64(pawn + paths.pawn_playerstate_off)))
+            if r:
+                return r
+    if paths.pc_playerstate_off is not None:
+        ctrl = _safe(lambda: pm.read_u64(d_addr + paths.deployable_placer_ctrl_off))
+        if ctrl:
+            r = try_ps(_safe(lambda: pm.read_u64(ctrl + paths.pc_playerstate_off)))
+            if r:
+                return r
+    return None
+
+
 def read_deployable(pm: ProcessMemory, alloc: FNameEntryAllocator,
                     paths: SnapshotPaths, d_addr: int,
                     class_name: str | None) -> dict[str, Any]:
@@ -1506,6 +1697,16 @@ def read_deployable(pm: ProcessMemory, alloc: FNameEntryAllocator,
     out["owningFobAddr"] = f"{fob:#x}" if fob else None
     # Take uobject name too: spawned ones are e.g. "Team1PreplacedRadio"
     out["actorName"] = _uobject_name(pm, d_addr, alloc)
+
+    # Placer — the player who placed this deployable. Fresh read only; the
+    # sticky cache + eos resolution happen in build_snapshot (it holds the
+    # per-run caches). `_placerPs` is stripped there before the snapshot ships.
+    out["placer"] = None
+    out["_placerPs"] = None
+    pr = _read_placer_ps(pm, paths, d_addr)
+    if pr:
+        out["_placerPs"] = pr[0]
+        out["placer"] = pr[1]
 
     # FOB resource pool — current/max ammo + construction. Only read on
     # actual FOB radios (bIsFob true); the same offsets on a non-FOB
@@ -2316,9 +2517,7 @@ def read_player(pm: ProcessMemory, alloc: FNameEntryAllocator,
                 except Exception:
                     tag = None
                 if tag and (tag == out.get("eosId") or len(tag) > 16
-                            or any(ord(c) < 0x20 or ord(c) == 0x7F
-                                   or 0xE000 <= ord(c) <= 0xF8FF
-                                   or ord(c) == 0xFFFD for c in tag)):
+                            or any(_tag_char_is_junk(ord(c)) for c in tag)):
                     tag = None
                 out["clanTag"] = tag
             out["stats"] = {
@@ -3284,6 +3483,43 @@ def build_snapshot(pm: ProcessMemory, arr: GUObjectArray,
     ]
     # Drop freed/junk slots flagged by read_deployable's freshness gate.
     deployables = [d for d in deployables if not d.get("stale")]
+    # Placer stickiness. The direct-PS / Instigator link nulls out once the
+    # placer despawns or disconnects, so capture the placer the first tick it
+    # resolves live and replay it for the actor's lifetime. Keyed by actor
+    # address; entries for deployables gone this tick are evicted (bounds the
+    # cache and guards actor-pointer reuse — a reused slot re-resolves fresh).
+    if caches is not None:
+        pl_cache = caches.placer_cache
+        pl_eos_off = paths.ps_offsets.get("OnlineUserId")
+        caches.placer_epoch += 1
+        ep = caches.placer_epoch
+        for d in deployables:
+            # Key on the actor's stable instance name (survives reader restarts
+            # + a persisted cache); fall back to the addr id if it's missing.
+            key = d.get("actorName") or d.get("id") or ""
+            fresh_ps = d.pop("_placerPs", None)
+            if key and d.get("placer") and fresh_ps:
+                pl_eos = caches.player_eos_ids.get(fresh_ps)
+                if (pl_eos is None and fresh_ps not in caches.player_eos_ids
+                        and pl_eos_off):
+                    pl_eos = _safe(lambda ps=fresh_ps: read_fstring(pm, ps + pl_eos_off))
+                    caches.player_eos_ids[fresh_ps] = pl_eos
+                pl_cache[key] = {"name": d["placer"], "eos": pl_eos, "ep": ep}
+            pl_hit = pl_cache.get(key) if key else None
+            if pl_hit:
+                pl_hit["ep"] = ep       # touch so a live deployable never ages out
+            d["placer"] = pl_hit["name"] if pl_hit else None
+            d["placerEosId"] = pl_hit["eos"] if pl_hit else None
+        # Bound the cache: drop entries not seen for ~1000 ticks (~30 min).
+        # Epoch-based, so a transient empty/partial snapshot never nukes it.
+        stale = ep - 1000
+        if stale > 0:
+            for k in [k for k, v in pl_cache.items() if v.get("ep", 0) < stale]:
+                del pl_cache[k]
+    else:
+        for d in deployables:
+            d.pop("_placerPs", None)
+            d.setdefault("placerEosId", None)
     vehicle_spawners = [
         read_vehicle_spawner(pm, alloc, paths, sp_addr,
                              class_cache.get(cls_addr) or _uobject_name(pm, cls_addr, alloc))

@@ -418,27 +418,50 @@ def _clean_name(name: Any) -> Optional[str]:
     return name
 
 
+# A codepoint that a torn/stale PlayerNamePrefix read produces but a real clan
+# tag never uses. Genuine stylized tags use symbols, brackets ("『GM』", "〖GM〗"),
+# fullwidth forms and Latin/Greek/Cyrillic — NONE of which are in these ranges,
+# so keeping them is safe. What lands here is misread-UTF-16 garbage: random CJK
+# / Hangul / Kana ideographs, box "block elements" (▇▆), and zalgo combining
+# marks. NOTE: this rejects a genuinely CJK/Hangul clan tag too — an accepted
+# tradeoff, since torn-read ideograph garbage is far more common than a real
+# short all-ideograph tag, and it is the "Chinese-looking mojibake" complaint.
+# Keep in sync with the inline gate in squad/snapshot.py and central's
+# clean_clan_tag().
+def _tag_char_is_junk(o: int) -> bool:
+    return (
+        o < 0x20 or o == 0x7F                 # control chars
+        or 0x0300 <= o <= 0x036F              # combining diacritics (zalgo)
+        or 0x1100 <= o <= 0x11FF              # Hangul Jamo
+        or 0x2580 <= o <= 0x259F              # block elements (▇ ▆ ▙ …)
+        or 0x3040 <= o <= 0x30FF              # Hiragana + Katakana
+        or 0x3130 <= o <= 0x318F              # Hangul Compatibility Jamo
+        or 0x3400 <= o <= 0x4DBF              # CJK Extension A
+        or 0x4E00 <= o <= 0x9FFF              # CJK Unified Ideographs
+        or 0xA960 <= o <= 0xA97F              # Hangul Jamo Extended-A
+        or 0xAC00 <= o <= 0xD7FF              # Hangul Syllables (+ Jamo Ext-B)
+        or 0xE000 <= o <= 0xF8FF              # private-use area (torn-read)
+        or 0xF900 <= o <= 0xFAFF              # CJK Compatibility Ideographs
+        or o == 0xFFFD                        # UTF-16 replacement char
+        or 0x20000 <= o <= 0x3FFFF            # CJK Extension B+ (astral)
+    )
+
+
 # The clan tag (PlayerNamePrefix) is a very short in-game field read from an
 # embedded FString. Unlike the name it was never validated: torn/stale reads
 # decode as CJK mojibake, land on private-use/control bytes, or alias onto the
 # player's OnlineUserId buffer (the "eos-id-as-tag" rows) — then COALESCE
 # latches them forever. Keep legit short stylized-Unicode tags ("BΛDGΞR♦",
-# "『GM』", "✦ AC ✦"); reject control/private-use/replacement chars, the leaked
-# eos id, empties, and runaway lengths.
+# "『GM』", "✦ AC ✦"); reject the torn-read mojibake (see _tag_char_is_junk),
+# the leaked eos id, empties, and runaway lengths.
 def _clean_tag(tag: Any) -> Optional[str]:
     if not isinstance(tag, str):
         return None
     t = tag.strip()
     if not t or len(t) > 16:
         return None
-    for c in t:
-        o = ord(c)
-        if o < 0x20 or o == 0x7F:      # control chars
-            return None
-        if 0xE000 <= o <= 0xF8FF:      # private-use area (torn-read mojibake)
-            return None
-        if o == 0xFFFD:                # UTF-16 replacement char
-            return None
+    if any(_tag_char_is_junk(ord(c)) for c in t):
+        return None
     if _valid_eos(t):                  # leaked OnlineUserId, never a tag
         return None
     return t
@@ -1083,11 +1106,75 @@ def _elo_leaderboard(db_path: Path, limit: int) -> list[dict]:
         conn.close()
 
 
+def _context_leaderboard(db_path: Path, context: str, limit: int = 50,
+                         period: str = "alltime",
+                         now: Optional[float] = None) -> list[dict]:
+    """Infantry- vs vehicle-context K/D board, derived from kill_events by
+    WEAPON classification (see _VEHICLE_WEAPON_SUBSTRINGS). A kill/death counts
+    toward the *vehicle* board when the weapon is a vehicle/emplacement weapon
+    (tank cannon, coax, autocannon, ATGM, …) and toward the *infantry* board
+    otherwise; unclassifiable (NULL weapon) events count toward neither.
+
+    Approximate by construction (substring match — same basis as
+    _longest_infantry_kill): the log-sourced kill_events carry no
+    killer_in_vehicle flag, so this attributes by the weapon used, not by
+    whether the player was seated. Context deaths come from attributed
+    kill_events only, so they run lower than the authoritative death counter
+    (bleed/environment deaths are out of context) — intended, context-scoped.
+    """
+    subs = _VEHICLE_WEAPON_SUBSTRINGS
+    if context == "veh_kd":
+        pred = "(" + " OR ".join(["instr(lower(weapon), ?) > 0"] * len(subs)) + ")"
+    else:  # inf_kd — weapon known and none of the vehicle fragments present
+        pred = " AND ".join(["instr(lower(weapon), ?) = 0"] * len(subs))
+    cutoff = period_cutoff(period, now)
+    if cutoff is None:
+        mfilter = "SELECT match_id FROM matches WHERE status='final'"
+        mparams: list[Any] = []
+    else:
+        mfilter = ("SELECT match_id FROM matches "
+                   "WHERE status='final' AND started_at >= ?")
+        mparams = [cutoff]
+    # The weapon predicate + match filter appear once per UNION leg (attacker,
+    # then victim); bind params in that order, then the LIMIT.
+    params: list[Any] = [*subs, *mparams, *subs, *mparams,
+                         max(1, min(int(limit or 50), 200))]
+    sql = (
+        "SELECT p.eos_id, p.last_name, p.last_clan_tag, "
+        "  agg.matches, agg.kills, agg.deaths, "
+        "  CAST(agg.kills AS REAL)/MAX(1, agg.deaths) AS value "
+        "FROM ( "
+        "  SELECT eos, SUM(k) kills, SUM(d) deaths, "
+        "         COUNT(DISTINCT match_id) matches "
+        "  FROM ( "
+        "    SELECT attacker_eos eos, match_id, 1 k, 0 d FROM kill_events "
+        "      WHERE killed=1 AND COALESCE(team_kill,0)=0 "
+        "        AND attacker_eos IS NOT NULL AND weapon IS NOT NULL "
+        f"        AND {pred} AND match_id IN ({mfilter}) "
+        "    UNION ALL "
+        "    SELECT victim_eos eos, match_id, 0 k, 1 d FROM kill_events "
+        "      WHERE killed=1 AND COALESCE(self_inflicted,0)=0 "
+        "        AND victim_eos IS NOT NULL AND weapon IS NOT NULL "
+        f"        AND {pred} AND match_id IN ({mfilter}) "
+        "  ) GROUP BY eos "
+        "  HAVING SUM(k) > 0 "
+        "     AND COUNT(DISTINCT CASE WHEN k=1 THEN match_id END) >= 3 "
+        ") agg JOIN players p ON p.eos_id = agg.eos "
+        "ORDER BY value DESC LIMIT ?")
+    conn = _ro(db_path)
+    try:
+        return [dict(r) for r in conn.execute(sql, params).fetchall()]
+    finally:
+        conn.close()
+
+
 def leaderboard(db_path: Path, stat: str = "kills", limit: int = 50,
                 period: str = "alltime",
                 now: Optional[float] = None) -> list[dict]:
     if stat == "elo":
         return _elo_leaderboard(db_path, limit)
+    if stat in ("inf_kd", "veh_kd"):
+        return _context_leaderboard(db_path, stat, limit, period, now)
     expr = _LEADER_STATS.get(stat)
     if expr is None:
         stat, expr = "kills", _LEADER_STATS["kills"]

@@ -1,6 +1,9 @@
 [project]
 name = "sqreader"
-version = "1.1.0"
+# Version is single-sourced from sqreader/__init__.py (see [tool.setuptools.dynamic]
+# below) so a release bump touches one line and the running agent reports the
+# same string it was built from.
+dynamic = ["version"]
 description = "Read live Squad dedicated-server game state from /proc/<pid>/mem and emit NDJSON snapshots."
 readme = "README.md"
 license = { text = "AGPL-3.0-or-later" }
@@ -75,6 +78,9 @@ exclude = ["^scripts/", "^tests/", "^frontend/"]
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = { attr = "sqreader.__version__" }
 
 [tool.setuptools.packages.find]
 where = ["."]

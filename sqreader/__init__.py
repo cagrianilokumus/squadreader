@@ -1,2 +1,5 @@
 """sqreader — Squad dedicated-server memory reader."""
-__version__ = "1.0.0"
+# Single source of truth for the agent version. pyproject.toml reads this via
+# `[tool.setuptools.dynamic] version = {attr = "sqreader.__version__"}`, and the
+# fleet/update system reports + gates on it — so a release is a one-line bump here.
+__version__ = "1.1.0"

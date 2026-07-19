@@ -53,10 +53,15 @@ const TABS: { key: string; label: string }[] = [
   { key: "elo", label: "ELO" },
   { key: "kills", label: "Kills" },
   { key: "kd", label: "K/D" },
+  { key: "inf_kd", label: "Infantry K/D" },
+  { key: "veh_kd", label: "Vehicle K/D" },
   { key: "score", label: "Combat" },
   { key: "objective", label: "Objective" },
   { key: "revives", label: "Revives" },
-  { key: "vehicle_kills", label: "Vehicle" },
+  // "Vehicles Destroyed" = enemy vehicles wrecked (the game's vehicleKills
+  // counter). Distinct from the "Vehicle K/D" board above, which is kills made
+  // *with* a vehicle weapon — the labels keep the two from being confused.
+  { key: "vehicle_kills", label: "Vehicles Destroyed" },
   { key: "matches", label: "Matches" },
   { key: "matchlist", label: "Match List" },
   { key: "weapons", label: "Weapons" },
@@ -67,8 +72,8 @@ const TABS: { key: string; label: string }[] = [
 // not player leaderboards. ("matches" = the by-match-count leaderboard;
 // "matchlist" = the match browser — distinct on purpose.)
 const LEADER_TABS = new Set([
-  "elo", "kills", "kd", "score", "objective", "revives", "vehicle_kills",
-  "matches",
+  "elo", "kills", "kd", "inf_kd", "veh_kd", "score", "objective", "revives",
+  "vehicle_kills", "matches",
 ]);
 const PERIODLESS = new Set(["elo"]);
 
@@ -80,7 +85,7 @@ const PERIODS: { key: StatsPeriod; label: string }[] = [
 ];
 
 function statValue(stat: string, v: number): string {
-  if (stat === "kd") return v.toFixed(2);
+  if (stat === "kd" || stat === "inf_kd" || stat === "veh_kd") return v.toFixed(2);
   return int(v);
 }
 
@@ -323,9 +328,18 @@ export function PlayerStats({ inline = false }: { inline?: boolean } = {}) {
 
             {ldLoading && <div className="ps-msg"><span className="ps-spin" />Loading…</div>}
 
+            {!ldLoading && (tab === "inf_kd" || tab === "veh_kd") && leaders
+              && leaders.length > 0 && (
+              <div className="ps-note">
+                Bağlam, her kill/ölümde kullanılan silaha göredir (tank topu ·
+                coax · otomatik top · ATGM = araç; diğer tüm silahlar = piyade)
+                — oyuncunun koltukta olup olmadığına göre değil. Yaklaşık.
+              </div>
+            )}
             {!ldLoading && LEADER_TABS.has(tab) && leaders && leaders.length === 0 && (
               <div className="ps-msg">
-                {tab === "kd" ? "No players with at least 3 matches yet."
+                {tab === "kd" || tab === "inf_kd" || tab === "veh_kd"
+                  ? "No players with at least 3 matches yet."
                   : tab === "elo" ? "No rated matches yet — a match must be "
                                   + "crowded and long enough to count for ELO."
                   : "No data yet."}

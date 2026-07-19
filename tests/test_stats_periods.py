@@ -190,3 +190,52 @@ def test_unknown_layer_yields_an_empty_grid_not_an_error(tmp_path):
     hm = map_heatmap(db, "NoSuchLayer_v9")
     assert hm["cells"] == []
     assert hm["maxCount"] == 0
+
+
+# --------------------------------------------------------------------------
+# infantry vs vehicle context leaderboards (weapon-classified K/D)
+# --------------------------------------------------------------------------
+
+def test_context_leaderboard_splits_by_weapon(tmp_path):
+    db = tmp_path / "s.db"
+    store = StatsStore(db, server_id="t")
+    TANK = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+    GRUNT = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+    VIC = "cccccccc-cccc-cccc-cccc-cccccccccccc"
+    # Three matches so both players clear the K/D 3-match floor.
+    for i, mid in enumerate(("m1", "m2", "m3")):
+        base = i * 10
+        events = [
+            # tanker kills the victim with a vehicle weapon (125mm cannon)
+            {"attacker": "Tank", "victim": "Vic",
+             "causerWeapon": "BP_T72_125mm_Cannon_C", "killed": 1, "ts": float(base + 1)},
+            # grunt kills the victim with a rifle
+            {"attacker": "Grunt", "victim": "Vic",
+             "causerWeapon": "BP_AK74_C", "killed": 1, "ts": float(base + 2)},
+        ]
+        if mid == "m3":   # the tanker dies once, to a vehicle weapon (30mm)
+            events.append({"attacker": "Vic", "victim": "Tank",
+                           "causerWeapon": "BP_BMP2_30mm_C", "killed": 1,
+                           "ts": float(base + 3)})
+        store.record_tick(_snap(mid, f"2026-07-1{5 + i}T10:00:00+00:00",
+                                [_p(TANK, "Tank", 1, kills=1),
+                                 _p(GRUNT, "Grunt", 1, kills=1),
+                                 _p(VIC, "Vic", 2, kills=0)],
+                                events))
+    store.finalize_open_match(reason="test")  # reads serve only finished matches
+    store.close()
+
+    veh = {r["eos_id"]: r for r in leaderboard(db, "veh_kd")}
+    inf = {r["eos_id"]: r for r in leaderboard(db, "inf_kd")}
+
+    # Vehicle board: only the tanker clears the floor (3 vehicle-weapon kills);
+    # one vehicle death in m3 → 3/1 = 3.0. The grunt's rifle kills stay off it.
+    assert set(veh) == {TANK}
+    assert veh[TANK]["kills"] == 3 and veh[TANK]["deaths"] == 1
+    assert veh[TANK]["value"] == 3.0 and veh[TANK]["matches"] == 3
+
+    # Infantry board: only the grunt (3 rifle kills, no attributed infantry
+    # deaths). The tanker's cannon kills stay off it.
+    assert set(inf) == {GRUNT}
+    assert inf[GRUNT]["kills"] == 3 and inf[GRUNT]["deaths"] == 0
+    assert inf[GRUNT]["value"] == 3.0

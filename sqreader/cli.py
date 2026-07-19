@@ -353,6 +353,34 @@ def cmd_watch(args: argparse.Namespace) -> int:
     return 0
 
 
+def _load_placer_cache(caches, path: Path) -> None:
+    """Re-attach captured deployable placers after a reader restart. The cache is
+    keyed by each actor's STABLE instance name, so a fresh memory address on
+    restart doesn't matter — a FOB/mine placed before the restart keeps its
+    placer instead of falling back to '—'."""
+    try:
+        if path.exists():
+            data = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                caches.placer_cache = {k: v for k, v in data.items()
+                                       if isinstance(v, dict) and v.get("name")}
+                caches.placer_epoch = max(
+                    (int(v.get("ep", 0)) for v in caches.placer_cache.values()),
+                    default=0)
+    except Exception:
+        pass
+
+
+def _save_placer_cache(caches, path: Path) -> None:
+    try:
+        tmp = path.with_suffix(path.suffix + ".tmp")
+        tmp.write_text(json.dumps(caches.placer_cache, ensure_ascii=False),
+                       encoding="utf-8")
+        tmp.replace(path)
+    except Exception:
+        pass
+
+
 def cmd_serve(args: argparse.Namespace) -> int:
     """
     Run the snapshot producer in a loop, recording finished matches and
@@ -452,6 +480,15 @@ def cmd_serve(args: argparse.Namespace) -> int:
     stats_db_path = (Path(args.stats_db).expanduser()
                      if getattr(args, "stats_db", None) else None)
 
+    # Deployable placer cache persisted next to the stats DB so captured placers
+    # survive reader restarts (mid-match agent deploys / crashes) instead of
+    # reverting to '—'. Load any prior cache before the loop starts.
+    placer_cache_path = (stats_db_path.parent / "placer_cache.json"
+                         if stats_db_path else None)
+    if placer_cache_path is not None:
+        _load_placer_cache(caches, placer_cache_path)
+    last_placer_save = time.time()
+
     # --- optional central push (OPT-IN): active only when this box is ENROLLED
     # (.env.agent present) AND enabled (`serve --push` or config push_enabled).
     # Every match is queued on finalize and flushed from a serve-loop timer, so
@@ -489,6 +526,126 @@ def cmd_serve(args: argparse.Namespace) -> int:
                       f"errors={res['errors']}", file=sys.stderr)
         except Exception as _fe:
             print(f"[push] flush error: {_fe!r}", file=sys.stderr)
+
+    # -- Fleet check-in (Phase 0 remote-update telemetry) -------------------
+    # A lightweight sealed report — agent version, the Squad BUILD we're attached
+    # to, and the reader's doctor-health — so central knows which enrolled servers
+    # a Squad patch just broke. Same opt-in boundary as push (enrolled + push on).
+    # Best-effort: a failed check-in is logged and forgotten, never fatal.
+    from . import fleet, health, squad_build
+    _checkin_channel = str(config.get("update_channel") or "stable")
+    _checkin_build_sha = squad_build.build_sha256(pid) if push_active else None
+    _checkin_restarts = (fleet.bump_restarts(stats_db_path.parent)
+                         if push_active and stats_db_path is not None else 0)
+
+    def _checkin() -> None:
+        if not push_active or push_creds is None or push_backlog is None:
+            return
+        try:
+            telem = fleet.gather(pm, arr, alloc, build_sha=_checkin_build_sha,
+                                 restarts=_checkin_restarts,
+                                 uptime_sec=time.time() - started,
+                                 channel=_checkin_channel)
+            ingest_client.checkin(
+                push_creds, telem, seq=ingest_client._next_seq(push_backlog))
+        except Exception as _ce:
+            print(f"[checkin] {_ce!r}", file=sys.stderr)
+
+    # -- Offset self-heal (Phase 1 remote-update) ---------------------------
+    # When a Squad patch drifts our hardcoded offsets, fetch a SIGNED pack from
+    # central, verify it (Ed25519), apply it AT RUNTIME, and confirm with doctor —
+    # rolling back if it doesn't clear the drift. No code redeploy. Same opt-in
+    # boundary as push; the user chose auto-apply. `offsets.active.json` persists a
+    # committed pack so it re-applies across restarts.
+    _offset_autoheal = bool(config.get("offset_autoheal"))
+    _update_enabled = bool(config.get("update_enabled"))
+    _offset_state_dir = stats_db_path.parent if stats_db_path is not None else None
+
+    if (_offset_autoheal and push_active and _checkin_build_sha
+            and _offset_state_dir is not None):
+        from . import offset_client as _oc
+        _committed = _oc.active_offsets_for(_offset_state_dir, _checkin_build_sha)
+        if _committed:
+            from .squad.snapshot import apply_offset_overrides, resolve_paths
+            _n = apply_offset_overrides(_committed.get("offsets") or {})
+            paths = resolve_paths(pm, arr, alloc)
+            print(f"[selfheal] re-applied committed offset pack "
+                  f"v{_committed.get('version')} ({len(_n)} offsets) at boot",
+                  file=sys.stderr)
+
+    def _selfheal():
+        """One self-heal attempt: if the reader has DRIFTED and central offers a
+        newer signed pack for our build, apply it in-process, verify with doctor,
+        and commit — or roll back. Returns the re-resolved paths on a successful
+        apply, else None. Best-effort; never raises out to the loop."""
+        if not (_offset_autoheal and push_active and push_creds is not None
+                and _checkin_build_sha and _offset_state_dir is not None
+                and push_backlog is not None):
+            return None
+        try:
+            from . import offset_client as _oc
+            from .squad.snapshot import (
+                apply_offset_overrides, resolve_paths, revert_offset_overrides)
+            if health.run_doctor(pm, arr, alloc).get("state") != "drift":
+                return None      # only self-heal a genuinely drifted reader
+            minv = _oc.active_version(_offset_state_dir, _checkin_build_sha)
+            got = _oc.fetch_and_accept(
+                push_creds, _checkin_build_sha, _checkin_channel, minv,
+                seq=ingest_client._next_seq(push_backlog))
+            if not got:
+                return None
+            applied = apply_offset_overrides(got["offsets"])
+            new_paths = resolve_paths(pm, arr, alloc)
+            caches.reset()
+            if health.run_doctor(pm, arr, alloc).get("state") == "ok":
+                _oc.save_active(_offset_state_dir, _checkin_build_sha,
+                                got["version"], got["offsets"])
+                print(f"[selfheal] applied offset pack v{got['version']} "
+                      f"({len(applied)} offsets) — reader healthy again",
+                      file=sys.stderr)
+                return new_paths
+            revert_offset_overrides()     # pack didn't clear the drift → undo
+            caches.reset()
+            print(f"[selfheal] pack v{got['version']} did not clear drift; "
+                  f"rolled back", file=sys.stderr)
+            return None
+        except Exception as _se:
+            try:
+                from .squad.snapshot import revert_offset_overrides
+                revert_offset_overrides()
+                caches.reset()
+            except Exception:
+                pass
+            print(f"[selfheal] error: {_se!r}", file=sys.stderr)
+            return None
+
+    def _check_update() -> None:
+        """If update_enabled, fetch + verify + download + STAGE a newer signed
+        release. Never installs or restarts the live reader — it stages the
+        verified artifact and logs that a restart (via `sqreader
+        apply-staged-update`) will apply it. Best-effort; never raises."""
+        if not (_update_enabled and push_active and push_creds is not None
+                and _offset_state_dir is not None and push_backlog is not None):
+            return
+        try:
+            from . import updater
+            got = updater.fetch_and_accept(
+                push_creds, _checkin_channel,
+                seq=ingest_client._next_seq(push_backlog),
+                min_applied=updater.staged_version(_offset_state_dir))
+            if not got:
+                return
+            data = updater.download_verified(
+                push_creds, got["artifact"], got["sha256"])
+            if data is None:
+                print(f"[update] release v{got['version']} download/verify failed",
+                      file=sys.stderr)
+                return
+            updater.stage(_offset_state_dir, got["version"], got["artifact"], data)
+            print(f"[update] staged agent release v{got['version']} — restart to "
+                  f"apply (`sqreader apply-staged-update`)", file=sys.stderr)
+        except Exception as _ue:
+            print(f"[update] {_ue!r}", file=sys.stderr)
 
     if stats_db_path:
         try:
@@ -589,6 +746,10 @@ def cmd_serve(args: argparse.Namespace) -> int:
     last_report = started
     last_flush = started
     _flush_push()  # drain anything a previous run queued before we start ticking
+    # First fleet check-in ~60s after boot (like the reference updater), then
+    # every CHECKIN_INTERVAL_SEC. Seeding last_checkin in the past makes the first
+    # one fire early so a freshly-broken server shows up on the fleet dashboard fast.
+    last_checkin = started - (fleet.CHECKIN_INTERVAL_SEC - 60.0)
     # Per-match recorder state. Lives across ticks; the recorder module's
     # `_handle_snap` opens/closes .sqrx files as matchId / matchState
     # change. Stays empty when recordings_dir is None.
@@ -791,6 +952,23 @@ def cmd_serve(args: argparse.Namespace) -> int:
                 _flush_push()
                 last_flush = now
 
+            # Persist the placer cache every ~30s so captured placers survive a
+            # reader restart (mid-match deploy / crash).
+            if placer_cache_path is not None and now - last_placer_save >= 30.0:
+                _save_placer_cache(caches, placer_cache_path)
+                last_placer_save = now
+
+            # Fleet check-in every ~5 min (first ~60s post-boot), then an offset
+            # self-heal attempt on the same cadence. Off the hot path; both are
+            # best-effort. A successful self-heal rebinds `paths` for later ticks.
+            if push_active and now - last_checkin >= fleet.CHECKIN_INTERVAL_SEC:
+                _checkin()
+                _healed = _selfheal()
+                if _healed is not None:
+                    paths = _healed
+                _check_update()
+                last_checkin = now
+
             sleep_for = period - (time.time() - t_tick)
             if sleep_for > 0:
                 time.sleep(sleep_for)
@@ -816,6 +994,8 @@ def cmd_serve(args: argparse.Namespace) -> int:
                 print(f"stats finalize error on shutdown: {_e!r}",
                       file=sys.stderr)
         _flush_push()  # best-effort: push whatever finalized before we exit
+        if placer_cache_path is not None:
+            _save_placer_cache(caches, placer_cache_path)  # keep placers across restart
         srv.shutdown()
         if out_f:
             out_f.close()
@@ -1024,8 +1204,6 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         read_fstructproperty_struct, find_field_by_name_with_super,
     )
     from .squad.snapshot import (
-        VEHICLE_SPAWNER_OFFSETS, DEPLOYABLE_OFFSETS,
-        MARKER_OFFSETS, PROJECTILE_OFFSETS, RALLY_OFFSETS,
         LANE_GRAPH_OFFSETS, LANE_LINK_NODEA_OFF, LANE_LINK_NODEB_OFF,
         COLLECTOR_CLASSES,
     )
@@ -1139,46 +1317,12 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     # A Squad update that shifts a struct layout is silent: the reader keeps
     # reading the old offset, gets neighbouring bytes, and ships plausible-looking
     # garbage. `offsets_match` catches it by reading each offset back through live
-    # reflection — so every group we hardcode should be listed here. The vehicle
-    # groups below are exactly the ones that broke before (the turret yaw came out
-    # of a pointer that had drifted), reconstructed as {reflected-name: offset}
-    # dicts from the scattered SQ_*_OFFSET constants; all names confirmed against
-    # live reflection.
-    from .squad.snapshot import (
-        SQ_SEATCOMP_SEAT_PAWN_OFFSET, SQ_SEATCOMP_SEATED_PLAYER_OFFSET,
-        SQ_SEATCOMP_SEATED_SOLDIER_OFFSET, SQ_VEHICLESEAT_SEAT_HEALTH_OFFSET,
-        SQ_VEHCOMP_HEALTH_OFFSET, SQ_VEHCOMP_MAX_HEALTH_OFFSET,
-        SQ_VEHCOMP_NORMALIZED_HEALTH_OFFSET,
-        SQ_VWEAPON_MAGAZINES_OFFSET, SQ_VWEAPON_VEHICLE_TURRET_OFFSET,
-    )
-    seatcomp_offsets = {
-        "SeatPawn":      SQ_SEATCOMP_SEAT_PAWN_OFFSET,
-        "SeatedPlayer":  SQ_SEATCOMP_SEATED_PLAYER_OFFSET,
-        "SeatedSoldier": SQ_SEATCOMP_SEATED_SOLDIER_OFFSET,
-    }
-    # SeatHealth lives on the seat pawn (SQVehicleSeat), read for the
-    # per-seat HP; it's hardcoded and drives a displayed value, so verify it.
-    vehicleseat_offsets = {"SeatHealth": SQ_VEHICLESEAT_SEAT_HEALTH_OFFSET}
-    vehcomp_offsets = {
-        "Health":           SQ_VEHCOMP_HEALTH_OFFSET,
-        "MaxHealth":        SQ_VEHCOMP_MAX_HEALTH_OFFSET,
-        "NormalizedHealth": SQ_VEHCOMP_NORMALIZED_HEALTH_OFFSET,
-    }
-    vweapon_offsets = {
-        "Magazines":     SQ_VWEAPON_MAGAZINES_OFFSET,
-        "VehicleTurret": SQ_VWEAPON_VEHICLE_TURRET_OFFSET,
-    }
-    for cls, table in (
-        ("SQDeployable",           DEPLOYABLE_OFFSETS),
-        ("SQVehicleSpawner",       VEHICLE_SPAWNER_OFFSETS),
-        ("SQMapMarker",            MARKER_OFFSETS),
-        ("SQProjectile",           PROJECTILE_OFFSETS),
-        ("SQSquadRallyPoint",      RALLY_OFFSETS),
-        ("SQVehicleSeatComponent", seatcomp_offsets),
-        ("SQVehicleSeat",          vehicleseat_offsets),
-        ("SQVehicleComponent",     vehcomp_offsets),
-        ("SQVehicleWeapon",        vweapon_offsets),
-    ):
+    # reflection — so every group we hardcode is listed in one place. The table
+    # set is shared with the fleet health signal (`health.hardcoded_offset_tables`)
+    # so this human command and the machine-readable `run_doctor` can never
+    # disagree about which offsets "correct" means.
+    from .health import hardcoded_offset_tables
+    for cls, table in hardcoded_offset_tables():
         passed, problems = offsets_match(cls, table)
         check(f"{cls} hardcoded offsets ({len(table)} fields)",
               passed, "; ".join(problems))
@@ -1512,6 +1656,43 @@ def _render_summary(snap: dict) -> None:
 
 # ----- argparse plumbing -----------------------------------------------------
 
+def cmd_apply_staged_update(args: argparse.Namespace) -> int:
+    """Install a staged agent release (fetched + verified by `serve`). Meant to be
+    run by the deploy/systemd layer at restart, NOT inside the live reader. It is
+    conservative: pip-installs the staged wheel into the current environment with
+    --no-deps, then clears the marker. Restarting the service runs the new code.
+    Rolls nothing back automatically — keep the previous wheel/venv if you want a
+    fast manual revert."""
+    import subprocess
+    from . import updater
+    if args.state_dir:
+        state_dir = Path(args.state_dir).expanduser()
+    elif args.stats_db:
+        state_dir = Path(args.stats_db).expanduser().parent
+    else:
+        state_dir = Path(".")
+    st = updater.staged(state_dir)
+    if not st:
+        print("no staged update", file=sys.stderr)
+        return 0
+    art = st.get("path")
+    if not art or not Path(art).is_file():
+        print("staged artifact missing on disk", file=sys.stderr)
+        return 1
+    cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "--no-deps", art]
+    print(f"applying staged update v{st.get('version')}: {' '.join(cmd)}",
+          file=sys.stderr)
+    rc = subprocess.call(cmd)
+    if rc == 0:
+        updater.clear_staged(state_dir)
+        print(f"installed v{st.get('version')}; restart the service to run it",
+              file=sys.stderr)
+        return 0
+    print(f"pip install failed (rc={rc}); staged update kept for retry",
+          file=sys.stderr)
+    return 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="sqreader",
                                  description=__doc__,
@@ -1669,6 +1850,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_enroll.add_argument("--stats-db", type=Path,
                           help="with --status: report the pending push-queue depth")
     p_enroll.set_defaults(func=cmd_enroll)
+
+    p_apply = sub.add_parser(
+        "apply-staged-update",
+        help="install a staged agent release (run by the deploy layer at restart)")
+    p_apply.add_argument("--state-dir", default=None,
+                         help="dir holding pending_release.json (default: stats-db dir)")
+    p_apply.add_argument("--stats-db", default=None,
+                         help="stats DB path; its parent dir holds the staged update")
+    p_apply.set_defaults(func=cmd_apply_staged_update)
     return ap
 
 

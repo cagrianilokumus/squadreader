@@ -44,6 +44,21 @@ DEFAULTS: dict[str, Any] = {
     "push_replay": True,
     # Where the pending-push queue lives; default is next to the stats DB.
     "push_backlog_dir": None,
+    # Remote-update rollout channel this agent follows. "stable" gets promoted
+    # packs/releases; "beta" opts into canary ones first. Reported on each fleet
+    # check-in and used by central to decide what (if anything) to serve us.
+    "update_channel": "stable",
+    # Auto-apply signed offset packs when a Squad patch drifts the reader
+    # (self-heal). Verified (Ed25519) → applied → re-checked with doctor → rolled
+    # back if it doesn't clear the drift. Only ever active on an enrolled,
+    # push-enabled box. Set false to require manual offset updates.
+    "offset_autoheal": True,
+    # Fetch + verify + STAGE signed agent code releases (Phase 2 self-update).
+    # OFF by default (opt-in): pulling new CODE is higher-risk than offset data.
+    # Even when on, the running reader never installs itself — it stages the
+    # verified artifact and `sqreader apply-staged-update` (run by the deploy
+    # layer at restart) performs the install.
+    "update_enabled": False,
 }
 
 _cache: dict[str, Any] | None = None

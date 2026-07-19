@@ -98,11 +98,28 @@ def test_vk_rejects_negative_and_nonnumeric():
     assert _vk("x") is None
 
 
-# --- _clean_tag (keep stylized Unicode; drop mojibake / eos-id alias) -------
+# --- _clean_tag (keep stylized Latin/symbol tags; drop torn-read mojibake) --
+# Policy: keep symbols, box-drawing lines, CJK brackets/punctuation ("『』〖〗"),
+# Greek/Cyrillic and Latin. Reject torn-read mojibake — CJK/Hangul/Kana
+# ideographs, block elements, zalgo — even a genuine all-ideograph tag (accepted
+# tradeoff: that garbage is far more common than a real short ideograph tag).
 
 def test_clean_tag_keeps_legit_stylized_tags():
-    for ok in ("BΛDGΞR♦", "✦ AC ✦", "TRB │ ♠", "『GM』", "鸧", "8mm", "TIM"):
+    for ok in ("BΛDGΞR♦", "✦ AC ✦", "TRB │ ♠", "『GM』", "〖GM〗", "8mm", "TIM"):
         assert _clean_tag(ok) == ok
+
+
+def test_clean_tag_rejects_torn_read_cjk_mojibake():
+    # The "Chinese-looking" leaderboard garbage: a torn/stale
+    # PlayerNamePrefix read decodes as random CJK / Hangul / Kana
+    # ideographs, block elements, and zalgo combining marks. Escapes keep
+    # the source ASCII-safe. None is a real clan tag.
+    for junk in ("银蓬祀m", "绰黑祀m",  # CJK
+                 "김嗯QZ", "鸧",                    # Hangul + CJK
+                 "▇▇QZ",                             # block elements
+                 "アイ",                               # katakana
+                 "Ä̈B"):                            # zalgo combining
+        assert _clean_tag(junk) is None
 
 
 def test_clean_tag_strips_surrounding_space():
