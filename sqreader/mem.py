@@ -27,7 +27,7 @@ import re
 import struct
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator
+from typing import Iterator, Sequence
 
 
 @dataclass(frozen=True, slots=True)
@@ -235,6 +235,32 @@ class ProcessMemory:
         if end >= 0:
             raw = raw[:end]
         return raw.decode("utf-8", errors="replace")
+
+    # -- batched reads --------------------------------------------------------
+
+    def read_many(
+        self, requests: Sequence[tuple[int, int]],
+    ) -> list[bytes]:
+        """Read a list of (addr, size) regions and return their bytes in order.
+
+        Currently a straight loop over ``read()`` — a subsequent commit
+        will transparently fold multi-region reads into a single
+        process_vm_readv syscall on Linux (with a per-region pread
+        fallback), so this is the batching hook every caller should
+        migrate to. Raises OSError on the first failed region, matching
+        ``read()`` semantics exactly.
+        """
+        return [self.read(addr, size) for addr, size in requests]
+
+    def try_read_many(
+        self, requests: Sequence[tuple[int, int]],
+    ) -> list[bytes | None]:
+        """Non-raising batched read: failed regions become ``None`` at
+        their slot in the returned list; the loop always completes.
+
+        Same future-batching note as ``read_many``.
+        """
+        return [self.try_read(addr, size) for addr, size in requests]
 
     # -- region iteration -----------------------------------------------------
 
