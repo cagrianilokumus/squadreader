@@ -346,14 +346,40 @@ def _post_json(url: str, obj: dict[str, Any], *, timeout: float) -> dict[str, An
     return parsed if isinstance(parsed, dict) else {}
 
 
+_RETRY_BACKOFFS: tuple[float, ...] = (1.0, 2.0, 4.0)
+
+
 def _send(req: urllib.request.Request, *, timeout: float) -> bytes:
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
-            return resp.read()
-    except urllib.error.HTTPError as exc:
-        raise PushError(f"central HTTP {exc.code}") from exc
-    except (urllib.error.URLError, OSError, TimeoutError) as exc:
-        raise PushError(f"central unreachable: {exc}") from exc
+    """POST/GET with exponential-backoff retry on transient failure.
+
+    Retries on network errors (URLError/OSError/TimeoutError) and 5xx
+    server responses up to len(_RETRY_BACKOFFS) times, with the listed
+    delays between attempts. A 4xx returns immediately — those are
+    typically malformed requests (a client-side bug, not transient).
+
+    Complements the backlog-layer marker retry in flush_backlog(): that
+    layer catches anything we ultimately fail (marker stays, next
+    flush cycle retries ~30 s later). This retry exists to shorten
+    recovery from short-lived hiccups (a dropped packet, a proxy
+    reboot) so the marker doesn't sit for the full flush interval.
+    """
+    max_retries = len(_RETRY_BACKOFFS)
+    for attempt in range(max_retries + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
+                return resp.read()
+        except urllib.error.HTTPError as exc:
+            if 500 <= exc.code < 600 and attempt < max_retries:
+                time.sleep(_RETRY_BACKOFFS[attempt])
+                continue
+            raise PushError(f"central HTTP {exc.code}") from exc
+        except (urllib.error.URLError, OSError, TimeoutError) as exc:
+            if attempt < max_retries:
+                time.sleep(_RETRY_BACKOFFS[attempt])
+                continue
+            raise PushError(f"central unreachable: {exc}") from exc
+    # Defensive: the loop always exits via `return` or `raise`.
+    raise PushError("send exhausted all retries")
 
 
 def _atomic_json(path: Path, obj: dict[str, Any]) -> None:
