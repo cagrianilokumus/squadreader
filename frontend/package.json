@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test:kf": "esbuild src/killfeed/diff.test.mts --bundle --platform=node --format=esm --outfile=node_modules/.cache/kf-test.mjs --log-level=warning && node node_modules/.cache/kf-test.mjs",
     "test:cap": "esbuild src/canvas/capVisibility.test.mts --bundle --platform=node --format=esm --outfile=node_modules/.cache/cap-test.mjs --log-level=warning && node node_modules/.cache/cap-test.mjs",
-    "test:tickets": "esbuild src/state/ticketTimeline.test.mts --bundle --platform=node --format=esm --outfile=node_modules/.cache/tickets-test.mjs --log-level=warning && node node_modules/.cache/tickets-test.mjs"
+    "test:tickets": "esbuild src/state/ticketTimeline.test.mts --bundle --platform=node --format=esm --outfile=node_modules/.cache/tickets-test.mjs --log-level=warning && node node_modules/.cache/tickets-test.mjs",
+    "test:recon": "esbuild src/state/replayReconstruct.test.mts --bundle --platform=node --format=esm --outfile=node_modules/.cache/recon-test.mjs --log-level=warning && node node_modules/.cache/recon-test.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

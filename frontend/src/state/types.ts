@@ -462,6 +462,39 @@ export interface Snapshot {
   damageEvents: DamageEvent[];
 }
 
+// ----- two-tier recording: compact 4 Hz position frames --------------------
+// Emitted by the agent's position sampler between full snapshots (`"t":"pos"`
+// NDJSON lines). Reconstructed into full Snapshots at load time (see
+// replayReconstruct.ts) so the existing frame-interpolation renders smooth 4 Hz
+// movement with zero render-path change. `id` is the same identity the viewer
+// matches on: a player's eosId ?? name, a vehicle's id.
+export interface PositionPlayer {
+  id: string;
+  x: number;
+  y: number;
+  z?: number | null;
+  h?: number | null;    // health
+  yaw?: number | null;
+}
+
+export interface PositionVehicle {
+  id: string;
+  x: number;
+  y: number;
+  h?: number | null;    // health
+  yaw?: number | null;
+  team?: number | null;
+}
+
+export interface PositionFrame {
+  t: "pos";
+  tick?: number;
+  timestamp: string;
+  fullTick?: number;
+  players: PositionPlayer[];
+  vehicles: PositionVehicle[];
+}
+
 // View transform: same model the old viewer used.
 export interface ViewState {
   minX: number;
@@ -498,6 +531,12 @@ export interface RecordingMeta {
   layerName: string | null;
   matchId: string | null;
   peakPlayers: number | null;
+  // Two-tier recording: `ticks` counts full (~1 Hz rich) frames only, for
+  // backward-compat; positionFrames counts the 4 Hz position frames spliced in
+  // at load time. totalFrames = ticks + positionFrames = the reconstructed
+  // Snapshot[] length (loader progress denominator). Absent on full-only .sqrx.
+  positionFrames?: number | null;
+  totalFrames?: number | null;
   team1Tickets?: number | null;
   team2Tickets?: number | null;
   team1Faction?: string | null;

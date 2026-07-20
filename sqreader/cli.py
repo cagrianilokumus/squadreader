@@ -24,7 +24,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Sequence
+from typing import Any, Sequence
 
 from . import config, elo
 
@@ -162,6 +162,26 @@ def _open_pipeline(pid: int | None, *, with_metadata: bool):
     paths = resolve_paths(pm, arr, alloc)
     metadata = Metadata.load() if with_metadata else None
     return pid, pm, arr, alloc, paths, metadata
+
+
+def _scanner_suspect(snap: dict) -> bool:
+    """Cache-poisoning signature: a populated InProgress match reading almost no
+    alive-with-position soldiers. Squad remaps class subobjects mid-match and our
+    caches poison silently → partial scans. Healthy live matches run 40-70% alive;
+    poisoned scans show 5-10%. Only judged while InProgress — outside it a low
+    alive-ratio is expected (players connected, soldiers despawned). Shared by the
+    single-tier loop and the background BuildWorker; the caller owns the warmup
+    skip + streak/reset response."""
+    if (snap.get("gameState") or {}).get("matchState") != "InProgress":
+        return False
+    ps = snap.get("players") or []
+    total = len(ps)
+    if total <= 20:
+        return False
+    alive = sum(1 for p in ps
+                if (s := p.get("soldier") or {}) and s.get("position")
+                and (s.get("health") or 0) > 0)
+    return alive < total * 0.20
 
 
 # ----- subcommands -----------------------------------------------------------
@@ -734,6 +754,41 @@ def cmd_serve(args: argparse.Namespace) -> int:
     if sqrx_writer:
         print(f"  tee .sqrx   -> {args.sqrx_out}", file=sys.stderr)
 
+    # --- two-tier recording (opt-in: --record-hz > --hz) -------------------
+    # The heavy full build runs on a background thread with its OWN pipeline;
+    # the main loop paces at record_hz, writing a cheap 4 Hz position frame each
+    # slot and folding in the worker's latest full frame whenever one is ready.
+    # Off by default (record_hz unset / <= hz) → the classic single-tier loop
+    # below runs byte-for-byte as before.
+    from datetime import datetime as _dt, timezone as _tz
+    record_hz = getattr(args, "record_hz", None)
+    two_tier = bool(record_hz and record_hz > args.hz)
+    worker = None
+    entities = None            # SampledEntities from the last full frame
+    last_full_gen = 0
+    sample_positions: Any = None
+    write_position_frame: Any = None
+    if two_tier and record_hz is not None:
+        from .squad.buildworker import ProcessBuildWorker
+        from .squad.possample import sample_positions
+        from .recorder import write_position_frame
+        # The heavy full build runs in a SEPARATE PROCESS (own GIL/core) that
+        # streams NDJSON snapshots; a thread worker starved the 4 Hz sampler via
+        # the GIL. The parent reads that pipe on an I/O thread + samples inline.
+        wargv = [sys.executable, "-m", "sqreader.cli", "build-worker",
+                 "--pid", str(pid), "--server-id", args.server_id]
+        if args.with_motd:
+            wargv.append("--with-motd")
+        if args.no_metadata:
+            wargv.append("--no-metadata")
+        worker = ProcessBuildWorker(
+            wargv, target_alive=lambda: _target_alive(pid))
+        worker.start()
+        period = 1.0 / record_hz
+        print(f"  two-tier: full ~{args.hz:g} Hz (bg process) + positions "
+              f"{record_hz:g} Hz -> {period*1000:.0f}ms slot; pid {pid}",
+              file=sys.stderr)
+
     stop = {"flag": False}
 
     def _stop(sig, frame):
@@ -780,142 +835,145 @@ def cmd_serve(args: argparse.Namespace) -> int:
     # spike. A full reset still happens as a recovery step: once, when
     # the sanity check first flags a bad tick (see below).
     CACHE_WINDOW_TICKS = 60
+
+    def _consume_full(snap: dict) -> None:
+        """Full-frame consumers shared by the single-tier loop (every tick) and
+        the two-tier loop (each fresh worker frame): authoritative kill-feed,
+        liveness beat, NDJSON/.sqrx tee, per-match recorder, player stats,
+        plugins. Every downstream is contained so its failure can never stop the
+        reader. `snap` must already carry `tick` + `perf`."""
+        nonlocal sqrx_raw_bytes
+        if log_tailer is not None:
+            from .squad.logtail import resolve_event_names
+            snap["damageEvents"] = resolve_event_names(
+                log_tailer.drain(), snap.get("players") or [])
+        line = json.dumps(snap, ensure_ascii=False) + "\n"
+        beat.mark()
+        if out_f:
+            out_f.write(line)
+            out_f.flush()
+        if sqrx_writer:
+            sqrx_raw_bytes += sqrx_writer.write_line(line)
+        # Per-match recorder: opens a new .sqrx on matchId change, closes when
+        # matchState leaves InProgress. State lives in `record_state_box`.
+        if recordings_dir:
+            try:
+                from .recorder import _handle_snap as _rec_step
+                _rec_step(
+                    snap=snap, raw_line=line,
+                    state_box=record_state_box,
+                    out_dir=recordings_dir,
+                    server_id=args.server_id,
+                    min_ticks=0,
+                    filename_buffer=record_filename_buffer,
+                )
+            except Exception as _rec_e:
+                print(f"[tick {tick}] recorder error: {_rec_e!r}",
+                      file=sys.stderr)
+        # Persistent player stats — same containment as the recorder: a stats
+        # bug can only ever cost stats, never the live reader.
+        if stats_store is not None:
+            try:
+                stats_store.record_tick(snap)
+            except Exception as _st_e:
+                print(f"[tick {tick}] stats error: {_st_e!r}", file=sys.stderr)
+        # Plugins last, behind the same containment. They run on this thread on
+        # purpose (see plugins/base.py), so a slow one shows up as reader lag.
+        if plugin_mgr is not None:
+            try:
+                _pl_t0 = time.time()
+                plugin_mgr.run_tick(snap, tick=tick)
+                _pl_ms = (time.time() - _pl_t0) * 1000.0
+                if _pl_ms > _PLUGIN_BUDGET_MS:
+                    print(f"[tick {tick}] plugins took {_pl_ms:.0f}ms "
+                          f"(budget {_PLUGIN_BUDGET_MS:.0f}ms)",
+                          file=sys.stderr)
+            except Exception as _pl_e:
+                print(f"[tick {tick}] plugin error: {_pl_e!r}", file=sys.stderr)
+
+    snap: dict = {}
     try:
         while not stop["flag"]:
             tick += 1
             t_tick = time.time()
             try:
-                # Inside the try so a transient read error from
-                # num_elements lands in the same per-tick recovery path
-                # as any other /proc hiccup.
-                caches.partial_invalidate(tick, window=CACHE_WINDOW_TICKS,
-                                          total_slots=arr.num_elements)
-                snap = clean_nonfinite(build_snapshot(
-                    pm, arr, alloc,
-                    server_id=args.server_id,
-                    include_motd=args.with_motd,
-                    paths=paths, metadata=meta,
-                    caches=caches, damage_tracker=damage_tracker,
-                ))
-                build_ms = (time.time() - t_tick) * 1000
-                stats_state["tick"] = tick
-                stats_state["lastBuildMs"] = round(build_ms, 1)
-                stats_state["avgBuildMs"] = (
-                    build_ms if stats_state["avgBuildMs"] is None
-                    else stats_state["avgBuildMs"] * 0.9 + build_ms * 0.1)
-                snap["tick"] = tick
-                snap["perf"] = {
-                    "buildMs": round(build_ms, 1),
-                    "objClassHits": caches.obj_class_hits,
-                    "objClassMisses": caches.obj_class_misses,
-                    "objClassSerialBumps": caches.obj_class_serial_bumps,
-                    "cacheResets": caches.reset_count,
-                }
-                # Scanner-health check — STABILITY-FIRST: it NEVER exits the
-                # process. This block used to sys.exit(1) on a content
-                # heuristic (low alive-ratio / null mapName). That heuristic
-                # false-positived at EVERY match transition — players stay
-                # CONNECTED but their soldiers despawn, so alive-ratio
-                # legitimately collapses — and produced ~100% of all observed
-                # restarts (110/110 self-heal exits on a healthy process).
-                # Now:
-                #   (a) we only judge health while a match is actually
-                #       InProgress; outside that (WaitingToStart /
-                #       WaitingPostMatch / Warmup / EndState / None) a low
-                #       alive-ratio and a null mapName are EXPECTED.
-                #   (b) the ONLY response to a genuine suspicion is an
-                #       in-process cache reset (re-resolves class pointers);
-                #       we then keep serving the last-good snapshot.
-                # Serving stale data through a rough patch is the accepted
-                # trade — a restart loop is not. (First-10-tick warm-up skip
-                # retained so a cold start's partial scan isn't misjudged.)
-                if tick >= 10 and (snap.get("gameState") or {}).get(
-                        "matchState") == "InProgress":
-                    ps = snap.get("players") or []
-                    total_players = len(ps)
-                    alive_with_pos = sum(
-                        1 for p in ps
-                        if (s := p.get("soldier") or {}) and s.get("position")
-                           and (s.get("health") or 0) > 0)
-                    # A populated LIVE match reading almost no alive-with-
-                    # position soldiers is the real cache-poisoning signature
-                    # (Squad remaps class subobjects mid-match). Healthy live
-                    # matches run 40-70% alive; poisoned scans show 5-10%.
-                    scanner_suspect = (total_players > 20
-                                       and alive_with_pos < total_players * 0.20)
-                    if scanner_suspect:
+                if two_tier:
+                    # -- Two-tier: fold in the worker's latest full frame when
+                    # ready, otherwise write a cheap 4 Hz position frame. --
+                    if worker is not None and worker.target_gone:
+                        print(f"[tick {tick}] target pid {pid} is gone "
+                              "(build worker); exiting for systemd restart",
+                              file=sys.stderr)
+                        sys.exit(1)
+                    frame = worker.latest() if worker is not None else None
+                    if frame is not None and frame.gen != last_full_gen:
+                        last_full_gen = frame.gen
+                        snap = frame.snap
+                        stats_state["tick"] = tick
+                        stats_state["lastBuildMs"] = round(frame.build_ms, 1)
+                        stats_state["avgBuildMs"] = (
+                            frame.build_ms if stats_state["avgBuildMs"] is None
+                            else stats_state["avgBuildMs"] * 0.9
+                            + frame.build_ms * 0.1)
+                        _consume_full(snap)
+                        entities = frame.entities
+                    elif entities is not None:
+                        ts = _dt.now(_tz.utc).isoformat()
+                        pos = sample_positions(pm, paths, entities, tick, ts)
+                        pos_line = json.dumps(pos, ensure_ascii=False) + "\n"
+                        beat.mark()
+                        if out_f:
+                            out_f.write(pos_line)
+                            out_f.flush()
+                        if sqrx_writer:
+                            sqrx_raw_bytes += sqrx_writer.write_line(pos_line)
+                        if recordings_dir:
+                            write_position_frame(record_state_box, pos_line)
+                    # else: worker still warming — no full frame + no entities.
+                else:
+                    # Inside the try so a transient read error from
+                    # num_elements lands in the same per-tick recovery path
+                    # as any other /proc hiccup.
+                    caches.partial_invalidate(tick, window=CACHE_WINDOW_TICKS,
+                                              total_slots=arr.num_elements)
+                    snap = clean_nonfinite(build_snapshot(
+                        pm, arr, alloc,
+                        server_id=args.server_id,
+                        include_motd=args.with_motd,
+                        paths=paths, metadata=meta,
+                        caches=caches, damage_tracker=damage_tracker,
+                    ))
+                    build_ms = (time.time() - t_tick) * 1000
+                    stats_state["tick"] = tick
+                    stats_state["lastBuildMs"] = round(build_ms, 1)
+                    stats_state["avgBuildMs"] = (
+                        build_ms if stats_state["avgBuildMs"] is None
+                        else stats_state["avgBuildMs"] * 0.9 + build_ms * 0.1)
+                    snap["tick"] = tick
+                    snap["perf"] = {
+                        "buildMs": round(build_ms, 1),
+                        "objClassHits": caches.obj_class_hits,
+                        "objClassMisses": caches.obj_class_misses,
+                        "objClassSerialBumps": caches.obj_class_serial_bumps,
+                        "cacheResets": caches.reset_count,
+                    }
+                    # Scanner-health, STABILITY-FIRST: never exits, only
+                    # re-resolves the class caches on a genuine cache-poisoning
+                    # suspicion (a populated InProgress match reading almost no
+                    # alive-with-position soldiers), rate-limited. Warmup skip
+                    # (>=10) so a cold start's partial scan isn't misjudged. In
+                    # two-tier mode the BuildWorker runs this on its own thread.
+                    if tick >= 10 and _scanner_suspect(snap):
                         bad_streak += 1
-                        # Re-resolve on first suspicion, then only rarely if
-                        # it persists — caches.reset() is a ~1-2s rebuild
-                        # spike, so we rate-limit it. Never exit.
                         if bad_streak == 1 or bad_streak % 120 == 0:
                             caches.reset(tick=tick,
                                          reason="scanner-suspect recovery")
                             print(f"[tick {tick}] SANITY: InProgress low-alive "
-                                  f"({alive_with_pos}/{total_players}), "
-                                  f"streak={bad_streak} -> in-process cache "
-                                  "reset (NOT exiting)", file=sys.stderr)
+                                  f"-> in-process cache reset (streak="
+                                  f"{bad_streak}, NOT exiting)", file=sys.stderr)
                     else:
                         bad_streak = 0
-                else:
-                    bad_streak = 0
-                # Replace the memory take-hit events with the log's
-                # authoritative ones when the tailer is running. Empty is
-                # correct (no kills this tick); the memory events only stand
-                # in if the tailer never started.
-                if log_tailer is not None:
-                    from .squad.logtail import resolve_event_names
-                    snap["damageEvents"] = resolve_event_names(
-                        log_tailer.drain(), snap.get("players") or [])
-                line = json.dumps(snap, ensure_ascii=False) + "\n"
-                beat.mark()
-                if out_f:
-                    out_f.write(line)
-                    out_f.flush()
-                if sqrx_writer:
-                    sqrx_raw_bytes += sqrx_writer.write_line(line)
-                # Per-match recorder: opens a new .sqrx on matchId change,
-                # closes when matchState leaves InProgress. State lives
-                # in `record_state_box` initialized before the loop.
-                if recordings_dir:
-                    try:
-                        from .recorder import _handle_snap as _rec_step
-                        _rec_step(
-                            snap=snap, raw_line=line,
-                            state_box=record_state_box,
-                            out_dir=recordings_dir,
-                            server_id=args.server_id,
-                            min_ticks=0,
-                            filename_buffer=record_filename_buffer,
-                        )
-                    except Exception as _rec_e:
-                        print(f"[tick {tick}] recorder error: {_rec_e!r}",
-                              file=sys.stderr)
-                # Persistent player stats — same containment as the recorder:
-                # a stats bug can only ever cost stats, never the live reader.
-                if stats_store is not None:
-                    try:
-                        stats_store.record_tick(snap)
-                    except Exception as _st_e:
-                        print(f"[tick {tick}] stats error: {_st_e!r}",
-                              file=sys.stderr)
-                # Plugins last, and behind the same containment. They run on this
-                # thread on purpose (see plugins/base.py), so a slow one shows up
-                # as reader lag — which is why we also time it: at 0.5 Hz the
-                # whole tick budget is 2 s and the reader owns that budget, not
-                # the plugins.
-                if plugin_mgr is not None:
-                    try:
-                        _pl_t0 = time.time()
-                        plugin_mgr.run_tick(snap, tick=tick)
-                        _pl_ms = (time.time() - _pl_t0) * 1000.0
-                        if _pl_ms > _PLUGIN_BUDGET_MS:
-                            print(f"[tick {tick}] plugins took {_pl_ms:.0f}ms "
-                                  f"(budget {_PLUGIN_BUDGET_MS:.0f}ms)",
-                                  file=sys.stderr)
-                    except Exception as _pl_e:
-                        print(f"[tick {tick}] plugin error: {_pl_e!r}",
-                              file=sys.stderr)
+                    _consume_full(snap)
             except OSError as e:
                 if not _target_alive(pid):
                     print(f"[tick {tick}] target pid {pid} is gone "
@@ -926,10 +984,6 @@ def cmd_serve(args: argparse.Namespace) -> int:
                 time.sleep(period)
                 continue
             except Exception as e:
-                # Don't let one bad tick kill the whole serve. Print full
-                # traceback so we can diagnose, sleep one period, retry.
-                # KeyboardInterrupt/SystemExit aren't subclasses of
-                # Exception, so Ctrl-C / `kill` still propagate.
                 import traceback
                 print(f"[tick {tick}] snapshot error: {e!r}", file=sys.stderr)
                 traceback.print_exc(file=sys.stderr)
@@ -960,12 +1014,15 @@ def cmd_serve(args: argparse.Namespace) -> int:
 
             # Fleet check-in every ~5 min (first ~60s post-boot), then an offset
             # self-heal attempt on the same cadence. Off the hot path; both are
-            # best-effort. A successful self-heal rebinds `paths` for later ticks.
+            # best-effort. A successful self-heal rebinds `paths` for later ticks
+            # (and hands them to the build worker in two-tier mode).
             if push_active and now - last_checkin >= fleet.CHECKIN_INTERVAL_SEC:
                 _checkin()
                 _healed = _selfheal()
                 if _healed is not None:
                     paths = _healed
+                    if worker is not None:
+                        worker.update_paths(_healed)
                 _check_update()
                 last_checkin = now
 
@@ -973,6 +1030,8 @@ def cmd_serve(args: argparse.Namespace) -> int:
             if sleep_for > 0:
                 time.sleep(sleep_for)
     finally:
+        if worker is not None:
+            worker.stop()
         # Close any in-progress writer so the .sqrx footer is written.  A
         # shutdown does not prove that the match ended, so finalize_recording
         # deliberately leaves the sidecar ``unverified``; the HTTP gate keeps
@@ -995,7 +1054,7 @@ def cmd_serve(args: argparse.Namespace) -> int:
                       file=sys.stderr)
         _flush_push()  # best-effort: push whatever finalized before we exit
         if placer_cache_path is not None:
-            _save_placer_cache(caches, placer_cache_path)  # keep placers across restart
+            _save_placer_cache(caches, placer_cache_path)  # keep placers
         srv.shutdown()
         if out_f:
             out_f.close()
@@ -1656,6 +1715,157 @@ def _render_summary(snap: dict) -> None:
 
 # ----- argparse plumbing -----------------------------------------------------
 
+def cmd_build_worker(args: argparse.Namespace) -> int:
+    """Internal: the full-build subprocess for two-tier recording. Opens its own
+    read-only pipeline to the target and free-runs `build_snapshot`, streaming
+    each finished snapshot as one NDJSON line to stdout. The parent `serve` loop
+    reads these on an I/O thread while sampling positions at 4 Hz — the build's
+    CPU/GIL cost lives here, in a separate process, so it can't starve the
+    sampler. Runs until the target dies or the parent kills it. Not for hand-use.
+    """
+    from .squad.snapshot import (
+        DamageTracker, SnapshotCaches, build_snapshot, clean_nonfinite,
+    )
+    pid, pm, arr, alloc, paths, meta = _open_pipeline(
+        args.pid, with_metadata=not args.no_metadata)
+    caches = SnapshotCaches()
+    damage_tracker = DamageTracker()
+    out = sys.stdout
+    tick = 0
+    bad_streak = 0
+    cache_window = 60
+    parent_pid = os.getppid()
+    print(f"build-worker: streaming full snapshots for pid {pid}",
+          file=sys.stderr)
+    while True:
+        # Orphan guard: if the parent `serve` died (ppid changed), stop —
+        # don't linger building against a closed pipe.
+        if os.getppid() != parent_pid:
+            return 0
+        tick += 1
+        t0 = time.time()
+        try:
+            caches.partial_invalidate(tick, window=cache_window,
+                                      total_slots=arr.num_elements)
+            snap = clean_nonfinite(build_snapshot(
+                pm, arr, alloc,
+                server_id=args.server_id, include_motd=args.with_motd,
+                paths=paths, metadata=meta,
+                caches=caches, damage_tracker=damage_tracker))
+            build_ms = (time.time() - t0) * 1000
+            snap["tick"] = tick
+            snap["perf"] = {
+                "buildMs": round(build_ms, 1),
+                "objClassHits": caches.obj_class_hits,
+                "objClassMisses": caches.obj_class_misses,
+                "objClassSerialBumps": caches.obj_class_serial_bumps,
+                "cacheResets": caches.reset_count,
+                "tier": "full",
+            }
+            # Scanner-health on the worker's own caches (STABILITY-FIRST: never
+            # exit on a content heuristic; only re-resolve, rate-limited).
+            if tick >= 10 and _scanner_suspect(snap):
+                bad_streak += 1
+                if bad_streak == 1 or bad_streak % 120 == 0:
+                    caches.reset(tick=tick, reason="scanner-suspect recovery")
+            else:
+                bad_streak = 0
+            out.write(json.dumps(snap, ensure_ascii=False) + "\n")
+            out.flush()
+        except OSError as e:
+            if not _target_alive(pid):
+                print(f"[build-worker] target pid {pid} gone; exiting",
+                      file=sys.stderr)
+                return 1
+            print(f"[build-worker] read error: {e!r}", file=sys.stderr)
+            time.sleep(0.5)
+        except BrokenPipeError:
+            # Parent closed the pipe (serve stopped / restarted) — we're done.
+            return 0
+        except Exception as e:  # noqa: BLE001 - one bad tick must not kill us
+            import traceback
+            print(f"[build-worker] snapshot error: {e!r}", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
+            time.sleep(0.5)
+
+
+def cmd_profile_build(args: argparse.Namespace) -> int:
+    """Profile the FULL snapshot build vs the fast POSITION sampler on the live
+    process — the Phase-0 measurement that gates the two-tier 4 Hz concurrency
+    choice. Read-only: runs N builds + N samples and reports timing percentiles,
+    entity counts, and an optional cProfile breakdown of one build."""
+    import statistics
+
+    from .squad.possample import SampledEntities, sample_positions
+    from .squad.snapshot import SnapshotCaches, build_snapshot, clean_nonfinite
+
+    pid, pm, arr, alloc, paths, meta = _open_pipeline(args.pid, with_metadata=True)
+    caches = SnapshotCaches()
+    n = max(1, int(args.iters))
+
+    def _pctl(xs: list[float], p: float) -> float:
+        s = sorted(xs)
+        return s[min(len(s) - 1, int(len(s) * p))]
+
+    def _build() -> dict:
+        caches.partial_invalidate(_build.i, total_slots=arr.num_elements)  # type: ignore[attr-defined]
+        _build.i += 1  # type: ignore[attr-defined]
+        return clean_nonfinite(build_snapshot(
+            pm, arr, alloc, paths=paths, metadata=meta, caches=caches))
+    _build.i = 0  # type: ignore[attr-defined]
+
+    print(f"pid {pid}: warming caches (3 builds)...", file=sys.stderr)
+    snap = {}
+    for _ in range(3):
+        snap = _build()
+
+    build_ms: list[float] = []
+    for _ in range(n):
+        t = time.perf_counter()
+        snap = _build()
+        build_ms.append((time.perf_counter() - t) * 1000)
+
+    ents = SampledEntities.from_snapshot(snap)
+    samp_ms: list[float] = []
+    for i in range(n):
+        t = time.perf_counter()
+        sample_positions(pm, paths, ents, i, "t")
+        samp_ms.append((time.perf_counter() - t) * 1000)
+
+    np_ = len(snap.get("players") or [])
+    nv = len(snap.get("vehicles") or [])
+    print(f"\n=== profile-build  (N={n}) ===")
+    print(f"players={np_}  vehicles={nv}  "
+          f"sampled={len(ents.players)}p/{len(ents.vehicles)}v")
+    print(f"FULL build ms:  avg={statistics.mean(build_ms):6.0f}  "
+          f"p50={_pctl(build_ms, 0.5):5.0f}  p95={_pctl(build_ms, 0.95):5.0f}  "
+          f"min={min(build_ms):5.0f}  max={max(build_ms):5.0f}")
+    print(f"POS sample ms:  avg={statistics.mean(samp_ms):6.1f}  "
+          f"p50={_pctl(samp_ms, 0.5):5.1f}  p95={_pctl(samp_ms, 0.95):5.1f}  "
+          f"max={max(samp_ms):5.1f}")
+    print(f"obj_class: hits={caches.obj_class_hits} misses={caches.obj_class_misses}")
+    fp95 = _pctl(build_ms, 0.95)
+    if fp95 < 200:
+        print("GATE: full build p95 < 200ms -> INLINE 4 Hz viable (no worker)")
+    else:
+        print(f"GATE: full build p95 {fp95:.0f}ms -> background worker needed "
+              "(thread if pos-jitter ok, else process)")
+
+    if args.profile:
+        import cProfile
+        import io
+        import pstats
+        pr = cProfile.Profile()
+        pr.enable()
+        _build()
+        pr.disable()
+        buf = io.StringIO()
+        pstats.Stats(pr, stream=buf).sort_stats("cumulative").print_stats(25)
+        print("\n=== cProfile (one build, top 25 by cumulative) ===")
+        print(buf.getvalue())
+    return 0
+
+
 def cmd_apply_staged_update(args: argparse.Namespace) -> int:
     """Install a staged agent release (fetched + verified by `serve`). Meant to be
     run by the deploy/systemd layer at restart, NOT inside the live reader. It is
@@ -1745,6 +1955,12 @@ def build_parser() -> argparse.ArgumentParser:
                               "to expose externally)")
     p_serve.add_argument("--port", type=int, default=8080)
     p_serve.add_argument("--hz", type=float, default=3.0)
+    p_serve.add_argument(
+        "--record-hz", type=float, default=None,
+        help="Two-tier recording: sample entity positions at this rate (e.g. 4) "
+             "between full ~--hz snapshots. A background thread runs the full "
+             "build; the main loop writes 4 Hz position frames for smooth replay. "
+             "Omit (or <= --hz) to keep the classic single-tier loop.")
     p_serve.add_argument("--with-motd", action="store_true")
     p_serve.add_argument("--no-metadata", action="store_true")
     p_serve.add_argument("--out", type=Path,
@@ -1836,6 +2052,28 @@ def build_parser() -> argparse.ArgumentParser:
                                 "the live binary (run after Squad updates)")
     p_doc.add_argument("--pid", type=int)
     p_doc.set_defaults(func=cmd_doctor)
+
+    p_prof = sub.add_parser(
+        "profile-build",
+        help="profile the full build vs the 4 Hz position sampler (Phase-0 gate)")
+    p_prof.add_argument("--pid", type=int, default=None,
+                        help="Squad server PID (else auto-resolved)")
+    p_prof.add_argument("--iters", type=int, default=20,
+                        help="builds + samples to time (default 20)")
+    p_prof.add_argument("--profile", action="store_true",
+                        help="also print a cProfile breakdown of one build")
+    p_prof.set_defaults(func=cmd_profile_build)
+
+    # Internal: the full-build subprocess spawned by `serve --record-hz` for
+    # two-tier recording. Streams NDJSON snapshots to stdout; not for hand-use.
+    p_bw = sub.add_parser("build-worker",
+                          help="(internal) full-build subprocess for two-tier "
+                               "recording")
+    p_bw.add_argument("--pid", type=int, default=None)
+    p_bw.add_argument("--server-id", default=config.get("server_id"))
+    p_bw.add_argument("--with-motd", action="store_true")
+    p_bw.add_argument("--no-metadata", action="store_true")
+    p_bw.set_defaults(func=cmd_build_worker)
 
     p_enroll = sub.add_parser(
         "enroll",

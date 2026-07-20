@@ -103,6 +103,11 @@ class RecordingState:
     tick_count: int = 0
     peak_players: int = 0
     raw_bytes: int = 0  # uncompressed payload size, for meta.sizeBytes hint
+    # Two-tier recording: 4 Hz position frames interleaved between the ~1 Hz
+    # full frames. Counted separately so `tick_count` (and therefore meta
+    # `ticks`, central `has_replay`, peakPlayers) stays full-frame-only and
+    # backward-compatible; positionFrames is purely additive.
+    position_count: int = 0
 
 
 def _utc_now() -> datetime:
@@ -134,6 +139,7 @@ def extract_metadata(sqrx_path: Path) -> dict:
     first: Optional[dict] = None
     last: Optional[dict] = None
     ticks = 0
+    position_frames = 0
     peak_players = 0
     with SqrxReader(sqrx_path) as r:
         server_id = r.server_id
@@ -142,6 +148,14 @@ def extract_metadata(sqrx_path: Path) -> dict:
             try:
                 snap = json.loads(line)
             except json.JSONDecodeError:
+                continue
+            # Two-tier: position frames are lighter interleaved lines. They
+            # carry no map/mode/roster, so they never count as ticks or set
+            # first/last/peak — that keeps a re-scanned meta identical to a
+            # full-only recording plus a positionFrames tally. An old .sqrx
+            # (full frames, no "t") has t=None here → treated as a full frame.
+            if snap.get("t") == "pos":
+                position_frames += 1
                 continue
             if first is None:
                 first = snap
@@ -158,6 +172,7 @@ def extract_metadata(sqrx_path: Path) -> dict:
         last_snap=last,
         ticks=ticks,
         peak_players=peak_players,
+        position_frames=position_frames,
     )
 
 
@@ -170,6 +185,7 @@ def _build_meta(
     last_snap: Optional[dict],
     ticks: int,
     peak_players: int,
+    position_frames: int = 0,
 ) -> dict:
     """Common meta dict assembly used by both finalize and self-heal paths."""
     first_gs = (first_snap or {}).get("gameState") or {}
@@ -186,6 +202,8 @@ def _build_meta(
         "filename": sqrx_path.name,
         "sizeBytes": size_bytes,
         "ticks": ticks,
+        "positionFrames": position_frames,
+        "totalFrames": ticks + position_frames,
         "durationSec": duration,
         "startedAtUtc": (
             first_ts.isoformat() if first_ts
@@ -283,6 +301,8 @@ def finalize_recording(state: RecordingState, *, min_ticks: int = 0,
         "sizeBytes": (state.path.stat().st_size
                       if state.path.exists() else 0),
         "ticks": state.tick_count,
+        "positionFrames": state.position_count,
+        "totalFrames": state.tick_count + state.position_count,
         "durationSec": int((last_ts - first_ts).total_seconds()),
         "startedAtUtc": first_ts.isoformat(),
         "endedAtUtc": last_ts.isoformat(),
@@ -537,7 +557,27 @@ def _write_line(state: RecordingState, snap: dict, raw_line: str) -> None:
         state.peak_players = pc
 
 
+def write_position_frame(state_box: dict, pos_line: str) -> int:
+    """Append a 4 Hz position frame to the currently-open recording, if any.
+
+    Deliberately thin and side-channel: it appends `pos_line` (an already-
+    serialized ``{"t":"pos",...}`` NDJSON line) to the active writer and does
+    NOTHING else — it never opens or closes a recording, never touches the
+    match state machine or tick-sequence tracking, and never advances
+    `tick_count` / `peak_players` / timestamps (full frames own those, so
+    `ticks` and `has_replay` stay full-frame-based and backward-compatible).
+    Returns bytes written, or 0 when no recording is open (the sampler ran
+    between matches — the frame is simply dropped)."""
+    state: Optional[RecordingState] = state_box.get("current")
+    if state is None:
+        return 0
+    n = state.writer.write_line(pos_line)
+    state.raw_bytes += n
+    state.position_count += 1
+    return n
+
+
 __all__ = [
     "compute_filename", "RecordingState",
-    "extract_metadata", "finalize_recording",
+    "extract_metadata", "finalize_recording", "write_position_frame",
 ]

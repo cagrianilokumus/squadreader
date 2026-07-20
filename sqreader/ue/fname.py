@@ -133,6 +133,21 @@ class FNameEntryAllocator:
     def __init__(self, pm: ProcessMemory, base_addr: int):
         self.pm = pm
         self.base = base_addr
+        # comparison_index -> FNameEntry memo. The FName pool is append-only for
+        # the process lifetime: an entry, once written at (block, offset), never
+        # moves or changes, and comparison_index fully determines that location.
+        # So a resolved entry is cacheable forever — this turns every repeat name
+        # (class names, weapon classes, damage types resolved every tick) from an
+        # 8-byte block-ptr read + a 1024-byte pool read + parse into a dict hit.
+        # Only SUCCESSFUL resolutions are cached; a None (transient bad read or an
+        # index not yet populated) is left uncached so it retries next tick.
+        self._entry_cache: dict[int, FNameEntry] = {}
+
+    def clear_entry_cache(self) -> None:
+        """Drop the comparison_index memo (e.g. on a full cache reset). Rarely
+        needed — the pool is immutable for the process, so this is only for
+        symmetry with the snapshot caches."""
+        self._entry_cache.clear()
 
     # struct fields ----------------------------------------------------------
 
@@ -222,6 +237,9 @@ class FNameEntryAllocator:
 
     def resolve_entry_id(self, comparison_index: int) -> FNameEntry | None:
         """Look up an FNameEntry by its packed FNameEntryId (uint32)."""
+        cached = self._entry_cache.get(comparison_index)
+        if cached is not None:
+            return cached                        # zero syscalls on a repeat name
         block = (comparison_index >> 16) & 0xFFFF
         offset = (comparison_index & 0xFFFF) * 2
         if block > self.current_block:
@@ -232,7 +250,10 @@ class FNameEntryAllocator:
         data = self.pm.try_read(block_addr + offset, 1024)
         if data is None or len(data) < 2:
             return None
-        return parse_fname_entry(data, 0)
+        entry = parse_fname_entry(data, 0)
+        if entry is not None:
+            self._entry_cache[comparison_index] = entry
+        return entry
 
     def fname_to_str(self, comparison_index: int, number: int = 0) -> str | None:
         """Render an FName (ComparisonIndex + Number) to its display string."""

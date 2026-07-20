@@ -647,6 +647,12 @@ class SnapshotCaches:
     is_squad_data_marker: dict[int, SubclassCacheValue] = field(default_factory=dict)
     # class_addr -> is-subclass-of-any-projectile-base-we-track?
     is_tracked_projectile: dict[int, SubclassCacheValue] = field(default_factory=dict)
+    # class_addr -> (gen, category int) — the whole subclass ladder collapsed to
+    # ONE cached lookup. The 187k-object walk classifies each object with a
+    # single dict get instead of six _is_subclass_of calls; the ladder itself
+    # runs once per distinct class (~hundreds), not per object. Gen-aware like
+    # the subclass caches it is derived from, so a reset() re-derives lazily.
+    class_category: dict[int, tuple[int, int]] = field(default_factory=dict)
     # class_addr -> is-subclass-of-SQGraphInitializerComponent?
     is_lane_initializer: dict[int, SubclassCacheValue] = field(default_factory=dict)
     # class_addr -> is-subclass-of-SQGraphRAASVisualizerComponent?
@@ -665,6 +671,12 @@ class SnapshotCaches:
     # around for the lifetime of the vehicle.
     weapon_class_names: dict[int, str | None] = field(default_factory=dict)
     weapon_uobj_names:  dict[int, str | None] = field(default_factory=dict)
+    # SQVehicleComponent (wheels/tracks/ammo racks/engine) class + instance
+    # names. Components persist for the vehicle's life (~95% hit), and a vehicle
+    # can carry up to 64 of them — the biggest per-vehicle name-read amplifier,
+    # so cache both the class and the instance name by component address.
+    component_class_names: dict[int, str | None] = field(default_factory=dict)
+    component_uobj_names:  dict[int, str | None] = field(default_factory=dict)
     # Player identity caches — name + EOS id never change after the
     # player joins the server. PlayerState UObject addresses are
     # stable for the player's whole session, so cache hit on a
@@ -730,6 +742,8 @@ class SnapshotCaches:
         self.turret_class_names.clear()
         self.weapon_class_names.clear()
         self.weapon_uobj_names.clear()
+        self.component_class_names.clear()
+        self.component_uobj_names.clear()
         self.player_names.clear()
         self.player_eos_ids.clear()
 
@@ -2176,7 +2190,9 @@ def read_take_hit_info(pm: ProcessMemory, alloc: FNameEntryAllocator,
 
 
 def read_vehicle_component(pm: ProcessMemory, alloc: FNameEntryAllocator,
-                           comp_addr: int) -> dict[str, Any] | None:
+                           comp_addr: int,
+                           caches: SnapshotCaches | None = None,
+                           ) -> dict[str, Any] | None:
     """
     Read one SQVehicleComponent-derived actor (wheel / track / ammo rack
     / turret base — anything that subclasses SQVehicleComponent gets the
@@ -2184,9 +2200,27 @@ def read_vehicle_component(pm: ProcessMemory, alloc: FNameEntryAllocator,
     """
     if not comp_addr:
         return None
-    cls = _uobject_class_name(pm, comp_addr, alloc) or ""
-    name = _uobject_name(pm, comp_addr, alloc) or ""
-    out: dict[str, Any] = {"name": name, "className": cls}
+    # Class + instance names are stable for a component's life; cache them by
+    # address (same rationale + "only cache truthy non-'None'" retry guard as
+    # turrets above). Up to 64 components/vehicle → this is the heaviest
+    # per-vehicle name-read saver once FName memoization is in place.
+    if caches is not None:
+        cls = caches.component_class_names.get(comp_addr)
+        if cls is None and comp_addr not in caches.component_class_names:
+            cls = _uobject_class_name(pm, comp_addr, alloc)
+            if cls and cls != "None":
+                caches.component_class_names[comp_addr] = cls
+            cls = cls or ""
+        name = caches.component_uobj_names.get(comp_addr)
+        if name is None and comp_addr not in caches.component_uobj_names:
+            name = _uobject_name(pm, comp_addr, alloc)
+            if name and name != "None":
+                caches.component_uobj_names[comp_addr] = name
+            name = name or ""
+    else:
+        cls = _uobject_class_name(pm, comp_addr, alloc) or ""
+        name = _uobject_name(pm, comp_addr, alloc) or ""
+    out: dict[str, Any] = {"name": name or "", "className": cls or ""}
     b = pm.try_read(comp_addr + SQ_VEHCOMP_HEALTH_OFFSET, 4)
     if b and len(b) == 4:
         h = struct.unpack("<f", b)[0]
@@ -2202,6 +2236,7 @@ def read_vehicle_component(pm: ProcessMemory, alloc: FNameEntryAllocator,
 def read_vehicle_components(pm: ProcessMemory, alloc: FNameEntryAllocator,
                             vh_addr: int,
                             paths: SnapshotPaths | None = None,
+                            caches: SnapshotCaches | None = None,
                             ) -> list[dict[str, Any]]:
     """
     Walk SQVehicle.VehicleComponents (TArray<SQVehicleComponent*>) and
@@ -2218,7 +2253,7 @@ def read_vehicle_components(pm: ProcessMemory, alloc: FNameEntryAllocator,
         comp_addr = _safe(lambda i=i: pm.read_u64(hdr.data_ptr + i * 8))
         if not comp_addr:
             continue
-        rec = read_vehicle_component(pm, alloc, comp_addr)
+        rec = read_vehicle_component(pm, alloc, comp_addr, caches)
         if rec:
             out.append(rec)
     return out
@@ -2227,6 +2262,7 @@ def read_vehicle_components(pm: ProcessMemory, alloc: FNameEntryAllocator,
 def read_vehicle_engine(pm: ProcessMemory, alloc: FNameEntryAllocator,
                         vh_addr: int,
                         paths: SnapshotPaths | None = None,
+                        caches: SnapshotCaches | None = None,
                         ) -> dict[str, Any] | None:
     """
     Read CachedVehicleEngine pointer + treat it as a SQVehicleComponent.
@@ -2239,7 +2275,7 @@ def read_vehicle_engine(pm: ProcessMemory, alloc: FNameEntryAllocator,
             paths, "CachedVehicleEngine", SQ_VEHICLE_CACHED_ENGINE_OFFSET)))
     if not eng_addr:
         return None
-    return read_vehicle_component(pm, alloc, eng_addr)
+    return read_vehicle_component(pm, alloc, eng_addr, caches)
 
 
 def read_vehicle_turrets(pm: ProcessMemory, alloc: FNameEntryAllocator,
@@ -2341,6 +2377,32 @@ def read_vehicle_turrets(pm: ProcessMemory, alloc: FNameEntryAllocator,
     return out
 
 
+def read_root_pos_yaw(pm: ProcessMemory, actor_addr: int,
+                      paths: SnapshotPaths) -> dict[str, Any]:
+    """An actor's RootComponent -> cached world position + yaw + `attached` flag.
+
+    ComponentToWorld is the world-space transform UE maintains on every
+    USceneComponent, so it is correct even for an actor attached to a vehicle
+    seat (RelativeLocation would be parent-relative). Shared verbatim by the
+    soldier + vehicle reads AND the 4 Hz position sampler — one source, no drift.
+    Returns {} when the root component can't be read (caller treats missing keys
+    as null; no fabricated positions)."""
+    root = _safe(lambda: pm.read_u64(actor_addr + paths.actor_root_component_off))
+    if not root:
+        return {}
+    out: dict[str, Any] = {}
+    attach_parent = _safe(lambda: pm.read_u64(
+        root + paths.scene_attach_parent_off))
+    out["attached"] = bool(attach_parent)
+    v = read_fvector(pm, root + paths.scene_component_to_world_translation_off)
+    if v is not None:
+        out["position"] = {"x": v.x, "y": v.y, "z": v.z}
+    yaw = _world_yaw(pm, root, paths)
+    if yaw is not None:
+        out["yaw"] = yaw
+    return out
+
+
 def read_vehicle(pm: ProcessMemory, alloc: FNameEntryAllocator,
                  paths: SnapshotPaths, vh_addr: int,
                  class_name: str | None,
@@ -2368,21 +2430,10 @@ def read_vehicle(pm: ProcessMemory, alloc: FNameEntryAllocator,
     # team (uint8 enum on SQPawn at +0x343)
     if paths.sq_pawn_team_off is not None:
         out["team"] = _safe(lambda: pm.read_u8(vh_addr + paths.sq_pawn_team_off))
-    # position via RootComponent.ComponentToWorld.Translation (same
-    # reasoning as soldier: cached world transform handles attached
-    # actors correctly — e.g. a deployable mounted on a vehicle).
-    root = _safe(lambda: pm.read_u64(vh_addr + paths.actor_root_component_off))
-    if root:
-        attach_parent = _safe(lambda: pm.read_u64(
-            root + paths.scene_attach_parent_off))
-        out["attached"] = bool(attach_parent)
-        v = read_fvector(
-            pm, root + paths.scene_component_to_world_translation_off)
-        if v is not None:
-            out["position"] = {"x": v.x, "y": v.y, "z": v.z}
-        yaw = _world_yaw(pm, root, paths)
-        if yaw is not None:
-            out["yaw"] = yaw
+    # position via RootComponent.ComponentToWorld.Translation (cached world
+    # transform handles attached actors correctly — e.g. a deployable mounted
+    # on a vehicle). Shared helper, also used by the position sampler.
+    out.update(read_root_pos_yaw(pm, vh_addr, paths))
     # last damager (UObject* — chain to its name if non-null)
     if "LastDamageInstigator" in o:
         ld_addr = _safe(lambda: pm.read_u64(vh_addr + o["LastDamageInstigator"]))
@@ -2401,10 +2452,10 @@ def read_vehicle(pm: ProcessMemory, alloc: FNameEntryAllocator,
     # Phase 2B subsystems — engine + per-component HP + turret weapons.
     # Each call is independently fault-tolerant (returns None / [] on
     # any read failure), so a bad pointer can't blow up the snapshot.
-    eng = read_vehicle_engine(pm, alloc, vh_addr, paths)
+    eng = read_vehicle_engine(pm, alloc, vh_addr, paths, caches=caches)
     if eng:
         out["engine"] = eng
-    comps = read_vehicle_components(pm, alloc, vh_addr, paths)
+    comps = read_vehicle_components(pm, alloc, vh_addr, paths, caches=caches)
     if comps:
         out["components"] = comps
     turrets = read_vehicle_turrets(pm, alloc, vh_addr, paths, caches=caches)
@@ -2814,26 +2865,10 @@ def _read_soldier(pm: ProcessMemory, alloc: FNameEntryAllocator,
                         weapon["magazines"] = mags
                 block["weapon"] = weapon
 
-    # Position via RootComponent → ComponentToWorld.Translation.
-    # ComponentToWorld is the cached world-space transform UE maintains
-    # on every USceneComponent; reading it instead of RelativeLocation
-    # gives us the correct world position even when the soldier is
-    # attached to a vehicle seat (which would otherwise return
-    # parent-relative coords). We keep the AttachParent check around
-    # only as an `attached` informational flag.
-    root = _safe(lambda: pm.read_u64(
-        soldier_addr + paths.actor_root_component_off))
-    if root:
-        attach_parent = _safe(lambda: pm.read_u64(
-            root + paths.scene_attach_parent_off))
-        block["attached"] = bool(attach_parent)
-        v = read_fvector(
-            pm, root + paths.scene_component_to_world_translation_off)
-        if v is not None:
-            block["position"] = {"x": v.x, "y": v.y, "z": v.z}
-        yaw = _world_yaw(pm, root, paths)
-        if yaw is not None:
-            block["yaw"] = yaw
+    # Position via RootComponent -> ComponentToWorld.Translation (world-space
+    # cached transform, correct even when attached to a vehicle seat). Shared
+    # helper, also used by the 4 Hz position sampler.
+    block.update(read_root_pos_yaw(pm, soldier_addr, paths))
     return block
 
 
@@ -2939,6 +2974,17 @@ def read_lane_graph(pm: ProcessMemory, alloc: FNameEntryAllocator,
     return out
 
 
+# Object categories for the single-lookup classification dispatch (see the walk
+# in build_snapshot). Order mirrors the original _is_subclass_of elif ladder.
+_CAT_NONE = 0
+_CAT_GAMESTATE = 1
+_CAT_VEHICLE = 2
+_CAT_MARKER = 3
+_CAT_DEPLOYABLE = 4
+_CAT_SPAWNER = 5
+_CAT_RALLY = 6
+
+
 def build_snapshot(pm: ProcessMemory, arr: GUObjectArray,
                    alloc: FNameEntryAllocator,
                    *, server_id: str = "squad",
@@ -3037,6 +3083,34 @@ def build_snapshot(pm: ProcessMemory, arr: GUObjectArray,
             is_tracked_projectile_cache[class_addr] = (_subgen, ok)
         return ok
 
+    def _classify(class_addr: int) -> int:
+        """Collapse the six-check subclass ladder into one category, computed
+        once per distinct class. Same order/priority as the original elif chain,
+        so the FIRST base matched wins."""
+        if _is_subclass_of(pm, class_addr, sq_game_state_class,
+                           is_subgs_cache, _subgen):
+            return _CAT_GAMESTATE
+        if _is_subclass_of(pm, class_addr, sq_vehicle_class,
+                           is_vehicle_cache, _subgen):
+            return _CAT_VEHICLE
+        if sq_map_marker_class and _is_subclass_of(
+                pm, class_addr, sq_map_marker_class, is_marker_cache, _subgen):
+            return _CAT_MARKER
+        if sq_deployable_class and _is_subclass_of(
+                pm, class_addr, sq_deployable_class,
+                is_deployable_cache, _subgen):
+            return _CAT_DEPLOYABLE
+        if sq_vehicle_spawner_class and _is_subclass_of(
+                pm, class_addr, sq_vehicle_spawner_class,
+                is_vehicle_spawner_cache, _subgen):
+            return _CAT_SPAWNER
+        if sq_squad_rally_point_class and _is_subclass_of(
+                pm, class_addr, sq_squad_rally_point_class,
+                is_rally_cache, _subgen):
+            return _CAT_RALLY
+        return _CAT_NONE
+
+    class_category = caches.class_category
     obj_class_cache = caches.obj_class
     for idx, obj_addr, serial in arr.iter_object_records():
         # Defensive: under heavy GC churn on a populated server we've
@@ -3112,53 +3186,45 @@ def build_snapshot(pm: ProcessMemory, arr: GUObjectArray,
                     cz_class_addr = class_addr
             continue
 
-        # GameState singleton may be a Blueprint subclass.
-        if game_state_addr is None and _is_subclass_of(
-                pm, class_addr, sq_game_state_class, is_subgs_cache, _subgen):
-            nm = _uobject_name(pm, obj_addr, alloc) or ""
-            if not nm.startswith("Default__"):
-                game_state_addr = obj_addr
-            continue
+        # Subclass classification via ONE cached category lookup instead of six
+        # _is_subclass_of calls per object — the ladder runs once per distinct
+        # class (~hundreds), not per object (~187k). Gen-aware, mirroring the
+        # subclass caches it derives from. Order/priority = the original ladder.
+        cc = class_category.get(class_addr)
+        if cc is not None and cc[0] == _subgen:
+            cat = cc[1]
+        else:
+            cat = _classify(class_addr)
+            class_category[class_addr] = (_subgen, cat)
 
-        # Vehicles — any class deriving from SQVehicle, non-CDO.
-        if _is_subclass_of(pm, class_addr, sq_vehicle_class, is_vehicle_cache, _subgen):
+        if cat == _CAT_GAMESTATE:
+            # GameState singleton may be a Blueprint subclass; keep the first.
+            if game_state_addr is None:
+                nm = _uobject_name(pm, obj_addr, alloc) or ""
+                if not nm.startswith("Default__"):
+                    game_state_addr = obj_addr
+            continue
+        if cat == _CAT_VEHICLE:
             nm = _uobject_name(pm, obj_addr, alloc) or ""
             if not nm.startswith("Default__"):
                 vehicles_raw.append((obj_addr, class_addr))
             continue
-
-        # SL/FTL map markers — any class deriving from SQMapMarker.
-        if sq_map_marker_class and _is_subclass_of(
-                pm, class_addr, sq_map_marker_class, is_marker_cache, _subgen):
+        if cat == _CAT_MARKER:  # SL/FTL map markers (SQMapMarker subclasses)
             nm = _uobject_name(pm, obj_addr, alloc) or ""
             if not nm.startswith("Default__"):
                 markers_raw.append((obj_addr, class_addr))
             continue
-
-        # Deployables — FOB radios, HABs, ammo crates, repair stations,
-        # bunkers, sandbags, emplacements (TOW/HMG/mortar baseplate).
-        if sq_deployable_class and _is_subclass_of(
-                pm, class_addr, sq_deployable_class, is_deployable_cache, _subgen):
+        if cat == _CAT_DEPLOYABLE:  # FOB radios, HABs, crates, emplacements…
             nm = _uobject_name(pm, obj_addr, alloc) or ""
             if not nm.startswith("Default__"):
                 deployables_raw.append((obj_addr, class_addr))
             continue
-
-        # Vehicle spawners — per-pad actors that emit vehicles for each
-        # team's availability rules (LAVs/Bradleys/helis/trucks).
-        if sq_vehicle_spawner_class and _is_subclass_of(
-                pm, class_addr, sq_vehicle_spawner_class,
-                is_vehicle_spawner_cache, _subgen):
+        if cat == _CAT_SPAWNER:  # per-pad vehicle spawners
             nm = _uobject_name(pm, obj_addr, alloc) or ""
             if not nm.startswith("Default__"):
                 vehicle_spawners_raw.append((obj_addr, class_addr))
             continue
-
-        # Rally points — per-squad spawn actors. We render their position +
-        # owning squad number so the map shows "[Sqd 3 Rally]" type badges.
-        if sq_squad_rally_point_class and _is_subclass_of(
-                pm, class_addr, sq_squad_rally_point_class,
-                is_rally_cache, _subgen):
+        if cat == _CAT_RALLY:  # per-squad rally points
             nm = _uobject_name(pm, obj_addr, alloc) or ""
             if not nm.startswith("Default__"):
                 rally_points_raw.append((obj_addr, class_addr))

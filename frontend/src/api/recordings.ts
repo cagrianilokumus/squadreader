@@ -1,6 +1,7 @@
 // Thin fetch helpers for /api/recordings + /api/recording/<id>.
 
 import type { RecordingMeta, Snapshot } from "../state/types";
+import { ReplayReconstructor, type RecordingLine } from "../state/replayReconstruct";
 
 export async function listRecordings(): Promise<RecordingMeta[]> {
   const r = await fetch("./api/recordings", { cache: "no-store" });
@@ -28,13 +29,21 @@ export async function fetchRecordingFrames(
   const r = await fetch(`./api/recording/${encodeURIComponent(id)}`);
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   const out: Snapshot[] = [];
+  // Two-tier recordings interleave full frames with compact "t":"pos" position
+  // frames; the reconstructor folds them into one increasing Snapshot[]. A
+  // full-only .sqrx (no "t") passes straight through unchanged.
+  const recon = new ReplayReconstructor();
   const pushLine = (line: string) => {
     if (!line) return;
+    let parsed: RecordingLine;
     try {
-      out.push(JSON.parse(line) as Snapshot);
+      parsed = JSON.parse(line) as RecordingLine;
     } catch {
       // Bad line; skip — partial-write tail is rare but possible.
+      return;
     }
+    const snap = recon.push(parsed);
+    if (snap) out.push(snap);
   };
 
   const reader = r.body?.getReader();
