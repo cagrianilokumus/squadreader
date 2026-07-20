@@ -105,6 +105,22 @@ class UObject:
     outer_addr: int
 
 
+@dataclass(frozen=True, slots=True)
+class _Topology:
+    """One-shot snapshot of FChunkedFixedUObjectArray bookkeeping.
+
+    Each iter_object_addrs / iter_object_records call refreshes this
+    via a single bulk read of the chunks pointer table (NumChunks * 8
+    bytes), instead of doing a pm.read_u64 per chunk inside the loop.
+    A failed refresh clears the cache so the iterator transparently
+    falls back to the original per-property path.
+    """
+    num_elements: int
+    num_chunks: int
+    chunks_array_addr: int
+    chunk_ptrs: tuple[int, ...]
+
+
 def _read_item_block(pm: ProcessMemory, base_addr: int, count: int) -> bytes | None:
     """
     Read `count` FUObjectItem records starting at `base_addr`.
@@ -162,6 +178,45 @@ class GUObjectArray:
         self.pm = pm
         self.base = base_addr
         self.cfa_base = base_addr + FUOA_OBJOBJECTS
+        self._topology: _Topology | None = None
+
+    # topology cache --------------------------------------------------------
+
+    def refresh_topology(self) -> _Topology | None:
+        """Bulk-read bookkeeping + chunk pointer array; cache the result.
+
+        Iterators call this at entry so the per-chunk chunk_ptr lookup
+        is served from the cached tuple instead of a pm.read_u64 per
+        chunk. On any read failure or an implausible NumChunks the
+        cache is cleared and callers fall back to per-property reads —
+        behavior identical to the pre-cache code path.
+        """
+        try:
+            num_elements = self.pm.read_i32(self.cfa_base + FCFA_NUM_ELEMENTS)
+            num_chunks = self.pm.read_i32(self.cfa_base + FCFA_NUM_CHUNKS)
+            chunks_arr = self.pm.read_u64(self.cfa_base + FCFA_OBJECTS)
+        except (OSError, OverflowError, ValueError):
+            self._topology = None
+            return None
+        if num_chunks <= 0 or num_chunks > 4096 or chunks_arr <= 0:
+            self._topology = None
+            return None
+        raw = self.pm.try_read(chunks_arr, num_chunks * 8)
+        if raw is None or len(raw) != num_chunks * 8:
+            self._topology = None
+            return None
+        topo = _Topology(
+            num_elements=num_elements,
+            num_chunks=num_chunks,
+            chunks_array_addr=chunks_arr,
+            chunk_ptrs=struct.unpack(f"<{num_chunks}Q", raw),
+        )
+        self._topology = topo
+        return topo
+
+    def invalidate_topology(self) -> None:
+        """Drop cached topology; the next iterator call refreshes it."""
+        self._topology = None
 
     # FUObjectArray header --------------------------------------------------
 
@@ -181,6 +236,9 @@ class GUObjectArray:
 
     @property
     def num_elements(self) -> int:
+        topo = self._topology
+        if topo is not None:
+            return topo.num_elements
         return self.pm.read_i32(self.cfa_base + FCFA_NUM_ELEMENTS)
 
     @property
@@ -189,6 +247,9 @@ class GUObjectArray:
 
     @property
     def num_chunks(self) -> int:
+        topo = self._topology
+        if topo is not None:
+            return topo.num_chunks
         return self.pm.read_i32(self.cfa_base + FCFA_NUM_CHUNKS)
 
     @property
@@ -197,6 +258,9 @@ class GUObjectArray:
 
     @property
     def chunks_array_addr(self) -> int:
+        topo = self._topology
+        if topo is not None:
+            return topo.chunks_array_addr
         return self.pm.read_u64(self.cfa_base + FCFA_OBJECTS)
 
     # access ---------------------------------------------------------------
@@ -231,6 +295,11 @@ class GUObjectArray:
         Reads each chunk's FUObjectItem array in one shot for speed
         (~24 bytes × 65536 = 1.5 MiB per chunk).
 
+        Refreshes the topology cache at entry so per-chunk chunk_ptr
+        lookups come from a single bulk read of the pointer table
+        instead of NumChunks individual pm.read_u64 calls. On refresh
+        failure the loop falls back to the original per-property path.
+
         Per-chunk defense: an EIO / OverflowError on a single chunk
         pointer used to abort the entire iteration and starve the
         snapshot build (whole-snapshot dropout). Chunk contents go
@@ -238,21 +307,27 @@ class GUObjectArray:
         with zero-fill on failure — a bad page costs its own objects
         only, never the whole chunk.
         """
-        n = self.num_elements
+        self.refresh_topology()
+        topo = self._topology
+        n = topo.num_elements if topo is not None else self.num_elements
         if end is None:
             end = n
         end = min(end, n)
-        chunks_arr = self.chunks_array_addr
+        chunks_arr = topo.chunks_array_addr if topo is not None else self.chunks_array_addr
+        chunk_ptrs = topo.chunk_ptrs if topo is not None else None
         i = start
         while i < end:
             ch = i // NUM_ELEMENTS_PER_CHUNK
             within = i % NUM_ELEMENTS_PER_CHUNK
             in_chunk_count = min(NUM_ELEMENTS_PER_CHUNK - within, end - i)
-            try:
-                chunk_ptr = self.pm.read_u64(chunks_arr + ch * 8)
-            except (OSError, OverflowError, ValueError):
-                i += in_chunk_count
-                continue
+            if chunk_ptrs is not None and ch < len(chunk_ptrs):
+                chunk_ptr = chunk_ptrs[ch]
+            else:
+                try:
+                    chunk_ptr = self.pm.read_u64(chunks_arr + ch * 8)
+                except (OSError, OverflowError, ValueError):
+                    i += in_chunk_count
+                    continue
             if chunk_ptr <= 0 or chunk_ptr > 0x0000_7fff_ffff_ffff:
                 i += in_chunk_count
                 continue
@@ -278,23 +353,32 @@ class GUObjectArray:
         ClassPrivate hasn't changed either (slot has the same UObject
         as last tick), so the class_addr read can be skipped entirely.
         Saves ~400 ms per snapshot on a 187k-object server.
+
+        Refreshes the topology cache at entry (see iter_object_addrs)
+        so per-chunk chunk_ptr lookups are served from a bulk read.
         """
-        n = self.num_elements
+        self.refresh_topology()
+        topo = self._topology
+        n = topo.num_elements if topo is not None else self.num_elements
         if end is None:
             end = n
         end = min(end, n)
-        chunks_arr = self.chunks_array_addr
+        chunks_arr = topo.chunks_array_addr if topo is not None else self.chunks_array_addr
+        chunk_ptrs = topo.chunk_ptrs if topo is not None else None
         i = start
         while i < end:
             ch = i // NUM_ELEMENTS_PER_CHUNK
             within = i % NUM_ELEMENTS_PER_CHUNK
             in_chunk_count = min(NUM_ELEMENTS_PER_CHUNK - within, end - i)
-            try:
-                chunk_ptr = self.pm.read_u64(chunks_arr + ch * 8)
-            except (OSError, OverflowError, ValueError):
-                # Defensive: see iter_object_addrs — same hardening.
-                i += in_chunk_count
-                continue
+            if chunk_ptrs is not None and ch < len(chunk_ptrs):
+                chunk_ptr = chunk_ptrs[ch]
+            else:
+                try:
+                    chunk_ptr = self.pm.read_u64(chunks_arr + ch * 8)
+                except (OSError, OverflowError, ValueError):
+                    # Defensive: see iter_object_addrs — same hardening.
+                    i += in_chunk_count
+                    continue
             if chunk_ptr <= 0 or chunk_ptr > 0x0000_7fff_ffff_ffff:
                 i += in_chunk_count
                 continue
