@@ -127,12 +127,13 @@ def _read_item_block(pm: ProcessMemory, base_addr: int, count: int) -> bytes | N
 
     Fast path: one big read. On failure (EIO from a guard page mid-
     chunk, racing unmap) OR a short read, fall back to _SUB_BLOCK_ITEMS-
-    sized pieces; unreadable pieces are zero-filled so the caller's
-    "obj_addr == 0 → empty slot" handling skips exactly the objects
-    that were genuinely unreadable — instead of dropping the whole
-    chunk (worst case 65k objects = a whole team's soldiers gone from
-    one snapshot, which the map renders as players blinking out).
-    Returns None only when nothing at all could be read.
+    sized pieces issued as a single batched try_read_many; unreadable
+    pieces are zero-filled so the caller's "obj_addr == 0 → empty slot"
+    handling skips exactly the objects that were genuinely unreadable —
+    instead of dropping the whole chunk (worst case 65k objects = a
+    whole team's soldiers gone from one snapshot, which the map renders
+    as players blinking out). Returns None only when nothing at all
+    could be read.
     """
     want = count * UOBJECT_ITEM_SIZE
     try:
@@ -141,12 +142,16 @@ def _read_item_block(pm: ProcessMemory, base_addr: int, count: int) -> bytes | N
             return data
     except (OSError, OverflowError, ValueError):
         pass
-    parts: list[bytes] = []
-    got_any = False
+    requests: list[tuple[int, int]] = []
     for off_items in range(0, count, _SUB_BLOCK_ITEMS):
         n = min(_SUB_BLOCK_ITEMS, count - off_items)
         sub_want = n * UOBJECT_ITEM_SIZE
-        sub = pm.try_read(base_addr + off_items * UOBJECT_ITEM_SIZE, sub_want)
+        requests.append(
+            (base_addr + off_items * UOBJECT_ITEM_SIZE, sub_want))
+    results = pm.try_read_many(requests)
+    parts: list[bytes] = []
+    got_any = False
+    for (_, sub_want), sub in zip(requests, results, strict=True):
         if sub is not None and len(sub) == sub_want:
             parts.append(sub)
             got_any = True
