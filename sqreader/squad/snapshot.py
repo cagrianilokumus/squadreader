@@ -30,8 +30,11 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
 
+from .. import profiling
 from ..mem import ProcessMemory
 from ..ue.fname import FNameEntryAllocator
+
+_PROFILE = profiling.ENABLED
 from ..ue.reflection import (
     bool_property_mask, get_class_layout, struct_layout_for_field,
     walk_super_chain,
@@ -2994,6 +2997,8 @@ def build_snapshot(pm: ProcessMemory, arr: GUObjectArray,
                    caches: SnapshotCaches | None = None,
                    damage_tracker: DamageTracker | None = None,
                    ) -> dict[str, Any]:
+    if _PROFILE:
+        profiling.begin()
     # Allow callers to cache `paths` across many snapshots — resolving the
     # 8 class layouts costs ~150 ms and never changes within a process run.
     if paths is None:
@@ -3112,6 +3117,7 @@ def build_snapshot(pm: ProcessMemory, arr: GUObjectArray,
 
     class_category = caches.class_category
     obj_class_cache = caches.obj_class
+    _t_walk = profiling.start() if _PROFILE else 0
     for idx, obj_addr, serial in arr.iter_object_records():
         # Defensive: under heavy GC churn on a populated server we've
         # seen extremely-rare cases where the unpacked address comes
@@ -3328,6 +3334,9 @@ def build_snapshot(pm: ProcessMemory, arr: GUObjectArray,
             soldier_count += 1
         elif cn == "SQVehicleSeat":
             vehicle_seat_count += 1
+
+    if _PROFILE:
+        profiling.add_walk(_t_walk)
 
     players = [read_player(pm, alloc, arr, paths, addr, caches=caches)
                for addr in players_raw]
@@ -3736,7 +3745,7 @@ def build_snapshot(pm: ProcessMemory, arr: GUObjectArray,
     if game_state and not include_motd:
         game_state.pop("motd", None)
 
-    return {
+    _snapshot = {
         "timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds"),
         "server": server_id,
         "schemaVersion": "phase3-draft",
@@ -3769,6 +3778,9 @@ def build_snapshot(pm: ProcessMemory, arr: GUObjectArray,
         "projectiles": projectiles,
         "damageEvents": damage_events,
     }
+    if _PROFILE:
+        profiling.emit()
+    return _snapshot
 
 
 __all__ = [

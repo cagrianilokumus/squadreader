@@ -28,9 +28,15 @@ import os
 import re
 import struct
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator, Sequence
+
+from . import profiling
+
+_PROFILE = profiling.ENABLED
+_perf = time.perf_counter_ns
 
 
 # -- process_vm_readv fast-path bindings --------------------------------------
@@ -231,7 +237,12 @@ class ProcessMemory:
             if fd is None:
                 fd = self._fd = os.open(self._mem_path, os.O_RDONLY)
             try:
-                data = os.pread(fd, size, addr)
+                if _PROFILE:
+                    _t = _perf()
+                    data = os.pread(fd, size, addr)
+                    profiling.add_read(_t, len(data))
+                else:
+                    data = os.pread(fd, size, addr)
             except OSError as e:
                 if attempt == 0 and e.errno in (errno.EBADF, errno.EPERM):
                     self.close()
@@ -326,7 +337,12 @@ class ProcessMemory:
             cursor += size
 
         try:
-            n = fn(self.pid, local_iovs, n_iov, remote_iovs, n_iov, 0)
+            if _PROFILE:
+                _t = _perf()
+                n = fn(self.pid, local_iovs, n_iov, remote_iovs, n_iov, 0)
+                profiling.add_read(_t, total, regions=n_iov)
+            else:
+                n = fn(self.pid, local_iovs, n_iov, remote_iovs, n_iov, 0)
         except OSError:
             return None
         if n < 0 or n != total:
