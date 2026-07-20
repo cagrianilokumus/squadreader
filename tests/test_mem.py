@@ -1,11 +1,15 @@
 """Behavioral tests for ProcessMemory's batched-read API surface
 (read_many / try_read_many). Uses the shared FakeProcessMemory helper
-so these run cross-platform — no /proc/pid/mem access required."""
+so these run cross-platform — no /proc/pid/mem access required. Also
+covers the process_vm_readv fast-path bind + fallback wiring."""
 from __future__ import annotations
+
+import sys
 
 import pytest
 
 from conftest import FakeProcessMemory
+from sqreader import mem as mem_mod
 
 
 def test_read_many_empty_returns_empty_list():
@@ -54,3 +58,21 @@ def test_try_read_many_all_none_when_all_bad():
     pm = FakeProcessMemory()
     result = pm.try_read_many([(0xdead, 4), (0xbeef, 8), (0xcafe, 16)])
     assert result == [None, None, None]
+
+
+def test_process_vm_readv_binding_matches_platform():
+    """The libc binding loads on Linux and is None on every other platform.
+
+    Guards against a broken bind silently degrading in production —
+    on Linux a None binding would drop us to the pread loop and mask
+    the perf regression, so it's worth failing loudly here."""
+    if sys.platform == "linux":
+        assert mem_mod._libc_process_vm_readv is not None
+    else:
+        assert mem_mod._libc_process_vm_readv is None
+
+
+def test_iov_max_constant_is_a_positive_int():
+    """IOV_MAX is used to chunk large request lists — must be sane."""
+    assert isinstance(mem_mod._IOV_MAX, int)
+    assert mem_mod._IOV_MAX >= 16

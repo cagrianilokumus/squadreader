@@ -21,13 +21,62 @@ and clearly violate Squad's TOS.
 """
 from __future__ import annotations
 
+import ctypes
+import ctypes.util
 import errno
 import os
 import re
 import struct
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator, Sequence
+
+
+# -- process_vm_readv fast-path bindings --------------------------------------
+#
+# read_many() folds up to IOV_MAX regions into a single process_vm_readv(2)
+# syscall on Linux; on non-Linux or if the binding fails to load the code
+# path degrades transparently to a per-region pread loop (byte-for-byte
+# identical result). IOV_MAX has been Linux's UIO_MAXIOV constant for 15+
+# years — using the literal is standard practice (glibc exposes it the
+# same way).
+_IOV_MAX = 1024
+
+
+class _LinuxIOVec(ctypes.Structure):
+    _fields_ = [
+        ("iov_base", ctypes.c_void_p),
+        ("iov_len", ctypes.c_size_t),
+    ]
+
+
+def _load_process_vm_readv():
+    """Bind libc process_vm_readv on Linux; return None everywhere else.
+
+    Called once at module import. Wrapped in try/except so an unusual
+    libc (e.g. musl without the symbol) also degrades quietly to the
+    loop path — the caller never sees a NameError from a broken bind.
+    """
+    if sys.platform != "linux":
+        return None
+    try:
+        libc_path = ctypes.util.find_library("c") or "libc.so.6"
+        libc = ctypes.CDLL(libc_path, use_errno=True)
+        fn = libc.process_vm_readv
+        fn.argtypes = [
+            ctypes.c_int,
+            ctypes.POINTER(_LinuxIOVec), ctypes.c_ulong,
+            ctypes.POINTER(_LinuxIOVec), ctypes.c_ulong,
+            ctypes.c_ulong,
+        ]
+        fn.restype = ctypes.c_ssize_t
+        return fn
+    except (OSError, AttributeError):
+        return None
+
+
+_libc_process_vm_readv = _load_process_vm_readv()
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,6 +164,9 @@ class ProcessMemory:
             raise FileNotFoundError(f"no such process: {pid}")
         self._maps: list[MapRegion] | None = None
         self._fd: int | None = None  # lazily-opened persistent mem fd
+        # Instance-level binding reference so tests can swap it (and so a
+        # future patch can support per-process disable via config).
+        self._readv_fn = _libc_process_vm_readv
 
     # -- fd lifecycle -----------------------------------------------------------
 
@@ -238,19 +290,82 @@ class ProcessMemory:
 
     # -- batched reads --------------------------------------------------------
 
+    def _readv_batch(
+        self, batch: Sequence[tuple[int, int]],
+    ) -> list[bytes] | None:
+        """One process_vm_readv syscall for a batch of at most IOV_MAX regions.
+
+        Returns bytes in request order on success. Returns None on any
+        errno, on a short read (n != total), or when the ctypes binding
+        is unavailable — callers fall back to a per-region pread loop
+        that preserves the pre-fast-path behavior exactly.
+        """
+        fn = self._readv_fn
+        if fn is None:
+            return None
+        n_iov = len(batch)
+        if n_iov == 0:
+            return []
+        sizes = [sz for _, sz in batch]
+        total = sum(sizes)
+        if total <= 0:
+            return [b""] * n_iov
+
+        local_buf = (ctypes.c_ubyte * total)()
+        local_base = ctypes.addressof(local_buf)
+
+        IovArray = _LinuxIOVec * n_iov
+        local_iovs = IovArray()
+        remote_iovs = IovArray()
+        cursor = 0
+        for j, (addr, size) in enumerate(batch):
+            local_iovs[j].iov_base = local_base + cursor
+            local_iovs[j].iov_len = size
+            remote_iovs[j].iov_base = addr
+            remote_iovs[j].iov_len = size
+            cursor += size
+
+        try:
+            n = fn(self.pid, local_iovs, n_iov, remote_iovs, n_iov, 0)
+        except OSError:
+            return None
+        if n < 0 or n != total:
+            return None
+
+        raw = bytes(local_buf)
+        out: list[bytes] = []
+        cursor = 0
+        for size in sizes:
+            out.append(raw[cursor:cursor + size])
+            cursor += size
+        return out
+
     def read_many(
         self, requests: Sequence[tuple[int, int]],
     ) -> list[bytes]:
         """Read a list of (addr, size) regions and return their bytes in order.
 
-        Currently a straight loop over ``read()`` — a subsequent commit
-        will transparently fold multi-region reads into a single
-        process_vm_readv syscall on Linux (with a per-region pread
-        fallback), so this is the batching hook every caller should
-        migrate to. Raises OSError on the first failed region, matching
-        ``read()`` semantics exactly.
+        Fast path (Linux): folds up to IOV_MAX (1024) regions into a
+        single process_vm_readv syscall. On a short-read / errno the
+        chunk falls back to a per-region pread loop that raises OSError
+        on the first failed region — identical semantics to ``read()``.
+        On non-Linux or if the binding failed to load the loop path is
+        used unconditionally.
         """
-        return [self.read(addr, size) for addr, size in requests]
+        if not requests:
+            return []
+        if self._readv_fn is None or len(requests) < 2:
+            return [self.read(addr, size) for addr, size in requests]
+        reqs = list(requests)
+        out: list[bytes] = []
+        for off in range(0, len(reqs), _IOV_MAX):
+            chunk = reqs[off:off + _IOV_MAX]
+            result = self._readv_batch(chunk)
+            if result is None:
+                out.extend(self.read(a, s) for a, s in chunk)
+            else:
+                out.extend(result)
+        return out
 
     def try_read_many(
         self, requests: Sequence[tuple[int, int]],
@@ -258,7 +373,10 @@ class ProcessMemory:
         """Non-raising batched read: failed regions become ``None`` at
         their slot in the returned list; the loop always completes.
 
-        Same future-batching note as ``read_many``.
+        Kept on the loop path in this commit — try_read's per-address
+        validation and None-on-failure semantics interact with the
+        batch's all-or-nothing short-read behavior in a way that
+        deserves its own commit + tests before flipping.
         """
         return [self.try_read(addr, size) for addr, size in requests]
 
