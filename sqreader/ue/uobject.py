@@ -65,6 +65,10 @@ _SUB_BLOCK_ITEMS = 4096
 FUOI_ATOMIC_FLAGS = 0x00     # uint64 — InternalObjectFlags in high bits
 FUOI_OBJECT = 0x08           # UObject* — the actual pointer
 FUOI_SERIAL_NUMBER = 0x10    # int32 — matches FWeakObjectPtr.SerialNumber
+
+# One C-level unpack per 24-byte FUObjectItem (Object @0x08, Serial @0x10)
+# instead of two struct.unpack_from calls per slot across the whole walk.
+_ITEM_RECORD = struct.Struct("<8xQi4x")
 FUOI_CLUSTER_ROOT_INDEX = 0x14  # int32 — 0 for non-clustered objects
 
 # FUObjectArray offsets
@@ -393,10 +397,7 @@ class GUObjectArray:
             if block is None:
                 i += in_chunk_count
                 continue
-            for j in range(in_chunk_count):
-                off = j * UOBJECT_ITEM_SIZE
-                obj_addr, = struct.unpack_from("<Q", block, off + FUOI_OBJECT)
-                serial, = struct.unpack_from("<i", block, off + FUOI_SERIAL_NUMBER)
+            for j, (obj_addr, serial) in enumerate(_ITEM_RECORD.iter_unpack(block)):
                 yield i + j, obj_addr, serial
             i += in_chunk_count
 
