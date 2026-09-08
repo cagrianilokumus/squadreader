@@ -14,11 +14,28 @@
 # sqreader requires >=3.10, so a stock bullseye image cannot build this at all.
 # This image keeps the Debian 11 userland (glibc 2.31 — the floor we want)
 # while providing a modern interpreter.
+#
+# Debian 11 is now end-of-life. That does NOT make it the wrong base: the job
+# of this image is to pin the oldest glibc the fleet needs, and an EOL distro
+# is exactly where that lives. What it does mean is that the apt metadata is
+# past its freshness window - see the Check-Valid-Until note below.
 FROM python:3.11-bullseye
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PYTHONDONTWRITEBYTECODE=1
+
+# bullseye-security's Release file expired when Debian 11 went end-of-life,
+# and apt then refuses the WHOLE update with a bare exit 100 - which is what
+# broke the 1.4.6 build a week after 1.4.5 built from this same Dockerfile.
+#
+# Only the freshness window is relaxed. The signature is still checked, so the
+# packages are still verified against Debian's key; what is accepted is
+# metadata that is correctly signed and simply old. The alternative is moving
+# to bookworm, which would raise the glibc floor from 2.31 to 2.36 and kill
+# the binary on every Debian 11 / Ubuntu 20.04 game box - the exact failure
+# this base was chosen to prevent.
+RUN echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99allow-eol-metadata
 
 # patchelf: Nuitka standalone rewrites RPATHs with it.
 # ccache: makes the second build minutes instead of tens of minutes.
