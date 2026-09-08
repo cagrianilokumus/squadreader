@@ -23,7 +23,8 @@ from typing import Any
 
 from ..mem import ProcessMemory
 from ..ue.uobject import UOBJ_CLASS_PRIVATE
-from .snapshot import SnapshotPaths, read_root_pos_yaw
+from .snapshot import (SnapshotPaths, read_root_pos_yaw,
+                       verify_component_to_world)
 
 SCHEMA_POS = "sqr-pos-1"
 _MAX_COORD_CM = 5_000_000.0     # 50 km — matches the actor-position sanity gate
@@ -127,6 +128,25 @@ def sample_positions(pm: ProcessMemory, paths: SnapshotPaths,
                      entities: SampledEntities, tick: int,
                      ts: str) -> dict[str, Any]:
     """A compact 4 Hz position frame for the known entity set. Fast + gated."""
+    # ComponentToWorld is a raw C++ member with no reflection, so its offset is
+    # checked against live actors rather than trusted. That check lives in
+    # `build_snapshot` — which, in the two-tier recorder, runs in a SEPARATE
+    # PROCESS. This function does not, so the correction never reached it: after
+    # a Squad update the full frames were right and the 4 Hz frames were reading
+    # 0x10 early, which is the FTransform's quaternion. Positions came out as
+    # `x=0.38, y=0.93` (two components of a unit quat) with the real x landing
+    # in z — every entity on the map jumping to the world origin for one frame
+    # and back, which in the viewer reads as players teleporting into whatever
+    # vehicle happened to be near the middle.
+    #
+    # So verify here too. `paths` is this process's own object; the flag makes
+    # it one comparison per process, not per tick. Vehicles are the sample:
+    # they sit in the world with no attach parent, which is the case where the
+    # world transform must equal the relative one.
+    if not paths.component_to_world_verified:
+        verify_component_to_world(
+            pm, paths, [addr for addr, _ in entities.vehicles])
+
     pso = paths.ps_offsets
     so = paths.soldier_offsets
     vo = paths.vehicle_offsets

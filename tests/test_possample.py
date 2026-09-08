@@ -26,6 +26,10 @@ def _paths():
         soldier_offsets={"Health": HEALTH_OFF},
         vehicle_offsets={"Health": VH_HEALTH_OFF},
         sq_pawn_team_off=TEAM_OFF,
+        # Already checked: these tests are about the staleness gates, not about
+        # rediscovering the world-transform offset. Leaving it False would send
+        # every one of them through the discovery scan.
+        component_to_world_verified=True,
     )
 
 

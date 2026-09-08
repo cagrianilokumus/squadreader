@@ -149,6 +149,12 @@ class _FakeMem:
     def read_u64(self, addr):
         return struct.unpack("<Q", self.read(addr, 8))[0]
 
+    def try_read(self, addr, n):
+        try:
+            return self.read(addr, n)
+        except OSError:
+            return None
+
 
 def _paths(rel=0x140, attach=0xC8, c2w=0x200):
     p = sn.SnapshotPaths.__new__(sn.SnapshotPaths)
@@ -157,6 +163,7 @@ def _paths(rel=0x140, attach=0xC8, c2w=0x200):
     p.scene_component_to_world_translation_off = c2w
     p.scene_component_to_world_rotation_off = c2w - 0x20
     p.actor_root_component_off = 0x1C0
+    p.scene_relative_rotation_off = 0x160
     p.component_to_world_verified = False
     return p
 
@@ -223,8 +230,11 @@ def test_a_component_at_the_origin_is_ignored():
 
 def _world(actor_base, comp_base, comp_bytes, root_off=0x1C0):
     """An actor whose RootComponent points at a component."""
-    actor = bytearray(0x200)
+    from sqreader.ue.uobject import UOBJ_CLASS_PRIVATE
+    actor = bytearray(0x400)
     struct.pack_into("<Q", actor, root_off, comp_base)
+    # A live UObject: the freshness gates read ClassPrivate first.
+    struct.pack_into("<Q", actor, UOBJ_CLASS_PRIVATE, 0x7F0000001000)
     return {actor_base: bytes(actor), comp_base: comp_bytes}
 
 
@@ -265,3 +275,43 @@ def test_an_empty_world_defers_rather_than_deciding():
     assert not paths.component_to_world_verified, \
         "deciding on no evidence would lock in whatever was there"
     assert paths.scene_component_to_world_translation_off == 0x200
+
+
+# --- the 4 Hz sampler lives in another process ---------------------------
+
+def test_the_position_sampler_heals_its_own_offset():
+    """The world-transform check lives in `build_snapshot`, and in the two-tier
+    recorder that runs in a SEPARATE PROCESS from the 4 Hz sampler. When the
+    correction did not reach the sampler, full frames were right while position
+    frames read 0x10 early — the FTransform's quaternion — so every entity
+    jumped to the world origin for one frame and back. In the viewer that reads
+    as the whole server teleporting into one vehicle.
+    """
+    from sqreader.squad import possample
+
+    objs = {}
+    vehicles = []
+    for i in range(8):
+        a, c = 0x400000 + i * 0x2000, 0x500000 + i * 0x2000
+        pos = (90000.0 + i * 640, -31000.0 - i * 410, 700.0 + i)
+        objs.update(_world(a, c, _component(pos, world_at=0x210)))
+        vehicles.append((a, f"0x{a:x}"))
+
+    paths = _paths(c2w=0x200)          # stale by 0x10, exactly the live case
+    ents = possample.SampledEntities(full_tick=1, players=(),
+                                     vehicles=tuple(vehicles))
+    pm = _FakeMem(objs)
+
+    # Enough of a SnapshotPaths for the sampler's own reads to no-op.
+    paths.ps_offsets = {}
+    paths.soldier_offsets = {}
+    paths.vehicle_offsets = {}
+    paths.sq_pawn_team_off = None
+
+    frame = possample.sample_positions(pm, paths, ents, tick=2, ts="t")
+    assert paths.scene_component_to_world_translation_off == 0x210, \
+        "the sampler must correct the offset it is about to read from"
+    assert frame["vehicles"], "nothing sampled"
+    v = frame["vehicles"][0]
+    assert abs(v["x"]) > 1000 and abs(v["y"]) > 1000, \
+        f"still reading the quaternion: {v['x']}, {v['y']}"
