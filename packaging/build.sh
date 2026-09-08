@@ -15,7 +15,14 @@ IMAGE=sqreader-build
 # ---------------------------------------------------------------- in Docker?
 if [ "${IN_CONTAINER:-0}" != "1" ]; then
   echo "[build] building image $IMAGE (cached after the first run) ..."
-  docker build -q -f packaging/Dockerfile.build -t "$IMAGE" packaging/ >/dev/null
+  # Quiet while it works, loud when it does not. `-q ... >/dev/null` threw the
+  # output away unconditionally, so a base-image build failure reached CI as a
+  # bare "exit code: 100" with no apt output — the one thing needed to fix it.
+  if ! docker build -f packaging/Dockerfile.build -t "$IMAGE" packaging/        >/tmp/sqreader-image-build.log 2>&1; then
+    echo "[build] image build FAILED; docker output follows:" >&2
+    cat /tmp/sqreader-image-build.log >&2
+    exit 1
+  fi
   echo "[build] compiling inside the container ..."
   exec docker run --rm -v "$ROOT":/src -w /src -e IN_CONTAINER=1 \
        "$IMAGE" -c "./packaging/build.sh"
