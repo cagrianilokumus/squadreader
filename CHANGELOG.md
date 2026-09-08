@@ -31,6 +31,21 @@ follows [Semantic Versioning](https://semver.org/).
   against one awkward key cost more than half the time, and only that key
   needs it.
 
+## [1.4.6] - 2026-09-08
+
+### Fixed
+- The world-transform self-check added in 1.4.5 only ran in the process
+  that builds full snapshots. In the two-tier recorder that is a separate
+  process from the 4 Hz position sampler, so when Squad moved
+  ComponentToWorld again the full frames were corrected and the position
+  frames were not. The sampler read 0x10 early, which lands in the
+  FTransform's quaternion: positions came out as `x=0.38, y=0.93` with the
+  real x pushed into z, so every entity jumped to the world origin for one
+  frame and back. In the viewer that renders as players teleporting into a
+  vehicle near the middle of the map - one tank showing nineteen passengers
+  drawn from both teams. The sampler now runs the same check, against the
+  vehicles it already has, once per process.
+
 ## [1.4.5] - 2026-09-01
 
 ### Fixed
