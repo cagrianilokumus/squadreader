@@ -31,6 +31,19 @@ follows [Semantic Versioning](https://semver.org/).
   against one awkward key cost more than half the time, and only that key
   needs it.
 
+## [1.4.8] - 2026-09-11
+
+### Fixed
+- The replay download sent `Transfer-Encoding: chunked` to every client,
+  including ones answered with an HTTP/1.0 status line - and HTTP/1.0 has
+  no chunked encoding. Browsers tolerate the contradiction; a strict
+  reverse proxy does not, and reads the hex chunk lengths as part of the
+  recording. The framing now follows the version the client actually
+  spoke: HTTP/1.1 gets a 1.1 status line and chunked (its terminator is
+  how a client knows the download finished rather than died), HTTP/1.0
+  gets the body bare, delimited by the connection close. Reported by a
+  deployment sitting behind such a proxy.
+
 ## [1.4.7] - 2026-09-08
 
 Same agent code as 1.4.6, which was tagged but never produced a binary: the
