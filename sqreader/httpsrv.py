@@ -968,9 +968,34 @@ def _make_handler(
                     self.end_headers()
                     return
 
+            # Chunked framing belongs to HTTP/1.1. This handler answers 1.0
+            # by default, so every reply carried a 1.0 status line with a
+            # Transfer-Encoding header on it. Browsers forgive that; a strict
+            # proxy does not, and it is right not to: HTTP/1.0 has no chunked
+            # encoding, so the hex length lines are read as body bytes and the
+            # download is garbage. Speak 1.1 when the client did, and fall
+            # back to a close-delimited body when it did not.
+            #
+            # Chunked is worth keeping where it is legal: its terminator is
+            # what tells a client the replay arrived whole. A close-delimited
+            # body cannot tell 'finished' from 'connection dropped halfway',
+            # and a silently truncated recording is the kind of wrong that
+            # looks right.
+            chunked = self.request_version == "HTTP/1.1"
+            if chunked:
+                self.protocol_version = "HTTP/1.1"
+
             self.send_response(200)
             self.send_header("Content-Type", "application/x-ndjson")
-            self.send_header("Transfer-Encoding", "chunked")
+            if chunked:
+                self.send_header("Transfer-Encoding", "chunked")
+            # Either way this connection ends with the response: there is no
+            # Content-Length to delimit it, and leaving the instance upgraded
+            # to 1.1 would mis-frame the next request served on the same
+            # socket (the SSE stream writes an unbounded body with neither
+            # length nor chunking, well-formed only under 1.0).
+            self.send_header("Connection", "close")
+            self.close_connection = True
             self.send_header("Vary", "Accept-Encoding")
             if enc != "identity":
                 self.send_header("Content-Encoding", enc)
@@ -986,9 +1011,14 @@ def _make_handler(
             def _chunk(data: bytes) -> None:
                 # HTTP/1.1 chunked: hex-length + \r\n + data + \r\n. Never emit a
                 # zero-length chunk — that byte sequence terminates the body.
-                if data:
+                # Under 1.0 the bytes go out bare and the close delimits them.
+                if not data:
+                    return
+                if chunked:
                     self.wfile.write(
                         f"{len(data):x}\r\n".encode("ascii") + data + b"\r\n")
+                else:
+                    self.wfile.write(data)
 
             try:
                 with SqrxReader(sqrx) as r:
@@ -1004,7 +1034,8 @@ def _make_handler(
                     else:  # identity — original behavior
                         for line in r:
                             _chunk(line.encode("utf-8") + b"\n")
-                self.wfile.write(b"0\r\n\r\n")
+                if chunked:
+                    self.wfile.write(b"0\r\n\r\n")
                 self.wfile.flush()
             except (BrokenPipeError, ConnectionResetError,
                     ConnectionAbortedError):
