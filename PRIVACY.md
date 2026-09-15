@@ -24,6 +24,11 @@ platform that you chose.
 | `stats/player_stats.db` (SQLite) | names, EOS/Steam ids, per-match stats, ELO | until you delete it (grows indefinitely) |
 | `recordings/*.sqrx` (+ `.meta.json`) | full per-tick match capture (positions, names) | until pruned by `deploy/cleanup_recordings.sh` (default 90 days) or manually |
 | `captures/*.ndjson` | ad-hoc snapshots you take | until you delete them |
+| `docker compose logs proxy` (optional Caddy proxy only) | replay-UI access log: client IP, path, user agent, timestamp | rotated by Docker, 5 × 10 MB (`docker-compose.proxy.yml`) |
+
+The reader's own HTTP server keeps no access log. The proxy's exists because it
+is the only place a request is ever recorded, which matters after an incident;
+it never contains player data, only whoever opened the replay site.
 
 ## Optional central push (opt-in, off by default)
 

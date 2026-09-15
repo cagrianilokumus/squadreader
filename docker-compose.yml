@@ -1,0 +1,59 @@
+# sqreader beside a Squad dedicated server. This stack runs the READER ONLY —
+# the game server is yours and lives outside this repo, in a container you
+# already run or natively on the host. Which one the reader attaches to is
+# chosen entirely in .env; start with `cp .env.example .env`.
+
+services:
+  sqreader:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: sqreader:local
+    restart: unless-stopped
+
+    # Required, not defaulted: this names something OUTSIDE this stack, so no
+    # default could be right.
+    pid: "${SQUAD_PID_MODE:?unset — cp .env.example .env, then uncomment ONE mode block in it}"
+
+    # SYS_PTRACE clears the ptrace gate on /proc/<pid>/maps; DAC_READ_SEARCH
+    # clears the DAC gate on /proc/<pid>/mem. Both are required — see README.
+    cap_drop: ["ALL"]
+    cap_add: ["SYS_PTRACE", "DAC_READ_SEARCH"]
+
+    # Host mode needs `unconfined`: docker-default confines ptrace to peers.
+    security_opt: ["apparmor=${SQUAD_APPARMOR:-docker-default}"]
+
+    # serve writes the .sqrx footer on SIGTERM; 10s risks a SIGKILL mid-footer.
+    stop_grace_period: 30s
+
+    ports:
+      # Loopback by default. Set SQREADER_BIND=0.0.0.0 to expose deliberately.
+      - "${SQREADER_BIND:-127.0.0.1}:${SQREADER_PORT:-8080}:8080"
+
+    volumes:
+      # Read-only, and only for the kill-feed log. Required for the same reason
+      # as SQUAD_PID_MODE: nothing here creates a Squad install, so a default
+      # would mount an empty directory and silently cost you half the kills.
+      - ${SQUAD_DATA:?set SQUAD_DATA in .env to your Squad install root — the directory that contains SquadGame/}:/squad:ro
+      - sqreader-data:/data
+      # Optional: plugins, alert webhook, central URL — and squad_port, the only
+      # way to name ONE of several servers in host mode. Picked up automatically.
+      # server_id and squad_log_glob are dead here: entrypoint.sh always passes
+      # the flags and a flag beats the config; use SERVER_ID / SQUAD_DATA in .env.
+      # - ./sqreader.config.json:/app/sqreader.config.json:ro
+
+    environment:
+      SERVER_ID: ${SERVER_ID:-squad}
+      SQREADER_HZ: ${SQREADER_HZ:-0.5}
+      RECORD_HZ: ${RECORD_HZ:-}
+      SQREADER_LOG_LEVEL: ${SQREADER_LOG_LEVEL:-INFO}
+      # Only for a config file mounted somewhere OTHER than /app.
+      SQREADER_CONFIG: ${SQREADER_CONFIG:-}
+      RETENTION_INTERVAL: ${RETENTION_INTERVAL:-86400}
+      RETENTION_MAX_AGE_DAYS: ${RETENTION_MAX_AGE_DAYS:-90}
+      RETENTION_MAX_TOTAL_GB: ${RETENTION_MAX_TOTAL_GB:-150}
+      RETENTION_MIN_FREE_GB: ${RETENTION_MIN_FREE_GB:-50}
+      RETENTION_MIN_KEEP: ${RETENTION_MIN_KEEP:-3}
+
+volumes:
+  sqreader-data:

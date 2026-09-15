@@ -1,0 +1,73 @@
+# Reverse proxy for the replay UI, mounted by docker-compose.proxy.yml. Also
+# usable with a plain `caddy run` outside Docker — see SQREADER_UPSTREAM below.
+# SQREADER_SITE is a Caddy site address and picks the mode by its shape:
+#   replays.example.com  -> automatic Let's Encrypt cert + HTTP->HTTPS redirect
+#   :80                  -> plain HTTP, no ACME (something else terminates TLS)
+
+# While a domain is still being set up: Let's Encrypt allows only 5 FAILED
+# validations per hostname per hour, and 5 duplicate certificates per week.
+# The staging CA has neither limit.
+# {
+# 	acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+# }
+
+{$SQREADER_SITE} {
+	# Service name, not 127.0.0.1 — loopback here is this container's own, and
+	# the container always listens on 8080 (SQREADER_PORT only moves the
+	# PUBLISHED host port), so this default fits every compose setup.
+	#
+	# Override it when Caddy runs OUTSIDE compose — the systemd unit in deploy/
+	# serves on 8081. Leave it UNSET to get the default: set-but-empty leaves
+	# reverse_proxy with no upstream at all, which `caddy validate` still calls
+	# valid and which then 503s every request.
+	#     SQREADER_UPSTREAM=127.0.0.1:8081
+	reverse_proxy {$SQREADER_UPSTREAM:sqreader:8080}
+
+	# The reader serves the SPA uncompressed — _handle_spa in sqreader/httpsrv.py
+	# sets Content-Type/Length/Cache-Control and no Content-Encoding, and its
+	# gzip/zstd negotiation is wired to the replay stream only. That leaves the
+	# two eager bundles in dist/index.html at ~429 kB, about 119 kB gzipped.
+	#
+	# Safe in front of the replay stream: a response that ALREADY carries
+	# Content-Encoding is passed through untouched, so the zstd passthrough keeps
+	# spending zero CPU. zstd is listed first because it is preferred when the
+	# client offers both. `Vary: Accept-Encoding` is added automatically.
+	encode zstd gzip
+
+	# Caddy adds neither of these on its own. `-Server` drops both Caddy's
+	# banner and the upstream's, which Caddy would otherwise append.
+	#
+	# HSTS closes the first-visit downgrade and is right for Mode A, where the
+	# hostname is yours. It is a footgun in Mode B: an outer TLS terminator
+	# forwards the header over its own HTTPS, which pins the WHOLE hostname —
+	# every sibling service on it — for the full max-age. So the directive comes
+	# from the environment: unset uses the default below, empty removes it
+	# entirely. .env.example turns it off inside the Mode B block.
+	#
+	# 30 days, not the year the hardening checklists print. That year is the
+	# minimum for the HSTS preload list, which this stack does not use, and a
+	# pin outlives the certificate that justified it: while a cert is invalid
+	# — a lost caddy-data volume plus Let's Encrypt's weekly limit, or the
+	# staging CA above — a pinned browser has no "proceed anyway" to click,
+	# and the only way to lift a pin is max-age=0 over WORKING HTTPS. This
+	# site has no login and no cookies, so a year of that trade buys little.
+	# Raise it once renewals have been boring for a while; 31536000 if you
+	# intend to preload.
+	#
+	# Lifting a pin browsers already cached: deleting the header does nothing,
+	# serve max-age=0 over HTTPS until they re-visit:
+	#     SQREADER_HSTS=header Strict-Transport-Security "max-age=0"
+	{$SQREADER_HSTS:header Strict-Transport-Security "max-age=2592000"}
+	header -Server
+
+	# JSON access log to stderr (`docker compose logs proxy`), the only request
+	# record in the
+	# stack: the Python server's per-request log is a deliberate no-op. Rotated
+	# by the `logging:` block in docker-compose.proxy.yml; contains client IPs,
+	# see PRIVACY.md.
+	log
+
+	# Optional ACME account e-mail. Uncomment together with LETSENCRYPT_EMAIL
+	# in .env; an empty value makes Caddy exit at startup.
+	# tls {$LETSENCRYPT_EMAIL}
+}
