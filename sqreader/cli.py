@@ -1573,7 +1573,16 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     # be typed into snapshot.py. Checking before the correction would fail on
     # every Squad update while the reader was in fact fine.
     from .squad.snapshot import resolve_paths
-    paths = resolve_paths(pm, arr, alloc)
+    try:
+        paths = resolve_paths(pm, arr, alloc)
+    except RuntimeError as exc:
+        # resolve_paths raises as soon as one of its required classes is
+        # absent — an empty or map-loading server, the same state the
+        # SQPlayerState gate below is written for. Resolving FIRST put this
+        # ahead of that gate, and main() is a bare `return args.func(args)`
+        # with no handler, so without this except the output is a traceback.
+        print(f"\nFAIL  doctor: {exc}; re-run once a match is live.")
+        return 1
 
     ok = True
     def check(label, condition, detail=""):

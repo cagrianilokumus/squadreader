@@ -108,8 +108,10 @@ class EntrypointRun:
     pgid: int
 
 
-def run_entrypoint(tmp_path: Path, **env: str) -> EntrypointRun:
-    """Run the entrypoint with stubbed `sqreader`/`sleep`; return what happened."""
+def run_entrypoint(tmp_path: Path, *args: str, **env: str) -> EntrypointRun:
+    """Run the entrypoint with stubbed `sqreader`/`sleep`; return what happened.
+
+    Positional `args` are what `docker compose run sqreader <args>` passes."""
     bindir = tmp_path / "bin"
     bindir.mkdir(exist_ok=True)
     for name, body in (("sqreader", _SQREADER_STUB), ("sleep", _SLEEP_STUB)):
@@ -136,7 +138,7 @@ def run_entrypoint(tmp_path: Path, **env: str) -> EntrypointRun:
     # process group whose id is the child's pid, so the backgrounded pruner can
     # be killed as a unit afterwards. pytest stays in its own group.
     with stdout.open("w", encoding="utf-8") as fh:
-        proc = subprocess.Popen(["sh", str(ENTRYPOINT)], env=environ,
+        proc = subprocess.Popen(["sh", str(ENTRYPOINT), *args], env=environ,
                                 stdout=fh, stderr=subprocess.STDOUT,
                                 start_new_session=True)
         pgid = proc.pid
@@ -181,6 +183,40 @@ def serve_call(calls: list[str]) -> str:
 
 def retention_calls(calls: list[str]) -> list[str]:
     return [c for c in calls if c.startswith("sqreader retention")]
+
+
+# --- one-shot subcommands --------------------------------------------------
+
+def test_an_argument_runs_that_subcommand_instead_of_a_second_serve(tmp_path):
+    """`docker compose run sqreader doctor` has to run doctor. The entrypoint
+    clears its positional params before assembling the serve line, so an
+    argument that is not consumed FIRST is discarded in silence — and the
+    container then starts a second `serve` writing into the same /data as the
+    one already running, which is a corrupted .sqrx, not an error message."""
+    run = run_entrypoint(tmp_path, "doctor")
+    assert "sqreader doctor" in run.calls
+    assert not [c for c in run.calls if c.startswith("sqreader serve")], \
+        "a maintenance command must not also bring up the reader"
+
+
+def test_a_one_shot_subcommand_keeps_its_own_flags(tmp_path):
+    run = run_entrypoint(tmp_path, "retention", "--dry-run")
+    assert "sqreader retention --dry-run" in run.calls
+
+
+def test_a_one_shot_subcommand_does_not_fork_the_pruner(tmp_path):
+    """Pruning is the long-running container's job. A `docker compose run`
+    that deletes recordings as a side effect of asking a question would be a
+    genuine surprise."""
+    run = run_entrypoint(tmp_path, "doctor", RETENTION_INTERVAL="86400")
+    assert retention_calls(run.calls) == []
+
+
+def test_a_one_shot_subcommand_still_gets_the_static_metadata_dir(tmp_path):
+    """Exported above the exec, not just above the serve line — `doctor` reads
+    the same map/capzone tables `serve` does."""
+    assert "env SQREADER_DATA_DIR=/app/data/static" in \
+        run_entrypoint(tmp_path, "doctor").calls
 
 
 # --- the reader ------------------------------------------------------------

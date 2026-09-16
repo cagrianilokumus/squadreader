@@ -13,24 +13,49 @@ tests
 frontend
 !frontend/dist
 
-# Runtime output — never bake a previous run's data into an image.
+# --- Secrets -------------------------------------------------------------
+# The Dockerfile is `COPY . /app`, so anything left here is baked into every
+# layer of every image built from this checkout — and travels with a registry
+# push, a `docker save` or a shared CI cache. These are the files .gitignore
+# already classes as secret, and the same reasoning applies twice over here.
+#
+# .env.agent is the one that bites quietly: it holds SQREADER_AGENT_ID and
+# SQREADER_AGENT_SECRET_HEX, and agent_creds.py writes it next to
+# $SQREADER_CONFIG — i.e. the repo root, for anyone who has run `enroll` from
+# a checkout. Baked in, WORKDIR /app makes the container adopt the host's
+# fleet identity and check in to central as that box.
+#
+# signing_key.pem signs every offset pack and code release the whole fleet
+# trusts (see update_trust.py). It belongs on an offline machine and in no
+# image at all. The public half is embedded in source, so nothing here needs
+# a .pem to verify signatures.
+.env
+.env.*
+*.pem
+.ssh_config.json
+sqreader.config.json
+
+# --- Runtime output — never bake a previous run's data into an image ------
 recordings
 stats
-*.sqrx
-*.log
-sqreader.config.json
-.env
+captures
+results
+**/*.sqrx
+**/*.log
 
 # Defensive: SQUAD_DATA points at a Squad install (tens of GB), and an operator
 # may aim it at a path inside the checkout — i.e. inside the build context.
 # Never stream that to the build daemon.
 squad-data
 
-__pycache__
-*.pyc
+# `**/` on purpose: a .dockerignore pattern is anchored at the context root
+# unless it starts with `**/`, so a bare `__pycache__` leaves every
+# sqreader/**/__pycache__ in the image.
+**/__pycache__
+**/*.pyc
+**/*.egg-info
 .venv
 venv
 .pytest_cache
 .mypy_cache
 .ruff_cache
-*.egg-info

@@ -61,10 +61,14 @@
 	header -Server
 
 	# JSON access log to stderr (`docker compose logs proxy`), the only request
-	# record in the
-	# stack: the Python server's per-request log is a deliberate no-op. Rotated
-	# by the `logging:` block in docker-compose.proxy.yml; contains client IPs,
-	# see PRIVACY.md.
+	# record in the stack: the Python server's per-request log is a deliberate
+	# no-op. Rotated by the `logging:` block in docker-compose.proxy.yml.
+	#
+	# It logs the request URI, and /api/players/<eosId>, /api/players?q=<name>
+	# and /api/match/<id> put player identifiers THERE — so this line, not the
+	# reader, is what pairs a player with a viewer's IP address. That is a
+	# deliberate trade for a post-incident trail; comment it out to decline it.
+	# See PRIVACY.md.
 	log
 
 	# Optional ACME account e-mail. Uncomment together with LETSENCRYPT_EMAIL

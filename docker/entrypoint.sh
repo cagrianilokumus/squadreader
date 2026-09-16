@@ -9,13 +9,32 @@ set -eu
 # SQREADER_STATE_DIR exists so this file is runnable outside a container (the
 # test harness cannot write /data). In the image it is always the default.
 # (Not SQREADER_DATA_DIR — metadata.py already owns that name for the
-# static-metadata directory; see the export near the bottom of this file.)
+# static-metadata directory; see the export just below.)
 DATA_DIR="${SQREADER_STATE_DIR:-/data}"
 
 # `serve` creates these itself (cli.py:642, stats.py:592), but the pruner runs
 # first and `cmd_retention` returns 1 on a missing directory — so on a fresh
 # volume the very first log line would be a spurious "recordings dir not found".
 mkdir -p "$DATA_DIR/recordings" "$DATA_DIR/stats"
+
+# The package is pip-installed, so metadata.py's source-relative guess lands
+# in site-packages, where data/static does not exist — every map, capture
+# zone and vehicle-faction table would load empty, silently. COPY put the
+# real one at /app/data/static; point the reader at it.
+#
+# Exported HERE, above everything that forks or execs, so the pruner subshell
+# and a one-shot subcommand both inherit it.
+export SQREADER_DATA_DIR=/app/data/static
+
+# One-shot subcommand: `docker compose run sqreader doctor`, `... retention
+# --dry-run`, `... enroll <token>`. Handled before anything else starts,
+# because a maintenance command has no business forking the pruner — and
+# because the `set --` further down would otherwise DISCARD these arguments
+# and silently bring up a second `serve` writing into the same $DATA_DIR as
+# the container already running.
+if [ "$#" -gt 0 ]; then
+  exec sqreader "$@"
+fi
 
 # An operator typo here would otherwise make `-gt` fail under `set -e` and kill
 # the container at boot with nothing but a shell error to go on.
@@ -49,19 +68,13 @@ fi
 # `${RECORD_HZ:+--record-hz "$RECORD_HZ"}` — that expansion's quoting behaviour
 # is subtle enough to be a liability in a file nobody reads twice.
 #
-# NOTE: this `set --` replaces the script's own positional params, so a
-# `docker compose run sqreader <cmd>` argument passed here is swallowed, not
-# forwarded. Use `docker compose run --entrypoint sh sqreader` instead.
+# Safe to clear the positional params here: a `docker compose run` argument
+# was already exec'd as a one-shot subcommand above, so anything still in $@
+# at this point is nothing we were asked to forward.
 set --
 if [ -n "${RECORD_HZ:-}" ]; then
   set -- --record-hz "$RECORD_HZ"
 fi
-
-# The package is pip-installed, so metadata.py's source-relative guess lands
-# in site-packages, where data/static does not exist — every map, capture
-# zone and vehicle-faction table would load empty, silently. COPY put the
-# real one at /app/data/static; point the reader at it.
-export SQREADER_DATA_DIR=/app/data/static
 
 # SQREADER_SQUAD_LOG override exists for the same reason SQREADER_STATE_DIR
 # does above: the test harness cannot write into the real /squad. In the

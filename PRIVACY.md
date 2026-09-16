@@ -24,11 +24,34 @@ platform that you chose.
 | `stats/player_stats.db` (SQLite) | names, EOS/Steam ids, per-match stats, ELO | until you delete it (grows indefinitely) |
 | `recordings/*.sqrx` (+ `.meta.json`) | full per-tick match capture (positions, names) | until pruned by `deploy/cleanup_recordings.sh` (default 90 days) or manually |
 | `captures/*.ndjson` | ad-hoc snapshots you take | until you delete them |
-| `docker compose logs proxy` (optional Caddy proxy only) | replay-UI access log: client IP, path, user agent, timestamp | rotated by Docker, 5 × 10 MB (`docker-compose.proxy.yml`) |
+| `docker compose logs proxy` (optional Caddy proxy only) | replay-UI access log: client IP, **full request URI — which for some paths contains player identifiers** (below), user agent, timestamp | rotated by Docker, 5 × 10 MB (`docker-compose.proxy.yml`) |
 
-The reader's own HTTP server keeps no access log. The proxy's exists because it
-is the only place a request is ever recorded, which matters after an incident;
-it never contains player data, only whoever opened the replay site.
+The reader's own HTTP server keeps no access log (`_H.log_message` is a
+deliberate no-op). The proxy's exists because it is then the only place a
+request is ever recorded, which matters after an incident.
+
+**Read this before enabling the proxy.** Caddy's `log` directive records the
+request URI, and three of the reader's API paths carry player identifiers in
+that URI:
+
+| Path | What ends up in the log |
+|------|-------------------------|
+| `/api/players/<eosId>` | an EOS account id |
+| `/api/players?q=<name>` | an in-game player name |
+| `/api/match/<id>` | a match id, which resolves to a full scoreboard |
+
+The replay UI calls these as you click through it, so a normal browsing session
+writes them. That makes the proxy log the first and only place in this stack
+where a **player identifier is correlated with a viewer's IP address** — a
+different kind of record from the match data itself, and one nothing else here
+produces. Under GDPR both sides of that pairing are personal data.
+
+It is not on by default: it exists only if you deploy
+`docker-compose.proxy.yml`. To keep the proxy and drop the log, comment out the
+`log` directive in `deploy/Caddyfile`; you lose the post-incident trail. To keep
+it, the only retention control is Docker's rotation above (5 × 10 MB, roughly a
+few hundred thousand requests) — there is no time-based expiry, so set your own
+if your policy needs one.
 
 ## Optional central push (opt-in, off by default)
 
