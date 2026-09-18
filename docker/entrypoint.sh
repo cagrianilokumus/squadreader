@@ -6,11 +6,12 @@
 # valve belongs next to the thing that opens it.
 set -eu
 
-# SQREADER_STATE_DIR exists so this file is runnable outside a container (the
-# test harness cannot write /data). In the image it is always the default.
+# Where docker-compose.yml mounts the sqreader-data volume. Not overridable:
+# an operator who wants the recordings somewhere else moves the HOST side of
+# that mount, which is the only side they can move without editing the image.
 # (Not SQREADER_DATA_DIR — metadata.py already owns that name for the
 # static-metadata directory; see the export just below.)
-DATA_DIR="${SQREADER_STATE_DIR:-/data}"
+DATA_DIR=/data
 
 # `serve` creates these itself (cli.py:642, stats.py:592), but the pruner runs
 # first and `cmd_retention` returns 1 on a missing directory — so on a fresh
@@ -76,10 +77,10 @@ if [ -n "${RECORD_HZ:-}" ]; then
   set -- --record-hz "$RECORD_HZ"
 fi
 
-# SQREADER_SQUAD_LOG override exists for the same reason SQREADER_STATE_DIR
-# does above: the test harness cannot write into the real /squad. In the
-# image this is always the default.
-SQUAD_LOG="${SQREADER_SQUAD_LOG:-/squad/SquadGame/Saved/Logs/SquadGame.log}"
+# Inside the container the install root is always /squad — the compose file
+# binds SQUAD_DATA there. Same as $DATA_DIR above: the host side of the mount
+# is the knob, not this path.
+SQUAD_LOG=/squad/SquadGame/Saved/Logs/SquadGame.log
 if [ ! -r "$SQUAD_LOG" ]; then
   echo "entrypoint: WARNING: $SQUAD_LOG is not readable — the kill feed will be" \
        "INCOMPLETE. SQUAD_DATA must be the install root that CONTAINS SquadGame/." \

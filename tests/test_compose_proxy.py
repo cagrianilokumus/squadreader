@@ -35,11 +35,10 @@ from __future__ import annotations
 import json
 import os
 import re
-import shutil
 import subprocess
 from pathlib import Path
 
-import pytest
+from conftest import needs_docker
 
 REPO = Path(__file__).resolve().parent.parent
 BASE = REPO / "docker-compose.yml"
@@ -55,9 +54,6 @@ ACTIVE = [ln.strip() for ln in CADDYFILE.splitlines()
 # name never has to exist for `config` to render.
 GAME = {"SQUAD_PID_MODE": "host", "SQUAD_APPARMOR": "unconfined",
         "SQUAD_DATA": "/srv/squad"}
-
-needs_docker = pytest.mark.skipif(
-    shutil.which("docker") is None, reason="docker not installed")
 
 
 def compose(tmp_path, *files, **env):

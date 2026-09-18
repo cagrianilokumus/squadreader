@@ -11,26 +11,38 @@ leaves data/static out of site-packages, and a miss there loads every map/
 capzone/vehicle-faction table empty with nothing in the log to explain it),
 and that a missing kill-feed log warns instead of retrying forever in silence.
 
-The stubs deserve a word. `sleep` used to be stubbed to exit non-zero so
-`set -e` ended the pruner's `while` loop after one pass — but the entrypoint
-now has `|| true` on that same call (minor 5: a failing real `sleep` must not
-kill the pruner for the container's lifetime), which neutralises that trick.
-So the stub logs its call and then really blocks (`exec`s the real `sleep`
-binary) instead, which holds the loop at one pass for the test's lifetime.
+The script runs IN A CONTAINER. The two paths it needs — /data and /squad —
+exist in exactly one place, and carrying an override in the production script
+so that a test could point them somewhere else was the wrong trade: the
+override read as operator configuration, was documented nowhere, and served
+nothing but this file. `docker run` bind-mounts a tmp_path onto each path
+instead, and hands the script a clean environment for free — so nothing a
+developer happens to have exported can quietly change what these tests assert.
 
-That blocking is a pause, NOT an exit, so nothing ends the loop on its own —
-and nothing waits on it either: the pruner is `( while :; do ...; done ) &`
-inside a script that then `exec`s away, so the subshell reparents to init and
-runs forever. An earlier version of this file relied on it "self-reaping" and
-leaked one permanently-running `sh entrypoint.sh` per pruner-enabled run; 641
-had piled up on one developer machine before anyone noticed. The leash is a
-process group: the entrypoint is started with `start_new_session=True`, and
-`_reap_group` SIGKILLs that whole group — and waits for it to actually die —
-before `run_entrypoint` returns. pytest is never in that group, so it cannot
-kill itself.
+`returncode` is the script's exit status, and reaching `exec sqreader serve`
+counts as 0: in production that exec is the container's steady state, not an
+exit.
 
-Output goes to a FILE, never a pipe: the pruner is a background subshell
-holding the parent's stdout, and a pipe would not close until it exits.
+The stubs deserve a word. `sleep` logs its call and then really blocks
+(`exec`s /bin/sleep), which holds the pruner's `while` loop at one pass for
+the test's lifetime; the entrypoint's `|| true` on that same call (minor 5: a
+failing real `sleep` must not kill the pruner for the container's lifetime)
+rules out the older trick of having the stub exit non-zero. The `sqreader`
+stub blocks the same way in the `serve` case, for a sharper reason: serve is
+PID 1, and were it to return, Docker would tear down the pid namespace with
+the backgrounded pruner still inside it — before it had logged a single pass.
+
+So nothing ends on its own, and nothing needs to: run_entrypoint waits for the
+log to show steady state, then removes the container. An earlier host-side
+version of this file had no such leash — the pruner reparented to init and ran
+until the machine did, and 641 orphaned `sh entrypoint.sh` processes had piled
+up on one developer machine before anyone counted them. The container is the
+leash now: `--rm`, a `docker rm -f` in a `finally`, and a module teardown that
+asserts no labelled container survived.
+
+Output goes to a FILE, never a pipe. That is the docker client's stdout now,
+and the pruner inside the container holds the far end of it exactly as it held
+the script's, so a pipe still would not close until it exits.
 
 Nothing here asserts an ordering between the `retention` and `serve` calls.
 The pruner is backgrounded and `serve` is `exec`ed, so which one reaches the
@@ -38,64 +50,74 @@ log first is genuinely undefined — a dry run showed `serve` winning.
 """
 from __future__ import annotations
 
-import contextlib
 import json
 import os
 import shutil
-import signal
 import subprocess
 import time
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
 
+from conftest import needs_docker
+
+# Every test in this file shells out to Docker, the compose ones at the bottom
+# included. Without a daemon there is nothing here to run.
+pytestmark = needs_docker
+
 REPO = Path(__file__).resolve().parent.parent
 ENTRYPOINT = REPO / "docker" / "entrypoint.sh"
+
+# The base the entrypoint will actually run under, read from the Dockerfile so
+# the two cannot drift. Nothing is built: the script needs `sh` and `mkdir`,
+# and the base already supplies the same /bin/sh (dash) the real image has.
+IMAGE = next(line.split()[1] for line
+             in (REPO / "docker" / "Dockerfile").read_text(encoding="utf-8").splitlines()
+             if line.startswith("FROM "))
+
+# On every container this file starts, so the teardown can prove none survived.
+LABEL = "sqreader-entrypoint-test"
+
+# What the entrypoint hardcodes — and therefore what the /squad mount has to
+# hold for the kill-feed log to be found.
+SQUAD_LOG = "/squad/SquadGame/Saved/Logs/SquadGame.log"
+
+# How long a container gets to reach steady state, or to exit on its own.
+_SETTLE_DEADLINE_SEC = 30.0
 
 _SQREADER_STUB = """#!/bin/sh
 printf 'sqreader %s\\n' "$*" >> "$STUB_LOG"
 printf 'env SQREADER_DATA_DIR=%s\\n' "${SQREADER_DATA_DIR:-unset}" >> "$STUB_LOG"
+# serve is PID 1 and never returns in production. If it returned here the
+# container would die with the backgrounded pruner still inside it, before
+# that subshell had run a single pass.
+case "${1:-}" in serve) exec /bin/sleep 300 ;; esac
 """
 
-# The real `sleep`, resolved against the unmodified PATH before run_entrypoint
-# ever prepends a stub bindir in front of it — `exec`ing it below is how the
-# stub blocks the pruner's `while` loop on its second iteration without
-# needing the loop's own `sleep` call to fail (see the module docstring).
-_REAL_SLEEP = shutil.which("sleep") or "/bin/sleep"
-
-_SLEEP_STUB = f"""#!/bin/sh
+_SLEEP_STUB = """#!/bin/sh
 printf 'sleep %s\\n' "$*" >> "$STUB_LOG"
-exec {_REAL_SLEEP} 10
+exec /bin/sleep 300
 """
 
-# How long to wait for the pruner's backgrounded subshell to catch up with the
-# `sh` process we already reaped — see EntrypointRun.
-_PRUNER_DEADLINE_SEC = 5.0
 
-# How long to wait for the killed process group to actually disappear.
-_REAP_DEADLINE_SEC = 5.0
+@pytest.fixture(scope="module", autouse=True)
+def _image():
+    """Pull once, outside any single test's deadline; then prove nothing leaked.
 
-
-def _reap_group(pgid: int) -> None:
-    """SIGKILL the entrypoint's process group and wait for it to really go.
-
-    Without this the pruner outlives the test forever (see the module
-    docstring). Waiting rather than fire-and-forgetting is what makes
-    `test_the_pruner_does_not_outlive_its_test` deterministic — SIGKILL is
-    asynchronous, and a zombie still counts as a group member until init
-    reaps it.
+    The leak assert is what survives of an earlier
+    `test_the_pruner_does_not_outlive_its_test`: the container is the leash
+    now, so the one way left to strand a pruner is for run_entrypoint's
+    `finally` to stop firing. This catches exactly that, and nothing else.
     """
-    with contextlib.suppress(ProcessLookupError):
-        os.killpg(pgid, signal.SIGKILL)
-    deadline = time.monotonic() + _REAP_DEADLINE_SEC
-    while time.monotonic() < deadline:
-        try:
-            os.killpg(pgid, 0)
-        except ProcessLookupError:
-            return
-        time.sleep(0.01)
-    raise AssertionError(f"entrypoint process group {pgid} survived SIGKILL")
+    if subprocess.run(["docker", "image", "inspect", IMAGE],
+                      capture_output=True).returncode:
+        subprocess.run(["docker", "pull", IMAGE], check=True, timeout=600)
+    yield
+    left = subprocess.run(["docker", "ps", "-aq", "--filter", f"label={LABEL}"],
+                          capture_output=True, text=True).stdout.split()
+    assert not left, f"leaked containers: {left}"
 
 
 @dataclass
@@ -105,15 +127,18 @@ class EntrypointRun:
     calls: list[str]
     returncode: int
     output: str
-    pgid: int
 
 
 def run_entrypoint(tmp_path: Path, *args: str, **env: str) -> EntrypointRun:
-    """Run the entrypoint with stubbed `sqreader`/`sleep`; return what happened.
+    """Run the entrypoint in a container; return what happened.
 
-    Positional `args` are what `docker compose run sqreader <args>` passes."""
-    bindir = tmp_path / "bin"
-    bindir.mkdir(exist_ok=True)
+    Positional `args` are what `docker compose run sqreader <args>` passes.
+    Keyword `env` is the container's entire environment beyond PATH and
+    STUB_LOG — nothing is inherited from the developer's shell.
+    """
+    bindir, data, squad = tmp_path / "bin", tmp_path / "data", tmp_path / "squad"
+    for d in (bindir, data, squad):
+        d.mkdir(exist_ok=True)
     for name, body in (("sqreader", _SQREADER_STUB), ("sleep", _SLEEP_STUB)):
         p = bindir / name
         p.write_text(body, encoding="utf-8")
@@ -121,58 +146,73 @@ def run_entrypoint(tmp_path: Path, *args: str, **env: str) -> EntrypointRun:
 
     # Truncate: several tests call this twice with the same tmp_path, and a log
     # that accumulated across runs would show two `serve` calls for one run.
-    log = tmp_path / "calls.log"
+    log = data / "calls.log"
     log.write_text("", encoding="utf-8")
     stdout = tmp_path / "stdout.txt"
-    environ = dict(os.environ)
-    environ.update({
-        "PATH": f"{bindir}:{environ['PATH']}",
-        "STUB_LOG": str(log),
-        "SQREADER_STATE_DIR": str(tmp_path / "data"),
-    })
-    environ.update(env)
+
+    container = f"sqreader-test-{uuid.uuid4().hex[:12]}"
+    argv = ["docker", "run", "--rm", "--name", container, "--label", LABEL,
+            # Nothing in here talks to anything — a stubbed sqreader least of all.
+            "--network", "none",
+            # So the directories the script creates under /data belong to the
+            # invoking user and pytest can still clean up its own tmp_path.
+            #
+            # ponytail: assumes rootful Docker, which is what CI and this
+            # repo's dev boxes run. Under rootless Docker drop --user — there
+            # the container's root already maps to the invoking user.
+            "--user", f"{os.getuid()}:{os.getgid()}",
+            "-v", f"{ENTRYPOINT}:/entrypoint.sh:ro",
+            "-v", f"{bindir}:/stub:ro",
+            "-v", f"{data}:/data",
+            "-v", f"{squad}:/squad:ro",
+            "-e", "PATH=/stub:/usr/local/bin:/usr/bin:/bin",
+            "-e", "STUB_LOG=/data/calls.log"]
+    for key, value in env.items():
+        argv += ["-e", f"{key}={value}"]
+    argv += [IMAGE, "sh", "/entrypoint.sh", *args]
 
     # A FILE, not a pipe — see the module docstring.
-    #
-    # start_new_session puts the script and everything it forks into a fresh
-    # process group whose id is the child's pid, so the backgrounded pruner can
-    # be killed as a unit afterwards. pytest stays in its own group.
     with stdout.open("w", encoding="utf-8") as fh:
-        proc = subprocess.Popen(["sh", str(ENTRYPOINT), *args], env=environ,
-                                stdout=fh, stderr=subprocess.STDOUT,
-                                start_new_session=True)
-        pgid = proc.pid
+        proc = subprocess.Popen(argv, stdout=fh, stderr=subprocess.STDOUT)
         try:
-            returncode = proc.wait(timeout=30)
-        except subprocess.TimeoutExpired:
-            _reap_group(pgid)
-            raise
-
-    # subprocess.run() only waits on the direct `sh` child, which `exec`s into
-    # the serve stub and returns immediately — the pruner's backgrounded
-    # subshell can still be forking `retention` and `sleep` after that. Under
-    # load the final reviewer measured the `retention` line missing in 44/150
-    # runs without this wait. Skip it when nothing will ever background (the
-    # script errored out before reaching the pruner, or pruning is off).
-    interval = environ.get("RETENTION_INTERVAL", "86400")
-    try:
-        if returncode == 0 and interval != "0":
-            deadline = time.monotonic() + _PRUNER_DEADLINE_SEC
-            while time.monotonic() < deadline:
-                if any(line.startswith("sleep ")
-                       for line in log.read_text(encoding="utf-8").splitlines()):
-                    break
-                time.sleep(0.05)
-    finally:
-        # In a finally: a failed poll must still not leave the pruner running.
-        _reap_group(pgid)
+            returncode = _settle(proc, log, env)
+        finally:
+            # In a finally: a failed settle must still not leave a container —
+            # and with it a pruner — running.
+            subprocess.run(["docker", "rm", "-f", container],
+                           capture_output=True, timeout=30)
+            proc.wait(timeout=30)
 
     return EntrypointRun(
         calls=log.read_text(encoding="utf-8").splitlines(),
         returncode=returncode,
         output=stdout.read_text(encoding="utf-8"),
-        pgid=pgid,
     )
+
+
+def _settle(proc: subprocess.Popen, log: Path, env: dict[str, str]) -> int:
+    """The script's exit code if it ended, or 0 once it reached steady state.
+
+    Steady state is `serve` up and — when pruning is on — the pruner's first
+    pass done. Waiting for that rather than for the container to exit is what
+    keeps the `retention` line from being a race: the pruner is a backgrounded
+    subshell and Docker kills it the instant PID 1 goes. An earlier host-side
+    version without this wait lost the line in 44 of 150 runs under load.
+    """
+    pruning = env.get("RETENTION_INTERVAL", "86400") != "0"
+    deadline = time.monotonic() + _SETTLE_DEADLINE_SEC
+    while time.monotonic() < deadline:
+        returncode = proc.poll()
+        if returncode is not None:
+            return returncode       # a one-shot subcommand, or the set -e path
+        calls = log.read_text(encoding="utf-8").splitlines()
+        if (any(c.startswith("sqreader serve") for c in calls)
+                and (not pruning or any(c.startswith("sleep ") for c in calls))):
+            return 0
+        time.sleep(0.05)
+    raise AssertionError(
+        f"entrypoint never settled in {_SETTLE_DEADLINE_SEC}s; "
+        f"log: {log.read_text(encoding='utf-8')!r}")
 
 
 def serve_call(calls: list[str]) -> str:
@@ -238,7 +278,7 @@ def test_the_reader_binds_all_interfaces_inside_the_container(tmp_path):
 
 def test_the_reader_is_pointed_at_the_mounted_log_and_assets(tmp_path):
     call = serve_call(run_entrypoint(tmp_path).calls)
-    assert "--squad-log /squad/SquadGame/Saved/Logs/SquadGame.log" in call
+    assert f"--squad-log {SQUAD_LOG}" in call
     assert "--icons-dir /app/icons" in call
     assert "--sqmaps-dir /app/sqmaps" in call
     assert "--frontend-dir /app/frontend/dist" in call
@@ -279,15 +319,19 @@ def test_the_server_id_is_settable(tmp_path):
 # GAME's mount namespace anyway, which is wrong here. So the entrypoint has to
 # warn for itself when the mount is missing/wrong, or the warning cli.py:581
 # would otherwise print is simply unreachable inside the container.
+#
+# These two are the reason the whole file moved into a container: the path is
+# hardcoded, so the only way to hand the script a log that is there — or one
+# that is not — is to own what /squad contains.
 
 _WARNING_TEXT = "is not readable"
 
 
 def test_a_readable_squad_log_gets_no_warning(tmp_path):
-    log = tmp_path / "SquadGame.log"
-    log.write_text("", encoding="utf-8")
-    result = run_entrypoint(tmp_path, SQREADER_SQUAD_LOG=str(log))
-    assert _WARNING_TEXT not in result.output
+    log = tmp_path / "squad" / "SquadGame" / "Saved" / "Logs" / "SquadGame.log"
+    log.parent.mkdir(parents=True)
+    log.write_text("", encoding="utf-8")        # lands under the /squad mount
+    assert _WARNING_TEXT not in run_entrypoint(tmp_path).output
 
 
 def test_a_missing_squad_log_warns_instead_of_failing_silently(tmp_path):
@@ -295,10 +339,9 @@ def test_a_missing_squad_log_warns_instead_of_failing_silently(tmp_path):
     thread — so cmd_serve prints the reassuring 'kill-feed from log -> …' and
     then retries forever with nothing in the log. The entrypoint has to say
     so up front."""
-    missing = tmp_path / "does-not-exist" / "SquadGame.log"
-    result = run_entrypoint(tmp_path, SQREADER_SQUAD_LOG=str(missing))
+    result = run_entrypoint(tmp_path)           # /squad is mounted, and empty
     assert _WARNING_TEXT in result.output
-    assert str(missing) in result.output
+    assert SQUAD_LOG in result.output
     assert result.returncode == 0          # a warning, not a failure
 
 
@@ -339,26 +382,14 @@ def test_the_pruner_sleeps_for_the_configured_interval(tmp_path):
 def test_the_data_directories_exist_before_the_pruner_looks(tmp_path):
     """serve creates them itself, but the pruner runs first and cmd_retention
     returns 1 on a missing directory — a fresh volume would open with a false
-    alarm in the log."""
+    alarm in the log.
+
+    Doubles as the proof that /data really is the bind mount: the script only
+    ever names /data, so these directories can only appear here if the mount
+    is wired the way every other test in this file assumes."""
     run_entrypoint(tmp_path)
     assert (tmp_path / "data" / "recordings").is_dir()
     assert (tmp_path / "data" / "stats").is_dir()
-
-
-def test_the_pruner_does_not_outlive_its_test(tmp_path):
-    """The regression that made this file leak processes onto the host.
-
-    The pruner is a backgrounded `while :` loop and the script `exec`s away
-    from it, so nothing on earth ends it: it reparents to init and runs until
-    the machine does. That went unnoticed through four task reviews and a fix
-    wave — 641 orphaned `sh entrypoint.sh` processes had accumulated before a
-    reviewer counted them. Asserting the process group is gone is the only
-    check that would have failed.
-    """
-    run = run_entrypoint(tmp_path)
-    assert retention_calls(run.calls), "pruner never ran — this proves nothing"
-    with pytest.raises(ProcessLookupError):
-        os.killpg(run.pgid, 0)
 
 
 def test_a_mistyped_interval_is_a_sentence_not_a_shell_error(tmp_path):
@@ -396,9 +427,6 @@ MODES = {
     "host":   "SQUAD_PID_MODE=host\nSQUAD_APPARMOR=unconfined\nSQUAD_DATA=/srv/squad\n",
 }
 
-needs_docker = pytest.mark.skipif(
-    shutil.which("docker") is None, reason="docker not installed")
-
 
 def compose_config(tmp_path: Path, mode: str) -> dict:
     env_file = tmp_path / f"{mode}.env"
@@ -411,7 +439,6 @@ def compose_config(tmp_path: Path, mode: str) -> dict:
     return json.loads(proc.stdout)
 
 
-@needs_docker
 @pytest.mark.parametrize("mode,pid", [
     ("attach", "container:my-squad"),
     ("host", "host"),
@@ -425,7 +452,6 @@ def test_no_mode_ever_defines_a_game_service(tmp_path, mode, pid):
     assert cfg["services"]["sqreader"]["pid"] == pid
 
 
-@needs_docker
 def test_host_mode_is_the_only_one_that_unconfines_apparmor(tmp_path):
     for mode, want in (("attach", "apparmor=docker-default"),
                        ("host", "apparmor=unconfined")):
@@ -433,7 +459,6 @@ def test_host_mode_is_the_only_one_that_unconfines_apparmor(tmp_path):
         assert opts == [want], f"{mode}: {opts}"
 
 
-@needs_docker
 @pytest.mark.parametrize("mode", list(MODES))
 def test_every_mode_grants_both_capabilities_and_no_others(tmp_path, mode):
     """SYS_PTRACE alone opens /proc/<pid>/maps but not /proc/<pid>/mem."""
@@ -442,7 +467,6 @@ def test_every_mode_grants_both_capabilities_and_no_others(tmp_path, mode):
     assert sorted(svc["cap_add"]) == ["DAC_READ_SEARCH", "SYS_PTRACE"]
 
 
-@needs_docker
 @pytest.mark.parametrize("mode", list(MODES))
 def test_every_mode_mounts_squad_read_only_with_a_graceful_stop(tmp_path, mode):
     """The reader never writes to /squad, and needs room to write the .sqrx
@@ -453,13 +477,11 @@ def test_every_mode_mounts_squad_read_only_with_a_graceful_stop(tmp_path, mode):
     assert svc["stop_grace_period"] == "30s"
 
 
-@needs_docker
 def test_the_replay_ui_is_not_published_to_the_world_by_default(tmp_path):
     port = compose_config(tmp_path, "attach")["services"]["sqreader"]["ports"][0]
     assert port["host_ip"] == "127.0.0.1"
 
 
-@needs_docker
 def test_a_missing_env_file_names_both_things_it_cannot_guess(tmp_path):
     """The fresh-clone case. Neither the game process nor its install directory
     exists inside this stack, so neither can carry a default — say which is
@@ -475,7 +497,6 @@ def test_a_missing_env_file_names_both_things_it_cannot_guess(tmp_path):
     assert "cp .env.example .env" in proc.stderr
 
 
-@needs_docker
 def test_a_mode_without_an_install_path_is_refused_before_anything_starts(tmp_path):
     """Defaulting SQUAD_DATA would mount an empty directory: the reader would
     start, look healthy, and undercount kills for the rest of the match."""
