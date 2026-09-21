@@ -61,13 +61,10 @@ from pathlib import Path
 
 import pytest
 
-from conftest import needs_docker
-
-# Every test in this file shells out to Docker, the compose ones at the bottom
-# included. Without a daemon there is nothing here to run.
-pytestmark = needs_docker
-
-REPO = Path(__file__).resolve().parent.parent
+# Not collected by a plain `pytest` — pyproject's testpaths is tests/, and this
+# tree is not it. Run it deliberately, on a box with a daemon:
+#     pytest docker/tests
+REPO = Path(__file__).resolve().parents[2]
 ENTRYPOINT = REPO / "docker" / "entrypoint.sh"
 
 # The base the entrypoint will actually run under, read from the Dockerfile so
@@ -423,7 +420,8 @@ def test_the_entrypoint_is_portable_posix_shell(tmp_path):
 COMPOSE = REPO / "docker-compose.yml"
 
 MODES = {
-    "attach": "SQUAD_PID_MODE=container:my-squad\nSQUAD_APPARMOR=docker-default\nSQUAD_DATA=/srv/squad\n",
+    "attach": ("SQUAD_PID_MODE=container:my-squad\n"
+               "SQUAD_APPARMOR=docker-default\nSQUAD_DATA=/srv/squad\n"),
     "host":   "SQUAD_PID_MODE=host\nSQUAD_APPARMOR=unconfined\nSQUAD_DATA=/srv/squad\n",
 }
 

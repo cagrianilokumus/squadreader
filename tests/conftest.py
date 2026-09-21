@@ -1,26 +1,16 @@
 """Make the `sqreader` package importable no matter where pytest is
 invoked from (repo root is one level up from this tests/ dir), and
 expose a shared FakeProcessMemory helper for mem.py-driven tests
-that must not touch /proc/pid/mem, and the marker that gates the tests
-which shell out to Docker."""
+that must not touch /proc/pid/mem."""
 from __future__ import annotations
 
-import shutil
 import sys
 from pathlib import Path
 from typing import Sequence
 
-import pytest
-
 _TESTS_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(_TESTS_DIR.parent))  # repo root — for `import sqreader`
 sys.path.insert(0, str(_TESTS_DIR))         # tests dir  — for `from conftest import ...`
-
-# `which`, not `docker info`: a box with the CLI but a dead daemon should fail
-# loudly rather than skip in silence, which is how a green run hides a broken
-# suite.
-needs_docker = pytest.mark.skipif(
-    shutil.which("docker") is None, reason="docker not installed")
 
 
 class FakeProcessMemory:

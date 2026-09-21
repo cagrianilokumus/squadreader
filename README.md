@@ -271,6 +271,17 @@ pulling the repo and running `docker compose build && docker compose up -d`
 (`build` alone leaves the old container running). Central push stays off;
 it needs `sqreader enroll` and the `push` extra (`pip install .[push]`).
 
+### Testing this setup
+
+The tests for the entrypoint and the compose files live in `docker/tests/`,
+outside the normal suite: they shell out to a real daemon, so a plain
+`pytest` neither runs nor collects them. After touching anything under
+`docker/` or a compose file, run them yourself:
+
+```bash
+python -m pytest docker/tests
+```
+
 ## Configuration
 
 Copy `sqreader.config.example.json` to `sqreader.config.json` (gitignored) and

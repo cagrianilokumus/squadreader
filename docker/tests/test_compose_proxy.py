@@ -28,7 +28,9 @@ The compose assertions go through `docker compose config --format json`, the
 same way `compose_config()` in test_docker_entrypoint.py does — that renders
 and MERGES both files, so a bad indent or a broken two-file merge fails here
 instead of at `up -d`. Caddyfile assertions stay textual because it is not
-YAML; those are the only ones that still run without Docker installed.
+YAML.
+
+Run with `pytest docker/tests` — a plain `pytest` does not collect this tree.
 """
 from __future__ import annotations
 
@@ -38,9 +40,7 @@ import re
 import subprocess
 from pathlib import Path
 
-from conftest import needs_docker
-
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2]
 BASE = REPO / "docker-compose.yml"
 PROXY = REPO / "docker-compose.proxy.yml"
 CADDYFILE = (REPO / "deploy" / "Caddyfile").read_text()
@@ -84,7 +84,6 @@ def proxy_service(tmp_path, **env):
     return json.loads(out)
 
 
-@needs_docker
 def test_the_two_files_merge_into_one_working_stack(tmp_path):
     """The check that only `up -d` used to make: does the merge even render."""
     cfg = proxy_service(tmp_path, SQREADER_SITE="replays.example.com")
@@ -113,7 +112,6 @@ def test_caddy_upstream_matches_the_port_the_entrypoint_serves():
         f"Caddyfile proxies to {upstream}, entrypoint serves on {served}")
 
 
-@needs_docker
 def test_certificates_live_in_a_named_volume(tmp_path):
     cfg = proxy_service(tmp_path, SQREADER_SITE="replays.example.com")
     data = [v for v in cfg["services"]["proxy"]["volumes"]
@@ -123,7 +121,6 @@ def test_certificates_live_in_a_named_volume(tmp_path):
     assert data[0]["source"] in cfg["volumes"]
 
 
-@needs_docker
 def test_http3_is_published_over_udp(tmp_path):
     cfg = proxy_service(tmp_path, SQREADER_SITE="replays.example.com")
     protos = {(p["target"], p["protocol"])
@@ -132,7 +129,6 @@ def test_http3_is_published_over_udp(tmp_path):
     assert (443, "tcp") in protos
 
 
-@needs_docker
 def test_site_address_is_required_not_defaulted(tmp_path):
     rc, _, err = compose(tmp_path, BASE, PROXY, **GAME)
     assert rc != 0, "SQREADER_SITE must fail loudly when unset"
@@ -147,7 +143,6 @@ def test_acme_email_directive_and_its_variable_move_together():
             "an empty LETSENCRYPT_EMAIL stops Caddy booting"
 
 
-@needs_docker
 def test_base_stack_stands_alone(tmp_path):
     rc, out, err = compose(tmp_path, BASE, **GAME)
     assert rc == 0, err
