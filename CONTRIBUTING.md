@@ -11,9 +11,7 @@ pip install -e ".[dev]"
 ```
 
 Real data needs a live Squad server on Linux, but the **test suite runs
-anywhere** — it uses fixtures, not a live process. The two Docker files
-(`tests/test_docker_entrypoint.py`, `tests/test_compose_proxy.py`) are the
-exception: they drive a real daemon, and skip without one.
+anywhere** — it uses fixtures, not a live process.
 
 ## Before opening a PR
 
