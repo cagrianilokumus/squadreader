@@ -243,6 +243,14 @@ wrong directory and cost you the kill feed silently.
 before `/proc/<pid>/mem` is ever opened. Otherwise check that `cap_add` still
 lists both `SYS_PTRACE` and `DAC_READ_SEARCH`.
 
+**`PermissionError` on a host that runs SELinux rather than AppArmor** (RHEL,
+Rocky, Fedora) — `SQUAD_APPARMOR` has nothing to act on there, so neither of
+its values changes anything. The confinement that can still refuse the ptrace
+is SELinux, and its denial is written to the HOST's `/var/log/audit/audit.log`
+rather than anywhere the container can see it: `ausearch -m avc -ts recent`
+while the reader retries is what separates a policy denial from a capability
+mistake.
+
 **`entrypoint: WARNING: /squad/SquadGame/Saved/Logs/SquadGame.log is not
 readable`** — the `/squad` mount is wrong. `SQUAD_DATA` must be the install
 root, the directory that *contains* `SquadGame/`. Expected while your server is

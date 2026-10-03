@@ -37,8 +37,18 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import subprocess
 from pathlib import Path
+
+import pytest
+
+# Neither test in this tree can run without a daemon, and without this guard
+# the first `docker` call raises FileNotFoundError instead — which reads as a
+# broken suite rather than a missing tool.
+pytestmark = pytest.mark.skipif(
+    shutil.which("docker") is None,
+    reason="needs a Docker daemon (README: Run in Docker > Testing this setup)")
 
 REPO = Path(__file__).resolve().parents[2]
 BASE = REPO / "docker-compose.yml"

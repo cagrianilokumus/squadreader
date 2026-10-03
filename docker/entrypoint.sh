@@ -60,7 +60,10 @@ if [ "$RETENTION_INTERVAL" -gt 0 ]; then
         --max-total-gb   "${RETENTION_MAX_TOTAL_GB:-150}" \
         --min-free-gb    "${RETENTION_MIN_FREE_GB:-50}" \
         --min-keep       "${RETENTION_MIN_KEEP:-3}" || true
-      sleep "$RETENTION_INTERVAL" || true
+      # `|| true` so a failing sleep does not kill the pruner for the
+      # container's lifetime — but with a floor under it, because a sleep
+      # that fails INSTANTLY turns this loop into a busy wait on a core.
+      sleep "$RETENTION_INTERVAL" || sleep 60 || true
     done
   ) &
 fi
