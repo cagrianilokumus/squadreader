@@ -53,12 +53,8 @@
   letter-spacing: -0.01em;
 }
 
-/* the two hardcoded (non-token) colors in the chrome, re-pointed to tokens */
+/* the hardcoded (non-token) colour in the chrome, re-pointed to a token */
 :root[data-theme="apple"] .btn-primary:hover { background: var(--accent-2); }
-:root[data-theme="apple"] #timeline-bar .tb-scrub {
-  height: 5px;
-  background: linear-gradient(90deg, var(--accent) 0%,
-                                     var(--accent) var(--pct, 0%),
-                                     var(--surface-3) var(--pct, 0%),
-                                     var(--surface-3) 100%);
-}
+/* (The timeline track used to be overridden here with a two-stop gradient.
+   That hid the downloaded-but-not-watched band on this theme — the one the
+   site actually serves. The base rule is token-derived now and needs nothing.) */

@@ -1,15 +1,24 @@
-// Bottom-fixed timeline scrubber. Shown only in replay mode after
-// frames have been loaded. Drives `replay.currentIdx` /
-// `replay.playing` / `replay.speed` on the viewer store; the rAF
-// playback engine (`useReplayPlayback`) reads those and advances the
-// playhead. Seeks ±30 s walk the frames[] timestamp list rather than
-// the index alone — a 5-min gap (e.g. paused recorder) wouldn't be
-// fairly represented by a fixed step count.
+// Bottom-fixed replay timeline. Shown only in replay mode once frames exist.
+// Drives `replay.currentIdx` / `replay.playing` / `replay.speed` on the viewer
+// store; the rAF playback engine (`useReplayPlayback`) reads those and moves
+// the playhead. Seeks walk the frames[] timestamp list rather than the index
+// alone — a recording with holes in it would not be fairly represented by a
+// fixed step count.
+//
+// Laid out the way demo viewers do it:
+//
+//   12:14 ━━━━━━━━━━━●┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄  36:39   time · track · length
+//   FLAGS │  ⚑      ⚑  ⚑            ⚑                    one labelled lane
+//  LOSSES │   ▲ ▼ ▲▲3  ▲  ▼    ▲   ▲  ▲▼                 per kind of moment
+//          ‹ ›        ↺30 ↺10  ▶  ↻10 ↻30        1× ▾    frame · skip · speed
+//
+// The lanes share the track's axis exactly, and a hairline playhead runs
+// through them, so "what happens next" is read straight off the bar.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { useViewerStore } from "../state/viewerStore";
 import type { Snapshot } from "../state/types";
-import { clusterMarkers, type ReplayMarker } from "../state/replayMarkers";
+import { clusterMarkers, type MarkerCluster, type ReplayMarker } from "../state/replayMarkers";
 import { teamColor } from "../canvas/draw";
 
 function fmtMMSS(ms: number): string {
@@ -37,9 +46,14 @@ const LEAD_MS: Record<ReplayMarker["kind"], number> = {
   cap: 15_000, vehicle: 5_000, tickets: 3_000,
 };
 
-// Markers closer than this share one glyph. Wide enough for the 12 px hit
-// area, so no marker can sit under another and swallow its clicks.
+// Markers closer than this share one spot. Wide enough for the hit area, so no
+// marker can sit under another and swallow its clicks.
 const MARK_GAP_PX = 12;
+
+const LANES = [
+  { id: "flags", label: "Flags", kinds: ["cap"] as ReplayMarker["kind"][] },
+  { id: "losses", label: "Losses", kinds: ["vehicle", "tickets"] as ReplayMarker["kind"][] },
+];
 
 const shortFaction = (f: string | null | undefined) => (f ?? "").split("_")[0] || null;
 
@@ -54,6 +68,46 @@ function markerText(m: ReplayMarker, side: string): string {
       return `${side} lost ${m.amount ?? 0} tickets in a minute`;
   }
 }
+
+// --- icons ------------------------------------------------------------------
+// Inline SVG, drawn on a 24-unit grid in `currentColor`, so every control
+// follows the theme and none depends on a font having the right glyph.
+
+const Svg = ({ children, size = 20 }: { children: React.ReactNode; size?: number }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true"
+       fill="currentColor">{children}</svg>
+);
+const PlayIcon = () => <Svg><path d="M8.5 5.6v12.8L19 12z" /></Svg>;
+const PauseIcon = () => (
+  <Svg><rect x="6.5" y="5.5" width="4" height="13" rx="1" />
+       <rect x="13.5" y="5.5" width="4" height="13" rx="1" /></Svg>
+);
+/** Circular arrow with the seconds in it; `dir` -1 winds back, +1 forward. */
+const SkipIcon = ({ dir, n }: { dir: -1 | 1; n: number }) => (
+  <Svg size={26}>
+    <g transform={dir > 0 ? "translate(24 0) scale(-1 1)" : undefined}>
+      <path d="M5.5 8.25A7.5 7.5 0 1 0 12 4.5" fill="none" stroke="currentColor"
+            strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M8.4 4.5 12.6 1.7v5.6z" />
+    </g>
+    <text x="12" y="15.3" textAnchor="middle" fontSize="7.6" fontWeight="800"
+          letterSpacing="-0.3">{n}</text>
+  </Svg>
+);
+const StepIcon = ({ dir }: { dir: -1 | 1 }) => (
+  <Svg>
+    <g transform={dir > 0 ? "translate(24 0) scale(-1 1)" : undefined}>
+      <rect x="6" y="6.5" width="2.2" height="11" rx="0.8" />
+      <path d="M18 6.5v11L9.8 12z" />
+    </g>
+  </Svg>
+);
+const Caret = () => (
+  <svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true">
+    <path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="2.2"
+          strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
 export function TimelineBar() {
   const mode    = useViewerStore((s) => s.mode);
@@ -75,30 +129,41 @@ export function TimelineBar() {
   const stepReplayFrame = useViewerStore((s) => s.stepReplayFrame);
   const markers = useViewerStore((s) => s.replay.markers);
 
-  // The marker strip's width in px, because overlap is a question of pixels.
-  // A callback ref, not useEffect: the strip only exists once frames do.
-  const [trackPx, setTrackPx] = useState(0);
+  // The lanes' inner width in px — overlap is a question of pixels — and
+  // where they start inside the bar, to put cards over the right spot. A
+  // callback ref, not useEffect: the lanes only exist once frames do.
+  const [lanePx, setLanePx] = useState(0);
+  const [laneLeft, setLaneLeft] = useState(0);
   const resizeObs = useRef<ResizeObserver | null>(null);
-  const marksRef = useCallback((el: HTMLDivElement | null) => {
+  const laneRef = useCallback((el: HTMLDivElement | null) => {
     resizeObs.current?.disconnect();
     resizeObs.current = null;
     if (!el) return;
-    const ro = new ResizeObserver(() => setTrackPx(el.clientWidth));
+    const measure = () => {
+      setLanePx(el.clientWidth);
+      // Relative to #timeline-bar, the cards' containing block.
+      let x = 0;
+      for (let n: HTMLElement | null = el; n && n.id !== "timeline-bar";
+           n = n.offsetParent as HTMLElement | null) x += n.offsetLeft;
+      setLaneLeft(x);
+    };
+    const ro = new ResizeObserver(measure);
     ro.observe(el);
     resizeObs.current = ro;
-    setTrackPx(el.clientWidth);
+    measure();
   }, []);
 
-  // A spot holding several moments opens a list instead of seeking: on a real
-  // 40-minute match the strip is a few hundred px, one glyph covers most of a
-  // minute, and a fight puts a flag, a ticket collapse and three vehicles in
-  // it. Seeking to the first of them would make the rest unreachable.
-  const [openSpot, setOpenSpot] = useState<string | null>(null);
+  // One open thing at a time: the list of a crowded spot, or the speed menu.
+  // A spot holding several moments opens a list instead of seeking — one
+  // glyph covers most of a minute on a long round, and seeking to the first
+  // moment in it would make the rest unreachable.
+  const [menu, setMenu] = useState<string | null>(null);
+  const [hover, setHover] = useState<string | null>(null);
   useEffect(() => {
-    if (!openSpot) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpenSpot(null); };
+    if (!menu) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMenu(null); };
     const onDown = (e: MouseEvent) => {
-      if (!(e.target as Element | null)?.closest?.(".tb-pop, .tb-mark")) setOpenSpot(null);
+      if (!(e.target as Element | null)?.closest?.(".tb-card, .tb-spot, .tb-speed")) setMenu(null);
     };
     window.addEventListener("keydown", onKey);
     window.addEventListener("mousedown", onDown);
@@ -106,7 +171,7 @@ export function TimelineBar() {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("mousedown", onDown);
     };
-  }, [openSpot]);
+  }, [menu]);
 
   if (mode !== "replay" || frameCount === 0) return null;
 
@@ -195,6 +260,7 @@ export function TimelineBar() {
 
   const setSpeed = (sp: number) => {
     setReplay((r) => ({ ...r, speed: sp, baseWallMs: 0, baseSnapMs: 0 }));
+    setMenu(null);
   };
 
   const pct = Math.max(0, Math.min(100, (elapsedMs / durationMs) * 100));
@@ -204,133 +270,161 @@ export function TimelineBar() {
   const asPct = (ms: number) =>
     Math.max(0, Math.min(100, ((ms - startMs) / durationMs) * 100));
 
-  const line = (x: ReplayMarker) =>
-    `${fmtMMSS(x.tMs - startMs)} · ${markerText(x, sideName(x.team))}`;
-  const toPx = (t: number) => (asPct(t) / 100) * trackPx;
-  const lanes = trackPx > 0
-    ? [{ cls: "above", spots: clusterMarkers(markers.filter((m) => m.kind === "cap"),
-                                             toPx, MARK_GAP_PX) },
-       { cls: "below", spots: clusterMarkers(markers.filter((m) => m.kind !== "cap"),
-                                             toPx, MARK_GAP_PX) }]
-    : [{ cls: "above", spots: [] }, { cls: "below", spots: [] }];
-  // Looked up every render: a marker arriving mid-download can change a
-  // spot's members and so its key, and then the list simply closes.
-  const openCluster = openSpot
-    ? lanes.flatMap((l) => l.spots).find((c) => c.key === openSpot) ?? null
-    : null;
+  const toPx = (t: number) => (asPct(t) / 100) * lanePx;
+  const lanes = LANES.map((l) => ({
+    ...l,
+    spots: lanePx > 0
+      ? clusterMarkers(markers.filter((m) => l.kinds.includes(m.kind)), toPx, MARK_GAP_PX)
+      : [] as MarkerCluster[],
+  }));
+  // Looked up every render: a marker arriving mid-download can change a spot's
+  // members and so its key, and then the card simply closes.
+  const allSpots = lanes.flatMap((l) => l.spots);
+  const openSpot = menu && menu !== "speed" ? allSpots.find((c) => c.key === menu) ?? null : null;
+  const hoverSpot = !openSpot && hover ? allSpots.find((c) => c.key === hover) ?? null : null;
+  const card = openSpot ?? hoverSpot;
+
   // How much of the match is in hand, on the same axis. The band runs from where
   // the window begins — not from zero, because after a seek the earlier part of
-  // the match genuinely is not held any more. On a finished recording it starts
-  // at 0 and ends at 100, so the bar renders as it did before this existed.
-  //
-  // One special case, for the common case: a recording that finished loading
-  // from the start holds everything, so the band would cover the entire track
-  // and recolour a bar nobody asked to change. Collapsing it to the playhead
-  // makes that render byte-identical to before any of this existed. After a
-  // seek it does NOT collapse — there the missing head is real information.
+  // the match genuinely is not held any more. A recording that finished loading
+  // from the start holds everything, and there the band collapses to the
+  // playhead rather than recolouring the whole track.
   const whollyHeld = !loading && asPct(windowStart) <= 0.01;
   const bufFrom = whollyHeld ? pct : asPct(windowStart);
   const bufTo = whollyHeld ? pct : Math.max(pct, asPct(bufferedMs));
 
+  const playTitle = stalled ? "Buffering — waiting for the download"
+                  : playing ? "Pause (Space)" : "Play (Space)";
+
   return (
-    <div id="timeline-bar"
-         title="Space: play/pause · , / . : frame step · F: Fit map · Tab: scoreboard">
-      {/* Two rows, the way a video player does it: the track gets the bar's
-          whole width — the markers need every pixel of it — and the controls
-          sit underneath, symmetric around play. */}
-      <div className="tb-track">
-        <input className="tb-scrub" type="range"
-               min={0} max={100} step={0.05}
-               value={pct} onChange={onScrub}
-               title="timeline (drag)"
-               style={{ "--pct": `${pct}%`,
-                        "--buf0": `${bufFrom}%`,
-                        "--buf": `${bufTo}%` } as React.CSSProperties} />
-        {/* Beside the track, never on it: the watched / buffered bands and
-            the thumb stay readable. Two lanes — flags above, losses below —
-            so the handful of moments that decide a round are never folded
-            into a heap of dead trucks. A marker the download has not reached
-            yet is still clickable; that is just a seek. */}
-        {lanes.map((lane) => (
-          <div key={lane.cls} className={`tb-marks ${lane.cls}`}
-               ref={lane.cls === "above" ? marksRef : undefined}>
-            {lane.spots.map((c) => {
-              const m = c.lead;
-              const multi = c.members.length > 1;
-              const text = c.members.map(line).join("\n");
-              return (
-                <button key={c.key}
-                        className={`tb-mark tb-mark-${m.kind}`
-                                   + (m.capture === "lost" ? " lost" : "")
-                                   + (multi ? " multi" : "")
-                                   + (openSpot === c.key ? " open" : "")}
-                        style={{ left: `${c.px}px`,
-                                 "--c": teamColor(m.team),
-                                 "--w": Math.max(...c.members.map((x) => x.weight)),
-                               } as React.CSSProperties}
-                        title={text} aria-label={text}
-                        aria-haspopup={multi ? "menu" : undefined}
-                        aria-expanded={multi ? openSpot === c.key : undefined}
-                        onClick={() => multi
-                          ? setOpenSpot((k) => (k === c.key ? null : c.key))
-                          : seekBefore(m)}>
-                  <i />
-                </button>
-              );
-            })}
-          </div>
+    <div id="timeline-bar">
+      <div className="tb-grid">
+        <span className="tb-time" aria-label="elapsed">{fmtMMSS(elapsedMs)}</span>
+        <div className="tb-track">
+          <input className="tb-scrub" type="range"
+                 min={0} max={100} step={0.05}
+                 value={pct} onChange={onScrub}
+                 aria-label="Timeline"
+                 style={{ "--pct": `${pct}%`,
+                          "--buf0": `${bufFrom}%`,
+                          "--buf": `${bufTo}%` } as React.CSSProperties} />
+        </div>
+        <span className="tb-time tb-time-end" aria-label="length">{fmtMMSS(durationMs)}</span>
+
+        {lanes.map((lane, i) => (
+          <Fragment key={lane.id}>
+            <span className="tb-lane-label">{lane.label}</span>
+            <div className="tb-lane">
+              <div className="tb-lane-in" ref={i === 0 ? laneRef : undefined}>
+                <span className="tb-playhead" style={{ left: `${pct}%` }} />
+                {lane.spots.map((c) => {
+                  const m = c.lead;
+                  const n = c.members.length;
+                  const label = c.members
+                    .map((x) => `${fmtMMSS(x.tMs - startMs)} ${markerText(x, sideName(x.team))}`)
+                    .join("; ");
+                  return (
+                    <button key={c.key}
+                            className={`tb-spot k-${m.kind}`
+                                       + (m.capture === "lost" ? " lost" : "")
+                                       + (menu === c.key ? " open" : "")}
+                            style={{ left: `${c.px}px`,
+                                     "--c": teamColor(m.team),
+                                     "--w": Math.max(...c.members.map((x) => x.weight)),
+                                   } as React.CSSProperties}
+                            aria-label={label}
+                            aria-haspopup={n > 1 ? "menu" : undefined}
+                            aria-expanded={n > 1 ? menu === c.key : undefined}
+                            onMouseEnter={() => setHover(c.key)}
+                            onMouseLeave={() => setHover((h) => (h === c.key ? null : h))}
+                            onFocus={() => setHover(c.key)}
+                            onBlur={() => setHover((h) => (h === c.key ? null : h))}
+                            onClick={() => n > 1
+                              ? setMenu((k) => (k === c.key ? null : c.key))
+                              : seekBefore(m)}>
+                      <i />
+                      {n > 1 && <b>{n}</b>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <span />
+          </Fragment>
         ))}
-        {openCluster && (
-          <div className="tb-pop" role="menu"
-               // Centred on its spot, but never hanging off either end of
-               // the bar: half the list's minimum width, plus a margin.
-               style={{ left: `clamp(124px, ${openCluster.px + 7}px, calc(100% - 124px))` }}>
-            {openCluster.members.map((x) => (
-              <button key={x.key} role="menuitem"
-                      onClick={() => { seekBefore(x); setOpenSpot(null); }}>
-                <i className={`tb-pop-glyph tb-mark-${x.kind}`}
-                   style={{ "--c": teamColor(x.team) } as React.CSSProperties} />
-                <span className="tb-pop-time">{fmtMMSS(x.tMs - startMs)}</span>
-                <span>{markerText(x, sideName(x.team))}</span>
-              </button>
-            ))}
-          </div>
-        )}
       </div>
+
       <div className="tb-controls">
-        <div className="tb-transport">
-          <button className="tb-btn" onClick={() => seekDeltaMs(-30_000)}
-                  title="back 30 s">−30s</button>
-          <button className="tb-btn" onClick={() => seekDeltaMs(-10_000)}
-                  title="back 10 s">−10s</button>
-          <button className="tb-btn tb-step" onClick={() => stepReplayFrame(-1)}
-                  title="previous frame (,)" aria-label="previous frame">‹</button>
-          <button className={`tb-btn tb-play${stalled ? " tb-buffering" : ""}`}
-                  onClick={togglePlay}
-                  title={stalled ? "buffering — waiting for the download"
-                                 : playing ? "pause (space)" : "play (space)"}>
-            {playing ? "⏸" : "▶"}
-          </button>
-          <button className="tb-btn tb-step" onClick={() => stepReplayFrame(1)}
-                  title="next frame (.)" aria-label="next frame">›</button>
-          <button className="tb-btn" onClick={() => seekDeltaMs(10_000)}
-                  title="forward 10 s">+10s</button>
-          <button className="tb-btn" onClick={() => seekDeltaMs(30_000)}
-                  title="forward 30 s">+30s</button>
+        <div className="tb-group tb-left">
+          <button className="tb-icon" onClick={() => stepReplayFrame(-1)}
+                  title="Previous frame ( , )" aria-label="Previous frame">
+            <StepIcon dir={-1} /></button>
+          <button className="tb-icon" onClick={() => stepReplayFrame(1)}
+                  title="Next frame ( . )" aria-label="Next frame">
+            <StepIcon dir={1} /></button>
         </div>
-        <span className="tb-clock">
-          {fmtMMSS(elapsedMs)} / {fmtMMSS(durationMs)}
-        </span>
-        <div className="tb-speeds">
-          {SPEEDS.map((sp) => (
-            <button key={sp}
-                    className={"tb-spd " + (speed === sp ? "active" : "")}
-                    onClick={() => setSpeed(sp)}>
-              {sp}×
-            </button>
-          ))}
+        <div className="tb-group tb-center">
+          <button className="tb-icon" onClick={() => seekDeltaMs(-30_000)}
+                  title="Back 30 s" aria-label="Back 30 seconds"><SkipIcon dir={-1} n={30} /></button>
+          <button className="tb-icon" onClick={() => seekDeltaMs(-10_000)}
+                  title="Back 10 s" aria-label="Back 10 seconds"><SkipIcon dir={-1} n={10} /></button>
+          <button className={`tb-play${stalled ? " tb-buffering" : ""}`}
+                  onClick={togglePlay} title={playTitle} aria-label={playTitle}>
+            {playing ? <PauseIcon /> : <PlayIcon />}
+          </button>
+          <button className="tb-icon" onClick={() => seekDeltaMs(10_000)}
+                  title="Forward 10 s" aria-label="Forward 10 seconds"><SkipIcon dir={1} n={10} /></button>
+          <button className="tb-icon" onClick={() => seekDeltaMs(30_000)}
+                  title="Forward 30 s" aria-label="Forward 30 seconds"><SkipIcon dir={1} n={30} /></button>
+        </div>
+        <div className="tb-group tb-right">
+          <button className={`tb-speed${menu === "speed" ? " open" : ""}`}
+                  aria-haspopup="menu" aria-expanded={menu === "speed"}
+                  title="Playback speed"
+                  onClick={() => setMenu((k) => (k === "speed" ? null : "speed"))}>
+            {speed}× <Caret />
+          </button>
+          {menu === "speed" && (
+            <div className="tb-card tb-speed-menu" role="menu">
+              {[...SPEEDS].reverse().map((sp) => (
+                <button key={sp} role="menuitemradio" aria-checked={speed === sp}
+                        className={speed === sp ? "on" : ""}
+                        onClick={() => setSpeed(sp)}>
+                  {sp}×
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* One card for both: what is under the pointer, or — once a crowded
+          spot is clicked — a list to pick from. Centred on its spot, never
+          hanging off either end of the bar. */}
+      {card && (
+        <div className={`tb-card tb-moments${openSpot ? " pick" : ""}`}
+             role={openSpot ? "menu" : "tooltip"}
+             style={{ left: `clamp(150px, ${laneLeft + card.px}px, calc(100% - 150px))` }}>
+          {card.members.map((x) => {
+            const row = (
+              <>
+                <i className={`tb-glyph k-${x.kind}${x.capture === "lost" ? " lost" : ""}`}
+                   style={{ "--c": teamColor(x.team) } as React.CSSProperties} />
+                <span className="tb-card-time">{fmtMMSS(x.tMs - startMs)}</span>
+                <span className="tb-card-text">{markerText(x, sideName(x.team))}</span>
+              </>
+            );
+            return openSpot
+              ? <button key={x.key} role="menuitem"
+                        onClick={() => { seekBefore(x); setMenu(null); setHover(null); }}>
+                  {row}</button>
+              : <div key={x.key} className="tb-card-row">{row}</div>;
+          })}
+          {!openSpot && card.members.length > 1 && (
+            <div className="tb-card-hint">Click to choose one</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

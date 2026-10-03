@@ -15,7 +15,14 @@ const proxyPath = {
   },
 };
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  // The central build (`npm run build:apple`). Its theme switch used to live
+  // only in a git-ignored .env.apple, so a build from a fresh checkout came out
+  // unthemed — and squadreader.com/stats, which keys on this flag, rendered the
+  // agent's landing page instead of the stats page. The mode carries it now.
+  define: mode === "apple"
+    ? { "import.meta.env.VITE_THEME": JSON.stringify("apple") }
+    : {},
   // Relative base so the built SPA works whether mounted at `/`,
   // `/sqr/viewer-next/`, `/sqr1/viewer-next/`, or any nginx prefix.
   // All asset URLs become `./assets/...`, resolved against the
@@ -39,4 +46,4 @@ export default defineConfig({
       "/sqmaps":  proxyPath,
     },
   },
-});
+}));

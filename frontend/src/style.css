@@ -1426,234 +1426,314 @@ html, body, #root {
 }
 .pill.warn { color: var(--warn); }
 
-/* ----- TimelineBar (replay scrubber, bottom-fixed) ----- */
+/* ----- TimelineBar (replay timeline, bottom-fixed) -----
+   time · track · length, then one labelled lane per kind of moment, then
+   frame step · skip & play · speed. Every colour is derived from the theme
+   tokens (--ink, --accent), so the default and the apple theme both read —
+   the old fixed navy greys were invisible against one of them. */
 #timeline-bar {
+  --tb-rest: color-mix(in srgb, var(--ink) 14%, transparent);
+  --tb-buf:  color-mix(in srgb, var(--ink) 34%, transparent);
+  --tb-lane: color-mix(in srgb, var(--ink) 4.5%, transparent);
+  --tb-hair: color-mix(in srgb, var(--ink) 9%, transparent);
+  --tb-thumb: 12px;
   position: absolute;
-  bottom: 8px; left: 50%;
+  bottom: 10px; left: 50%;
   transform: translateX(-50%);
-  /* Two rows: the track across the full width, the controls beneath it. */
-  display: flex; flex-direction: column; align-items: stretch; gap: 2px;
+  /* No wider than before: the kill feed sits at the bottom right. */
+  width: min(780px, calc(100% - 24px));
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 10px 14px 8px;
   background: var(--glass-2);
   -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
   border: 1px solid var(--glass-brd);
   border-radius: var(--radius);
-  padding: 2px 14px 8px;
-  z-index: 9;
-  width: min(780px, calc(100% - 32px));
-  font-size: 12px;
   box-shadow: var(--shadow);
-}
-#timeline-bar .tb-btn {
-  background: var(--surface-2);
-  color: var(--ink);
-  border: 1px solid var(--glass-brd);
-  border-radius: var(--radius-sm);
-  padding: 3px 10px;
+  z-index: 9;
   font-size: 12px;
-  cursor: pointer;
-  min-width: 36px;
-  transition: background .12s, border-color .12s, color .12s;
+  color: var(--ink);
 }
-#timeline-bar .tb-btn:hover {
-  background: var(--accent-weak);
-  border-color: var(--accent); color: var(--accent);
+
+/* time | track | length, and under them label | lane | (empty) */
+#timeline-bar .tb-grid {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 46px;
+  column-gap: 10px;
+  row-gap: 4px;
+  align-items: center;
 }
+#timeline-bar .tb-time {
+  font-variant-numeric: tabular-nums;
+  font-size: 11.5px;
+  color: var(--ink);
+  text-align: right;
+}
+#timeline-bar .tb-time-end { text-align: left; color: var(--ink-mute); }
+
+#timeline-bar .tb-track { height: 18px; display: flex; align-items: center; }
 #timeline-bar .tb-scrub {
-  flex: 1;
-  -webkit-appearance: none;
-  appearance: none;
-  height: 6px;
-  /* Three bands: watched, downloaded-but-not-watched, and not here yet. The
-     middle one is the buffered track — the same thing the grey bar on a video
-     scrubber means. When the download finishes the viewer passes --buf == --pct,
-     which collapses that band to nothing and leaves the original two-tone bar. */
-  background: linear-gradient(90deg, var(--accent) 0%,
-                                     var(--accent) var(--pct, 0%),
-                                     #1a2230 var(--pct, 0%),
-                                     #1a2230 var(--buf0, 0%),
-                                     #33496b var(--buf0, 0%),
-                                     #33496b var(--buf, 0%),
-                                     #1a2230 var(--buf, 0%),
-                                     #1a2230 100%);
-  border-radius: var(--radius-sm);
+  width: 100%;
+  -webkit-appearance: none; appearance: none;
+  height: 4px; margin: 0;
+  border-radius: 2px;
+  /* watched · gap before the held window · held (buffered) · not here yet.
+     --buf0 / --buf collapse onto --pct once a recording is held in full. */
+  background: linear-gradient(90deg,
+    var(--accent) 0, var(--accent) var(--pct, 0%),
+    var(--tb-rest) var(--pct, 0%), var(--tb-rest) var(--buf0, 0%),
+    var(--tb-buf) var(--buf0, 0%), var(--tb-buf) var(--buf, 0%),
+    var(--tb-rest) var(--buf, 0%), var(--tb-rest) 100%);
   outline: none;
   cursor: pointer;
+  transition: height .12s;
 }
+#timeline-bar .tb-track:hover .tb-scrub { height: 6px; }
 #timeline-bar .tb-scrub::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 14px; height: 14px;
+  width: var(--tb-thumb); height: var(--tb-thumb);
   border-radius: 50%;
-  background: var(--ink);
-  border: 2px solid var(--accent);
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent);
   cursor: grab;
 }
 #timeline-bar .tb-scrub::-moz-range-thumb {
-  width: 14px; height: 14px;
-  border-radius: 50%;
-  background: var(--ink);
-  border: 2px solid var(--accent);
+  width: var(--tb-thumb); height: var(--tb-thumb);
+  border: 0; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent);
   cursor: grab;
 }
-/* The track is a positioning box now: the range input fills it and the
-   important-moment markers sit in a strip above it. */
-#timeline-bar .tb-track {
+#timeline-bar .tb-scrub:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+/* ---- lanes ---- */
+#timeline-bar .tb-lane-label {
+  font-size: 9.5px; font-weight: 600;
+  letter-spacing: .09em; text-transform: uppercase;
+  color: var(--ink-mute);
+  text-align: right;
+}
+#timeline-bar .tb-lane {
+  height: 18px;
+  border-radius: 4px;
+  background: var(--tb-lane);
+  box-shadow: inset 0 0 0 1px var(--tb-hair);
+}
+/* Inset by the thumb's radius: the thumb's CENTRE travels from r to width-r,
+   and this is the span a moment has to share with it to line up. */
+#timeline-bar .tb-lane-in {
   position: relative;
-  /* Room for a marker lane above the track and one below it. */
-  height: 38px;
-  min-width: 0;
-  display: flex;
-  align-items: center;
+  height: 100%;
+  margin: 0 calc(var(--tb-thumb) / 2);
 }
-#timeline-bar .tb-controls {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 8px;
-  flex-wrap: wrap;            /* a phone gets two lines rather than a clipped row */
-}
-#timeline-bar .tb-transport { display: flex; align-items: center; gap: 4px; }
-#timeline-bar .tb-btn.tb-step { min-width: 30px; padding: 1px 8px 3px; font-size: 16px; line-height: 1; }
-#timeline-bar .tb-btn.tb-play { min-width: 42px; }
-#timeline-bar .tb-track .tb-scrub { width: 100%; }
-/* Inset by the thumb's radius (7 px): the thumb's CENTRE travels from 7 px to
-   width-7 px, so this is the span a marker has to share with it to line up. */
-#timeline-bar .tb-marks {
-  position: absolute;
-  left: 7px; right: 7px;
-  bottom: calc(50% + 5px);
-  height: 14px;
+#timeline-bar .tb-playhead {
+  position: absolute; top: -3px; bottom: -3px;
+  width: 1px; margin-left: -0.5px;
+  background: color-mix(in srgb, var(--accent) 75%, transparent);
   pointer-events: none;
 }
-#timeline-bar .tb-mark {
-  position: absolute;
-  bottom: 0;
-  width: 12px; height: 14px;          /* the hit area, wider than the glyph */
-  transform: translateX(-50%);
-  display: flex; align-items: flex-end; justify-content: center;
+
+/* a moment on a lane */
+#timeline-bar .tb-spot {
+  position: absolute; top: 50%;
+  transform: translate(-50%, -50%);
+  height: 18px; min-width: 12px;
+  display: flex; align-items: center; justify-content: center; gap: 1px;
   padding: 0; border: 0; background: none;
   cursor: pointer;
-  pointer-events: auto;
+  z-index: 1;
 }
-#timeline-bar .tb-mark i {
-  display: block;
+#timeline-bar .tb-spot:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 3px;
+}
+#timeline-bar .tb-spot i,
+#timeline-bar .tb-glyph {
+  display: block; flex: none;
   background: var(--c);
-  opacity: calc(0.55 + 0.45 * var(--w, 1));
-  transition: transform .1s, opacity .1s;
-  transform-origin: 50% 100%;
+  transition: transform .1s;
 }
-#timeline-bar .tb-mark:hover i,
-#timeline-bar .tb-mark:focus-visible i { transform: scale(1.6); opacity: 1; }
-#timeline-bar .tb-mark:hover,
-#timeline-bar .tb-mark:focus-visible { z-index: 1; outline: none; }
-/* The second lane hangs BELOW the track: losses (vehicles, ticket
-   collapses), so the flags above are never folded into them. */
-#timeline-bar .tb-marks.below { bottom: auto; top: calc(50% + 5px); }
-#timeline-bar .tb-marks.below .tb-mark { bottom: auto; top: 0; align-items: flex-start; }
-#timeline-bar .tb-marks.below .tb-mark i { transform-origin: 50% 0; }
-#timeline-bar .tb-marks.below .tb-mark.multi::after { top: auto; bottom: -3px; }
-#timeline-bar .tb-mark.open i { transform: scale(1.6); opacity: 1; }
-
-/* The list a multi-moment spot opens. */
-#timeline-bar .tb-pop {
-  position: absolute;
-  bottom: calc(50% + 24px);
-  transform: translateX(-50%);
-  min-width: 240px; max-width: 340px;
-  max-height: 240px; overflow-y: auto;
-  display: flex; flex-direction: column; gap: 2px;
-  padding: 4px;
-  background: var(--glass-2);
-  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
-  border: 1px solid var(--glass-brd);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow);
-  z-index: 20;
-}
-#timeline-bar .tb-pop button {
-  display: flex; align-items: center; gap: 8px;
-  width: 100%;
-  padding: 5px 8px;
-  border: 0; border-radius: 4px;
-  background: none;
-  color: var(--ink);
-  font-size: 12px; text-align: left;
-  cursor: pointer;
-}
-#timeline-bar .tb-pop button:hover,
-#timeline-bar .tb-pop button:focus-visible { background: var(--accent-weak); outline: none; }
-#timeline-bar .tb-pop-time {
-  min-width: 34px;
-  color: var(--ink-mute);
+#timeline-bar .tb-spot:hover i,
+#timeline-bar .tb-spot.open i,
+#timeline-bar .tb-spot:focus-visible i { transform: scale(1.3); }
+/* How many moments share the spot — said with a number, in the spot's own
+   colour, instead of a scatter of grey dots. */
+#timeline-bar .tb-spot b {
+  font-size: 9px; font-weight: 700; line-height: 1;
+  color: var(--c);
   font-variant-numeric: tabular-nums;
 }
-#timeline-bar .tb-pop-glyph { flex: none; display: block; background: var(--c); }
-#timeline-bar .tb-pop-glyph.tb-mark-cap {
-  width: 8px; height: 12px;
-  clip-path: polygon(0 0, 100% 25%, 20% 50%, 20% 100%, 0 100%);
+/* Pennant on a pole: a flag changed hands. Gone neutral: the side that lost
+   it, quieter — a loss to neutral is the smaller event of the two. */
+#timeline-bar .k-cap i,
+#timeline-bar .tb-glyph.k-cap {
+  width: 9px; height: 12px;
+  clip-path: polygon(0 0, 100% 26%, 22% 52%, 22% 100%, 0 100%);
 }
-#timeline-bar .tb-pop-glyph.tb-mark-vehicle {
-  width: 10px; height: 9px;
+/* Lost to neutral: the same pennant, hollow — still in the colour of the
+   side that lost it, and never mistaken for a capture. */
+#timeline-bar .k-cap.lost i,
+#timeline-bar .tb-glyph.k-cap.lost {
+  clip-path: path(evenodd, "M0 0 L9 3.12 L1.98 6.24 L1.98 12 L0 12 Z M2.6 1.75 L6.3 3.12 L2.6 4.55 Z");
+}
+/* A vehicle lost: a triangle, bigger for dearer ones. */
+#timeline-bar .k-vehicle i {
+  width: calc(7px + 4px * var(--w, 1)); height: calc(6px + 4px * var(--w, 1));
   clip-path: polygon(50% 0, 100% 100%, 0 100%);
 }
-#timeline-bar .tb-pop-glyph.tb-mark-tickets {
+#timeline-bar .tb-glyph.k-vehicle {
   width: 10px; height: 9px;
-  clip-path: polygon(0 0, 100% 0, 50% 100%);
-}
-
-/* More than one moment in this spot: a dot over the glyph says so; the
-   tooltip lists them all. */
-#timeline-bar .tb-mark.multi::after {
-  content: "";
-  position: absolute;
-  top: -3px; left: 50%;
-  width: 3px; height: 3px;
-  margin-left: -1.5px;
-  border-radius: 50%;
-  background: var(--ink-mute);
-}
-/* A pennant on a pole: a flag changed hands. */
-#timeline-bar .tb-mark-cap i {
-  width: 8px; height: 12px;
-  clip-path: polygon(0 0, 100% 25%, 20% 50%, 20% 100%, 0 100%);
-}
-/* Went neutral: drawn in the colour of the side that LOST it, but quieter
-   than a capture, which is the bigger event. */
-#timeline-bar .tb-mark-cap.lost i { opacity: 0.45; }
-/* A vehicle lost: the same ▲ the ticket chart uses. Bigger for dearer ones. */
-#timeline-bar .tb-mark-vehicle i {
-  width: calc(6px + 4px * var(--w, 1)); height: calc(5px + 4px * var(--w, 1));
   clip-path: polygon(50% 0, 100% 100%, 0 100%);
 }
 /* Tickets collapsing: pointing down, in the colour of the side bleeding. */
-#timeline-bar .tb-mark-tickets i {
-  width: calc(7px + 4px * var(--w, 1)); height: calc(5px + 4px * var(--w, 1));
+#timeline-bar .k-tickets i {
+  width: calc(8px + 4px * var(--w, 1)); height: calc(6px + 4px * var(--w, 1));
   clip-path: polygon(0 0, 100% 0, 50% 100%);
 }
-#timeline-bar .tb-clock {
-  font-variant-numeric: tabular-nums;
-  color: var(--ink-mute);
-  min-width: 90px;
-  text-align: center;
+#timeline-bar .tb-glyph.k-tickets {
+  width: 10px; height: 9px;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
 }
-#timeline-bar .tb-speeds {
-  display: flex; gap: 2px;
-  border-left: 1px solid var(--glass-brd);
-  padding-left: 8px;
-  margin-left: 2px;
+
+/* ---- controls: frame step · skip & play · speed, three equal-weight groups ---- */
+#timeline-bar .tb-controls {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
 }
-#timeline-bar .tb-spd {
-  background: transparent;
-  color: var(--ink-mute);
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  padding: 2px 7px;
-  font-size: 11px;
+#timeline-bar .tb-group { display: flex; align-items: center; gap: 2px; }
+/* The outer groups line up with the track, not with the bar's edge. */
+#timeline-bar .tb-left { justify-self: start; padding-left: 50px; }
+#timeline-bar .tb-center { justify-self: center; gap: 6px; }
+#timeline-bar .tb-right { justify-self: end; padding-right: 50px; position: relative; }
+#timeline-bar .tb-icon {
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  padding: 0; border: 0; border-radius: 50%;
+  background: none;
+  color: var(--ink);
+  opacity: .85;
   cursor: pointer;
-  transition: background .12s, color .12s;
+  transition: background .12s, opacity .12s;
 }
-#timeline-bar .tb-spd:hover { color: var(--accent); }
-#timeline-bar .tb-spd.active {
+#timeline-bar .tb-icon:hover {
+  opacity: 1;
+  background: color-mix(in srgb, var(--ink) 9%, transparent);
+}
+#timeline-bar .tb-icon:active { background: color-mix(in srgb, var(--ink) 15%, transparent); }
+#timeline-bar .tb-icon:focus-visible,
+#timeline-bar .tb-play:focus-visible,
+#timeline-bar .tb-speed:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#timeline-bar .tb-play {
+  position: relative;
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  padding: 0; border: 0; border-radius: 50%;
   background: var(--accent);
-  color: var(--on-accent);
-  font-weight: 600;
+  color: var(--on-accent, #fff);
+  cursor: pointer;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--accent) 35%, transparent);
+  transition: transform .1s, filter .12s;
+}
+#timeline-bar .tb-play:hover { filter: brightness(1.1); }
+#timeline-bar .tb-play:active { transform: scale(.95); }
+/* Waiting for the download: a ring runs round the play button. */
+#timeline-bar .tb-play.tb-buffering::after {
+  content: "";
+  position: absolute; inset: -4px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--accent);
+  animation: tb-spin .9s linear infinite;
+}
+@keyframes tb-spin { to { transform: rotate(360deg); } }
+#timeline-bar .tb-speed {
+  height: 28px; padding: 0 8px 0 11px;
+  display: flex; align-items: center; gap: 3px;
+  border: 1px solid var(--tb-hair);
+  border-radius: 999px;
+  background: var(--tb-lane);
+  color: var(--ink);
+  font-size: 12px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+#timeline-bar .tb-speed:hover,
+#timeline-bar .tb-speed.open { border-color: var(--accent); color: var(--accent); }
+
+/* ---- cards: what is under the pointer, a crowded spot's list, the speed menu ---- */
+#timeline-bar .tb-card {
+  position: absolute;
+  z-index: 20;
+  padding: 5px;
+  background: var(--surface-2);
+  border: 1px solid var(--glass-brd);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+}
+#timeline-bar .tb-moments {
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  min-width: 260px; max-width: 360px;
+  max-height: 260px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 1px;
+}
+/* A hover card must never sit between the pointer and the spot under it. */
+#timeline-bar .tb-moments:not(.pick) { pointer-events: none; }
+#timeline-bar .tb-card-row,
+#timeline-bar .tb-moments button {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 8px;
+  border-radius: 5px;
+  font-size: 12px; text-align: left;
+  color: var(--ink);
+}
+#timeline-bar .tb-moments button {
+  width: 100%;
+  border: 0; background: none;
+  cursor: pointer;
+}
+#timeline-bar .tb-moments button:hover,
+#timeline-bar .tb-moments button:focus-visible { background: var(--accent-weak); outline: none; }
+#timeline-bar .tb-card-time {
+  min-width: 36px;
+  color: var(--ink-mute);
+  font-variant-numeric: tabular-nums;
+}
+#timeline-bar .tb-card-text { flex: 1; }
+#timeline-bar .tb-card-hint {
+  margin-top: 3px; padding: 4px 8px 2px;
+  border-top: 1px solid var(--tb-hair);
+  font-size: 10.5px;
+  color: var(--ink-mute);
+}
+#timeline-bar .tb-speed-menu {
+  bottom: calc(100% + 8px); right: 50px;
+  display: flex; flex-direction: column; gap: 1px;
+  min-width: 76px;
+}
+#timeline-bar .tb-speed-menu button {
+  padding: 6px 12px;
+  border: 0; border-radius: 5px;
+  background: none;
+  color: var(--ink);
+  font-size: 12px; text-align: right;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+#timeline-bar .tb-speed-menu button:hover { background: var(--accent-weak); }
+#timeline-bar .tb-speed-menu button.on { color: var(--accent); font-weight: 700; }
+
+/* A phone: narrower gutters, the outer groups drop their track alignment. */
+@media (max-width: 560px) {
+  #timeline-bar { padding: 8px 10px 6px; }
+  #timeline-bar .tb-grid { grid-template-columns: 38px minmax(0, 1fr) 38px; column-gap: 6px; }
+  #timeline-bar .tb-lane-label { font-size: 8px; letter-spacing: .04em; }
+  #timeline-bar .tb-left { padding-left: 0; }
+  #timeline-bar .tb-right { padding-right: 0; }
+  #timeline-bar .tb-speed-menu { right: 0; }
+  #timeline-bar .tb-icon { width: 28px; height: 28px; }
+  #timeline-bar .tb-center { gap: 2px; }
 }
 
 /* ----- RecordingPicker dialog ----- */
