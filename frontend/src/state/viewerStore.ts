@@ -305,6 +305,12 @@ interface Store {
   restartReplayAt(ms: number): void;
   /** Append newly found timeline markers (already de-duplicated by the caller). */
   addReplayMarkers(markers: ReplayMarker[]): void;
+  /**
+   * One recorded frame forward (+1) or back (-1), and pause. Stepping is how
+   * you look at a moment, so playing on past it would defeat the point. Clamped
+   * to what is HELD: at the download frontier there is no next frame yet.
+   */
+  stepReplayFrame(delta: number): void;
   /** The stream closed: no more frames are coming. */
   finishReplayLoad(opts?: { truncated?: boolean }): void;
   setRecordings(r: RecordingMeta[] | null): void;
@@ -562,6 +568,15 @@ export const useViewerStore = create<Store>((set) => ({
     // Replace the feed wholesale (replay: the playhead-filtered slice of the
     // pre-computed timeline). Newest-first + capping are the caller's job.
     set({ killFeed: entries });
+  },
+  stepReplayFrame(delta) {
+    set((s) => {
+      const r = s.replay;
+      if (!r.frameCount) return {};
+      const next = Math.max(0, Math.min(r.frameCount - 1, r.currentIdx + delta));
+      return { replay: { ...r, currentIdx: next, playing: false,
+                         baseWallMs: 0, baseSnapMs: 0 } };
+    });
   },
   addReplayMarkers(markers) {
     if (!markers.length) return;

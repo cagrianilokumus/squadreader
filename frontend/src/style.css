@@ -1431,12 +1431,13 @@ html, body, #root {
   position: absolute;
   bottom: 8px; left: 50%;
   transform: translateX(-50%);
-  display: flex; align-items: center; gap: 8px;
+  /* Two rows: the track across the full width, the controls beneath it. */
+  display: flex; flex-direction: column; align-items: stretch; gap: 2px;
   background: var(--glass-2);
   -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
   border: 1px solid var(--glass-brd);
   border-radius: var(--radius);
-  padding: 8px 14px;
+  padding: 2px 14px 8px;
   z-index: 9;
   width: min(780px, calc(100% - 32px));
   font-size: 12px;
@@ -1497,11 +1498,20 @@ html, body, #root {
    important-moment markers sit in a strip above it. */
 #timeline-bar .tb-track {
   position: relative;
-  flex: 1;
+  /* Room for a marker lane above the track and one below it. */
+  height: 38px;
   min-width: 0;
   display: flex;
   align-items: center;
 }
+#timeline-bar .tb-controls {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;            /* a phone gets two lines rather than a clipped row */
+}
+#timeline-bar .tb-transport { display: flex; align-items: center; gap: 4px; }
+#timeline-bar .tb-btn.tb-step { min-width: 30px; padding: 1px 8px 3px; font-size: 16px; line-height: 1; }
+#timeline-bar .tb-btn.tb-play { min-width: 42px; }
 #timeline-bar .tb-track .tb-scrub { width: 100%; }
 /* Inset by the thumb's radius (7 px): the thumb's CENTRE travels from 7 px to
    width-7 px, so this is the span a marker has to share with it to line up. */

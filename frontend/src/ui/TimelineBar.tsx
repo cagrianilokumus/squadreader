@@ -26,7 +26,9 @@ function snapMs(s: Snapshot | undefined | null): number {
   return Number.isFinite(t) ? t : 0;
 }
 
-const SPEEDS = [1, 2, 4, 8] as const;
+// Half speed is for watching one fight properly; the rest are for getting
+// through a 40-minute round.
+const SPEEDS = [0.5, 1, 2, 4, 8] as const;
 
 // How far BEFORE a moment a click on its marker lands. A flag falls at the end
 // of a capture that took a while, so it gets the most run-up; a ticket marker
@@ -70,6 +72,7 @@ export function TimelineBar() {
   const stalled = useViewerStore((s) => s.replay.stalled);
   const speed   = useViewerStore((s) => s.replay.speed);
   const setReplay = useViewerStore((s) => s.setReplay);
+  const stepReplayFrame = useViewerStore((s) => s.stepReplayFrame);
   const markers = useViewerStore((s) => s.replay.markers);
 
   // The marker strip's width in px, because overlap is a question of pixels.
@@ -143,8 +146,15 @@ export function TimelineBar() {
    * The 1 s slack on the lower bound is for the ±30 s button landing a hair
    * before the first held frame; restarting the download for that would be a
    * silly way to spend a request.
+   *
+   * `prefer` decides which side of a HOLE to land on. Recordings have holes:
+   * one community's agent writes in bursts with 25-30 s between them. The
+   * first frame after a point inside a hole is its far side — so −10 s from
+   * just past a hole did not move at all, and a marker click meant to land
+   * five seconds before a moment landed on it. Going back, and arriving before
+   * something, both want the last frame at or before the target instead.
    */
-  const seekToMs = (target: number) => {
+  const seekToMs = (target: number, prefer: "after" | "before" = "after") => {
     const held = target >= windowStart - 1000 && target <= bufferedMs;
     if (!held) { restartReplayAt(Math.max(startMs, target)); return; }
     let lo = 0, hi = lastIdx;
@@ -153,11 +163,17 @@ export function TimelineBar() {
       if (snapMs(frames[mid]) < target) lo = mid + 1;
       else hi = mid;
     }
+    // `lo` is the first frame at or after the target.
+    if (prefer === "before" && lo > 0 && snapMs(frames[lo]) > target) lo -= 1;
     seekToIdx(lo);
   };
 
   // ±N-second jump along the timestamp axis (not the index axis).
-  const seekDeltaMs = (deltaMs: number) => { seekToMs(curMs + deltaMs); };
+  const seekDeltaMs = (deltaMs: number) => {
+    seekToMs(curMs + deltaMs, deltaMs < 0 ? "before" : "after");
+  };
+  // A marker click lands BEFORE its moment, whatever holes are in the way.
+  const seekBefore = (m: ReplayMarker) => seekToMs(m.tMs - LEAD_MS[m.kind], "before");
 
   const onScrub = (e: React.ChangeEvent<HTMLInputElement>) => {
     seekToMs(startMs + (parseFloat(e.target.value) / 100) * durationMs);
@@ -218,17 +234,10 @@ export function TimelineBar() {
 
   return (
     <div id="timeline-bar"
-         title="Space: play/pause · F: Fit map · Tab: scoreboard">
-      <button className={`tb-btn${stalled ? " tb-buffering" : ""}`}
-              onClick={togglePlay}
-              title={stalled ? "buffering — waiting for the download"
-                             : playing ? "pause (space)" : "play (space)"}>
-        {playing ? "⏸" : "▶"}
-      </button>
-      <button className="tb-btn" onClick={() => seekDeltaMs(-30_000)}
-              title="back 30s">⏮ 30s</button>
-      <button className="tb-btn" onClick={() => seekDeltaMs(30_000)}
-              title="forward 30s">30s ⏭</button>
+         title="Space: play/pause · , / . : frame step · F: Fit map · Tab: scoreboard">
+      {/* Two rows, the way a video player does it: the track gets the bar's
+          whole width — the markers need every pixel of it — and the controls
+          sit underneath, symmetric around play. */}
       <div className="tb-track">
         <input className="tb-scrub" type="range"
                min={0} max={100} step={0.05}
@@ -264,7 +273,7 @@ export function TimelineBar() {
                         aria-expanded={multi ? openSpot === c.key : undefined}
                         onClick={() => multi
                           ? setOpenSpot((k) => (k === c.key ? null : c.key))
-                          : seekToMs(m.tMs - LEAD_MS[m.kind])}>
+                          : seekBefore(m)}>
                   <i />
                 </button>
               );
@@ -278,7 +287,7 @@ export function TimelineBar() {
                style={{ left: `clamp(124px, ${openCluster.px + 7}px, calc(100% - 124px))` }}>
             {openCluster.members.map((x) => (
               <button key={x.key} role="menuitem"
-                      onClick={() => { seekToMs(x.tMs - LEAD_MS[x.kind]); setOpenSpot(null); }}>
+                      onClick={() => { seekBefore(x); setOpenSpot(null); }}>
                 <i className={`tb-pop-glyph tb-mark-${x.kind}`}
                    style={{ "--c": teamColor(x.team) } as React.CSSProperties} />
                 <span className="tb-pop-time">{fmtMMSS(x.tMs - startMs)}</span>
@@ -288,17 +297,39 @@ export function TimelineBar() {
           </div>
         )}
       </div>
-      <span className="tb-clock">
-        {fmtMMSS(elapsedMs)} / {fmtMMSS(durationMs)}
-      </span>
-      <div className="tb-speeds">
-        {SPEEDS.map((sp) => (
-          <button key={sp}
-                  className={"tb-spd " + (speed === sp ? "active" : "")}
-                  onClick={() => setSpeed(sp)}>
-            {sp}×
+      <div className="tb-controls">
+        <div className="tb-transport">
+          <button className="tb-btn" onClick={() => seekDeltaMs(-30_000)}
+                  title="back 30 s">−30s</button>
+          <button className="tb-btn" onClick={() => seekDeltaMs(-10_000)}
+                  title="back 10 s">−10s</button>
+          <button className="tb-btn tb-step" onClick={() => stepReplayFrame(-1)}
+                  title="previous frame (,)" aria-label="previous frame">‹</button>
+          <button className={`tb-btn tb-play${stalled ? " tb-buffering" : ""}`}
+                  onClick={togglePlay}
+                  title={stalled ? "buffering — waiting for the download"
+                                 : playing ? "pause (space)" : "play (space)"}>
+            {playing ? "⏸" : "▶"}
           </button>
-        ))}
+          <button className="tb-btn tb-step" onClick={() => stepReplayFrame(1)}
+                  title="next frame (.)" aria-label="next frame">›</button>
+          <button className="tb-btn" onClick={() => seekDeltaMs(10_000)}
+                  title="forward 10 s">+10s</button>
+          <button className="tb-btn" onClick={() => seekDeltaMs(30_000)}
+                  title="forward 30 s">+30s</button>
+        </div>
+        <span className="tb-clock">
+          {fmtMMSS(elapsedMs)} / {fmtMMSS(durationMs)}
+        </span>
+        <div className="tb-speeds">
+          {SPEEDS.map((sp) => (
+            <button key={sp}
+                    className={"tb-spd " + (speed === sp ? "active" : "")}
+                    onClick={() => setSpeed(sp)}>
+              {sp}×
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

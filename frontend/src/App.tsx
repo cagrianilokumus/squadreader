@@ -115,11 +115,17 @@ export default function App() {
   //   Esc      — close any open detail panel + scoreboard
   //   Tab      — toggle scoreboard (Squad in-game convention).
   //              preventDefault so focus doesn't jump between buttons.
+  //   , / .    — one recorded frame back / forward, paused (YouTube's keys).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      // Don't intercept while a text input is focused.
-      const tag = (e.target as HTMLElement | null)?.tagName ?? "";
-      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      // Don't intercept while a TEXT input is focused. The timeline scrubber
+      // is an input too, but nobody types into a slider — and it keeps focus
+      // after every drag, so treating it as text silently disabled Space and
+      // frame stepping until the user clicked somewhere else.
+      const el = e.target as HTMLElement | null;
+      const tag = el?.tagName ?? "";
+      const isSlider = tag === "INPUT" && (el as HTMLInputElement).type === "range";
+      if ((tag === "INPUT" && !isSlider) || tag === "TEXTAREA") return;
       if (e.key === "Escape") {
         setSelectedVehicleId(null);
         setSelectedPlayerKey(null);
@@ -147,6 +153,12 @@ export default function App() {
             currentIdx: (r.currentIdx >= r.frameCount - 1 && !r.loading)
               ? 0 : r.currentIdx,
           }));
+        }
+      } else if (e.key === "," || e.key === ".") {
+        const s = useViewerStore.getState();
+        if (s.mode === "replay" && s.replay.frameCount) {
+          e.preventDefault();
+          s.stepReplayFrame(e.key === "," ? -1 : 1);
         }
       }
     };
