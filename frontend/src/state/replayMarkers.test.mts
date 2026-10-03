@@ -109,6 +109,37 @@ function run(frames: Snapshot[], chunks = 1): ReplayMarker[] {
   ok(run(noTeam).length === 0, "a vehicle with no team is skipped");
 }
 
+// --- FOB radios --------------------------------------------------------------
+{
+  const radio = (bleeding: boolean, team = 2, hp = 300) =>
+    ({ id: "r1", classShort: "BP_FOBRadio_AFU_C", team, isFob: true,
+       health: hp, fobBleeding: bleeding });
+  const withRadio = (sec: number, r: object | null) => {
+    const f = frame(sec) as unknown as Record<string, unknown>;
+    f.deployables = r ? [r] : [];
+    return f as unknown as Snapshot;
+  };
+  // Dug down: health falls, then the game flags it bleeding and keeps it there.
+  const dug = [withRadio(0, radio(false)), withRadio(2, radio(false, 2, 120)),
+               withRadio(4, radio(true, 2, 24)), withRadio(6, radio(true, 2, 24)),
+               withRadio(8, radio(true, 2, 24))];
+  const m = run(dug).filter((x) => x.kind === "radio");
+  ok(m.length === 1, "one radio lost");
+  ok(m[0]?.tMs === T0 + 4000 && m[0]?.team === 2, "at the moment it started bleeding, against its owner");
+  // A one-frame blip of the flag is a torn read, not a lost FOB.
+  const blip = [withRadio(0, radio(false)), withRadio(2, radio(true)),
+                withRadio(3, radio(false)), withRadio(6, radio(false))];
+  ok(run(blip).filter((x) => x.kind === "radio").length === 0, "a bleeding blip is ignored");
+  // An owner packing up their own radio: it just leaves the list.
+  const packed = [withRadio(0, radio(false)), withRadio(2, radio(false)),
+                  withRadio(4, null), withRadio(6, null)];
+  ok(run(packed).filter((x) => x.kind === "radio").length === 0, "a radio taken down by its owner is not a loss");
+  // A window that opens on a radio already dug down has not seen it fall.
+  const already = [withRadio(0, radio(true, 2, 24)), withRadio(2, radio(true, 2, 24)),
+                   withRadio(4, radio(true, 2, 24))];
+  ok(run(already).filter((x) => x.kind === "radio").length === 0, "first sight of a dug-down radio is not a moment");
+}
+
 // --- ticket collapses --------------------------------------------------------
 {
   // Team 1 bleeds 1 ticket every 5 s: 12 a minute, never a collapse.

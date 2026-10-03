@@ -1,5 +1,5 @@
 // Important moments for the replay timeline: a flag changing hands, a vehicle
-// destroyed, a team's tickets collapsing.
+// destroyed, a FOB radio dug down, a team's tickets collapsing.
 //
 // Computed INCREMENTALLY. A replay arrives in chunks and is watchable from the
 // first few seconds, so the markers have to arrive with the frames — this is a
@@ -17,7 +17,7 @@ import { destroyedVehicles } from "./ticketTimeline";
 import { vehicleTicketCost } from "./ticketCosts";
 import { vehicleDisplayName } from "../data/vehicleDisplayNames";
 
-export type MarkerKind = "cap" | "vehicle" | "tickets";
+export type MarkerKind = "cap" | "vehicle" | "radio" | "tickets";
 
 export interface ReplayMarker {
   /** Same event, same key — in any download window. */
@@ -67,6 +67,10 @@ export interface MarkerState {
   prev: Snapshot | null;
   /** Confirmed owner per zone id. */
   owners: Map<string, number>;
+  /** Confirmed bleeding state per FOB radio id. */
+  radios: Map<string, boolean>;
+  /** A radio state change waiting for CAP_CONFIRM_MS, per radio id. */
+  radioPending: Map<string, { bleeding: boolean; tMs: number }>;
   /** A change waiting for CAP_CONFIRM_MS, per zone id. */
   pending: Map<string, { owner: number; tMs: number }>;
   losses: Record<1 | 2, Loss[]>;
@@ -76,6 +80,7 @@ export interface MarkerState {
 export function createMarkerState(): MarkerState {
   return {
     upTo: 0, prev: null, owners: new Map(), pending: new Map(),
+    radios: new Map(), radioPending: new Map(),
     losses: { 1: [], 2: [] }, burst: { 1: null, 2: null },
   };
 }
@@ -122,6 +127,7 @@ export function extendMarkers(st: MarkerState, frames: Snapshot[], emit: MarkerS
       // Warm-up, the end of a round, a map change: nothing here is a moment of
       // play, and nothing should carry across it.
       st.pending.clear();
+      st.radioPending.clear();
       st.losses = { 1: [], 2: [] };
       st.burst = { 1: null, 2: null };
       continue;
@@ -153,6 +159,39 @@ export function extendMarkers(st: MarkerState, frames: Snapshot[], emit: MarkerS
       emit({
         key: `cap:${z.id}:${owner}:${p.tMs}`, kind: "cap", tMs: p.tMs, team,
         subject: zoneName(z), capture: taken ? "taken" : "lost", weight: 1,
+      });
+    }
+
+    // --- FOB radios ----------------------------------------------------------
+    // A radio is lost when the game says so: dug down to its floor (24 of
+    // 300 HP on current builds) it starts BLEEDING and gets a death time, and
+    // only much later leaves the list. That flag is the moment — not the
+    // disappearance, which also happens when an owner packs up their own
+    // radio, and which can come long after the fight that took it.
+    for (const d of cur.deployables ?? []) {
+      if (!d.isFob || !d.id) continue;
+      const bleeding = d.fobBleeding === true;
+      const was = st.radios.get(d.id);
+      if (was === undefined) {
+        // First sight — including a radio already dug down when a download
+        // window opened — is not a moment.
+        st.radios.set(d.id, bleeding);
+        continue;
+      }
+      if (bleeding === was) { st.radioPending.delete(d.id); continue; }
+      let p = st.radioPending.get(d.id);
+      if (!p || p.bleeding !== bleeding) {
+        p = { bleeding, tMs };
+        st.radioPending.set(d.id, p);
+      }
+      if (tMs - p.tMs < CAP_CONFIRM_MS) continue;
+      st.radios.set(d.id, bleeding);
+      st.radioPending.delete(d.id);
+      const team = asTeam(d.team);
+      if (!bleeding || !team) continue;    // only the fall is a moment
+      emit({
+        key: `radio:${d.id}`, kind: "radio", tMs: p.tMs, team,
+        subject: "FOB radio", weight: 0.9,
       });
     }
 
@@ -227,7 +266,7 @@ export function findDuplicate(have: readonly ReplayMarker[], m: ReplayMarker): R
 // --- drawing ------------------------------------------------------------------
 
 /** Which of several moments in one spot gets to be the glyph. */
-const PRIORITY: Record<MarkerKind, number> = { cap: 3, tickets: 2, vehicle: 1 };
+const PRIORITY: Record<MarkerKind, number> = { cap: 4, radio: 3, tickets: 2, vehicle: 1 };
 
 export interface MarkerCluster {
   /** The member drawn: the most important kind, then the heaviest. */

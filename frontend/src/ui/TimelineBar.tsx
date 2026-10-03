@@ -5,20 +5,22 @@
 // alone — a recording with holes in it would not be fairly represented by a
 // fixed step count.
 //
-// Laid out the way demo viewers do it:
+// The match's important moments (flags, FOB radios, vehicles, ticket
+// collapses) can be drawn three ways, and the viewer picks one:
 //
-//   12:14 ━━━━━━━━━━━●┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄  36:39   time · track · length
-//   FLAGS │  ⚑      ⚑  ⚑            ⚑                    one labelled lane
-//  LOSSES │   ▲ ▼ ▲▲3  ▲  ▼    ▲   ▲  ▲▼                 per kind of moment
-//          ‹ ›        ↺30 ↺10  ▶  ↻10 ↻30        1× ▾    frame · skip · speed
+//   race   — both teams' ticket lines, flags pinned above, losses ON the line
+//            of the side that suffered them, collapses as the line thickening
+//   ticks  — thin ticks over the track and small flags: the quietest
+//   lanes  — a flags lane and a losses lane, each with its own small icon
 //
-// The lanes share the track's axis exactly, and a hairline playhead runs
-// through them, so "what happens next" is read straight off the bar.
+// All three share one time axis with the track, so a moment sits exactly
+// where the thumb would be at that time.
 
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useViewerStore } from "../state/viewerStore";
 import type { Snapshot, Vehicle } from "../state/types";
 import { clusterMarkers, type MarkerCluster, type ReplayMarker } from "../state/replayMarkers";
+import { sampleTickets, ticketsAt, type TicketPoint } from "../state/ticketSeries";
 import { teamColor } from "../canvas/draw";
 import { vehicleIconUrl, vehicleTurretIconUrl } from "../canvas/icons";
 
@@ -41,21 +43,32 @@ function snapMs(s: Snapshot | undefined | null): number {
 const SPEEDS = [0.5, 1, 2, 4, 8] as const;
 
 // How far BEFORE a moment a click on its marker lands. A flag falls at the end
-// of a capture that took a while, so it gets the most run-up; a ticket marker
-// is already placed where the losing began.
+// of a capture that took a while, and a radio is dug down over most of a
+// minute, so they get the most run-up; a ticket marker is already placed
+// where the losing began.
 const LEAD_MS: Record<ReplayMarker["kind"], number> = {
-  cap: 15_000, vehicle: 5_000, tickets: 3_000,
+  cap: 15_000, radio: 20_000, vehicle: 5_000, tickets: 3_000,
 };
 
-// Moments closer than a lane's gap share one spot: wide enough for its widest
-// icon plus a count, so no icon sits under another and swallows its clicks. A
-// vehicle lies on its side and is the widest thing drawn.
-const LANES = [
-  { id: "flags", label: "Flags", gapPx: 24,
-    kinds: ["cap"] as ReplayMarker["kind"][] },
-  { id: "losses", label: "Losses", gapPx: 40,
-    kinds: ["vehicle", "tickets"] as ReplayMarker["kind"][] },
+// --- views --------------------------------------------------------------------
+
+type ViewId = "race" | "ticks" | "lanes";
+const VIEWS: { id: ViewId; label: string }[] = [
+  { id: "race", label: "Ticket race" },
+  { id: "ticks", label: "Minimal" },
+  { id: "lanes", label: "Lanes" },
 ];
+const VIEW_KEY = "sqr.timelineView";
+function readView(): ViewId {
+  try {
+    const v = localStorage.getItem(VIEW_KEY);
+    if (v === "race" || v === "ticks" || v === "lanes") return v;
+  } catch { /* private window, blocked storage: fall through */ }
+  return "race";
+}
+function saveView(v: ViewId) {
+  try { localStorage.setItem(VIEW_KEY, v); } catch { /* not worth failing over */ }
+}
 
 const shortFaction = (f: string | null | undefined) => (f ?? "").split("_")[0] || null;
 
@@ -64,6 +77,8 @@ function markerText(m: ReplayMarker, side: string): string {
     case "cap":
       return m.capture === "taken"
         ? `${m.subject} captured by ${side}` : `${side} lost ${m.subject}`;
+    case "radio":
+      return `${side} lost a FOB radio`;
     case "vehicle":
       return `${side} ${m.subject} destroyed`;
     case "tickets":
@@ -71,15 +86,13 @@ function markerText(m: ReplayMarker, side: string): string {
   }
 }
 
-// --- the moments' icons -------------------------------------------------------
-// The same art the map draws with, served next to the page: Squad's own
-// objective flag and casualty skull, and for a vehicle ITS silhouette — a
-// tank reads as a tank, a truck as a truck — with the explosion over it.
-// White PNGs, painted in a team colour through a CSS mask.
+// --- the moments' icons ---------------------------------------------------------
+// The art the map already draws with, served next to the page: Squad's own
+// objective flag, FOB marker and casualty skull, and each vehicle's own icon.
 
 const OBJECTIVE = "./icons/scoreboard/objective.png";
 const DEATHS = "./icons/scoreboard/deaths.png";
-const EXPLODED = "./icons/misc/exploded.png";
+const FOB = "./icons/markers/fob.png";
 const VEHICLE_FALLBACK = "./icons/scoreboard/vehicle.png";
 
 // Absolute, because a relative url() in an inline style is resolved against
@@ -87,84 +100,74 @@ const VEHICLE_FALLBACK = "./icons/scoreboard/vehicle.png";
 // stylesheet lives one directory down, in assets/.
 const abs = (u: string) => new URL(u, document.baseURI).href;
 
-function momentIcon(m: ReplayMarker): { layers: string[]; color: string } {
-  switch (m.kind) {
-    case "cap":
-      // The flag in the colour of whoever holds it NOW: the side that took it,
-      // or neutral grey when it fell to nobody.
-      return { layers: [OBJECTIVE], color: teamColor(m.capture === "taken" ? m.team : null) };
-    case "vehicle": {
-      const v = { classShort: m.vehicle?.classShort ?? null,
-                  kind: m.vehicle?.kind ?? undefined } as Vehicle;
-      const base = vehicleIconUrl(v) ?? VEHICLE_FALLBACK;
-      // Turreted armour is drawn in two pieces on the map; put the turret
-      // back on, or a tank is an empty hull.
-      const turret = vehicleTurretIconUrl(v);
-      return { layers: turret ? [base, turret] : [base], color: teamColor(m.team) };
-    }
-    case "tickets":
-      return { layers: [DEATHS], color: teamColor(m.team) };
-  }
-}
+/** A flag in the colour of whoever holds it NOW: the taker, or neutral grey. */
+const capColor = (m: ReplayMarker) => teamColor(m.capture === "taken" ? m.team : null);
 
-/**
- * Lane size: flags all alike, vehicles by what they cost, collapses by depth.
- * A vehicle's box is its LENGTH — it is drawn lying on its side, facing the
- * way time runs, because the map's icons are top-down and upright: at lane
- * height every one of them, tank or truck, shrank to the same rounded pill,
- * while on its side a tank keeps its barrel and a truck its cab.
- */
-function laneIconSize(m: ReplayMarker, weight: number): number {
-  if (m.kind === "cap") return 16;
-  if (m.kind === "vehicle") return Math.round(20 + 6 * weight);
-  return Math.round(14 + 3 * weight);
-}
-
-function MomentIcon({ m, size }: { m: ReplayMarker; size: number }) {
-  const { layers, color } = momentIcon(m);
-  if (m.kind === "vehicle") {
-    // Drawn the way the map draws a vehicle: the icon as it is, white with its
-    // own detail, on a chip in the team's colour. Painting the silhouette
-    // through a mask kept only its outline — hatch, cab and turret are grey
-    // lines INSIDE the white, and a mask reads nothing but alpha — so every
-    // vehicle came out the same rounded blob.
-    return (
-      <span className="tb-veh" style={{ "--c": color } as React.CSSProperties}>
-        <span className="tb-veh-chip"
-              style={{ width: size + 6, height: Math.round(size * 0.62) + 4 }}>
-          <span className="tb-veh-in" style={{ width: size, height: size }}>
-            {layers.map((u) => <img key={u} src={abs(u)} alt="" draggable={false} />)}
-          </span>
-        </span>
-        <span className="tb-boom" style={{ backgroundImage: `url("${abs(EXPLODED)}")` }} />
-      </span>
-    );
-  }
-  const mask = layers.map((u) => `url("${abs(u)}")`).join(", ");
+/** A white PNG painted one colour through a mask. */
+function MaskIcon({ src, size, color }: { src: string; size: number; color: string }) {
+  const mask = `url("${abs(src)}")`;
   return (
-    <span className={`tb-ico k-${m.kind}`} style={{ width: size, height: size }}>
-      <span className="tb-ico-shape"
-            style={{ WebkitMaskImage: mask, maskImage: mask, background: color }} />
+    <span className="tb-ico" style={{ width: size, height: size }}>
+      <span className="tb-ico-shape" style={{ WebkitMaskImage: mask, maskImage: mask, background: color }} />
     </span>
   );
 }
 
-// --- control icons ------------------------------------------------------------
-// Inline SVG, drawn on a 24-unit grid in `currentColor`, so every control
-// follows the theme and none depends on a font having the right glyph.
+function vehicleLayers(m: ReplayMarker): string[] {
+  const v = { classShort: m.vehicle?.classShort ?? null, kind: m.vehicle?.kind ?? undefined } as Vehicle;
+  const base = vehicleIconUrl(v) ?? VEHICLE_FALLBACK;
+  // Turreted armour is drawn in two pieces on the map; put the turret back
+  // on, or a tank is an empty hull.
+  const turret = vehicleTurretIconUrl(v);
+  return turret ? [base, turret] : [base];
+}
+
+/**
+ * A vehicle's own icon, white with its detail, lying on its side facing the
+ * way time runs. The map's icons are top-down and upright; at timeline size
+ * every one of them, tank or truck, shrank to the same pill standing up.
+ */
+function VehicleIcon({ m, len }: { m: ReplayMarker; len: number }) {
+  return (
+    <span className="tb-veh" style={{ width: len, height: Math.round(len * 0.62) }}>
+      <span className="tb-veh-in" style={{ width: len, height: len }}>
+        {vehicleLayers(m).map((u) => <img key={u} src={abs(u)} alt="" draggable={false} />)}
+      </span>
+    </span>
+  );
+}
+
+/** The icon a moment gets in a card or a lane. */
+function MomentIcon({ m, size }: { m: ReplayMarker; size: number }) {
+  switch (m.kind) {
+    case "cap": return <MaskIcon src={OBJECTIVE} size={size} color={capColor(m)} />;
+    case "radio": return <MaskIcon src={FOB} size={size} color={teamColor(m.team)} />;
+    case "tickets": return <MaskIcon src={DEATHS} size={size - 1} color={teamColor(m.team)} />;
+    case "vehicle":
+      return (
+        <span className="tb-veh-mark" style={{ "--c": teamColor(m.team) } as React.CSSProperties}>
+          <VehicleIcon m={m} len={size + 6} />
+        </span>
+      );
+  }
+}
+
+// --- control icons --------------------------------------------------------------
+// Inline SVG on a 24-unit grid in `currentColor`, so every control follows the
+// theme and none depends on a font having the right glyph.
 
 const Svg = ({ children, size = 20 }: { children: React.ReactNode; size?: number }) => (
   <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true"
        fill="currentColor">{children}</svg>
 );
-const PlayIcon = () => <Svg><path d="M8.5 5.6v12.8L19 12z" /></Svg>;
+const PlayIcon = () => <Svg size={18}><path d="M8.5 5.6v12.8L19 12z" /></Svg>;
 const PauseIcon = () => (
-  <Svg><rect x="6.5" y="5.5" width="4" height="13" rx="1" />
+  <Svg size={18}><rect x="6.5" y="5.5" width="4" height="13" rx="1" />
        <rect x="13.5" y="5.5" width="4" height="13" rx="1" /></Svg>
 );
 /** Circular arrow with the seconds in it; `dir` -1 winds back, +1 forward. */
 const SkipIcon = ({ dir, n }: { dir: -1 | 1; n: number }) => (
-  <Svg size={26}>
+  <Svg size={24}>
     <g transform={dir > 0 ? "translate(24 0) scale(-1 1)" : undefined}>
       <path d="M5.5 8.25A7.5 7.5 0 1 0 12 4.5" fill="none" stroke="currentColor"
             strokeWidth="1.8" strokeLinecap="round" />
@@ -188,6 +191,22 @@ const Caret = () => (
           strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
+const ViewIcon = ({ id }: { id: ViewId }) => (
+  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none"
+       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    {id === "race" && <path d="M3 7l5 3 4-2 4 6 5 2" />}
+    {id === "ticks" && <path d="M5 18V12M9.5 18V8M14 18v-5M18.5 18V9" />}
+    {id === "lanes" && <><path d="M3 8h18M3 16h18" opacity=".45" />
+                         <circle cx="8" cy="8" r="1.8" fill="currentColor" />
+                         <circle cx="15" cy="16" r="1.8" fill="currentColor" /></>}
+  </svg>
+);
+
+// --- the bar ----------------------------------------------------------------------
+
+/** A spot the card can describe: a cluster, or one moment drawn on its own. */
+type Spot = MarkerCluster;
+const single = (m: ReplayMarker, px: number): Spot => ({ lead: m, members: [m], px, key: m.key });
 
 export function TimelineBar() {
   const mode    = useViewerStore((s) => s.mode);
@@ -209,23 +228,26 @@ export function TimelineBar() {
   const stepReplayFrame = useViewerStore((s) => s.stepReplayFrame);
   const markers = useViewerStore((s) => s.replay.markers);
 
-  // The lanes' inner width in px — overlap is a question of pixels — and
-  // where they start inside the bar, to put cards over the right spot. A
-  // callback ref, not useEffect: the lanes only exist once frames do.
-  const [lanePx, setLanePx] = useState(0);
-  const [laneLeft, setLaneLeft] = useState(0);
+  const [view, setView] = useState<ViewId>(readView);
+  const pickView = (v: ViewId) => { setView(v); saveView(v); };
+
+  // The time axis's width in px — overlap is a question of pixels — and where
+  // it starts inside the bar, to put cards over the right spot. A callback
+  // ref: the axis only exists once frames do, and it is a different element
+  // in each view.
+  const [axisPx, setAxisPx] = useState(0);
+  const [axisLeft, setAxisLeft] = useState(0);
   const resizeObs = useRef<ResizeObserver | null>(null);
-  const laneRef = useCallback((el: HTMLDivElement | null) => {
+  const axisRef = useCallback((el: HTMLDivElement | null) => {
     resizeObs.current?.disconnect();
     resizeObs.current = null;
     if (!el) return;
     const measure = () => {
-      setLanePx(el.clientWidth);
-      // Relative to #timeline-bar, the cards' containing block.
+      setAxisPx(el.clientWidth);
       let x = 0;
       for (let n: HTMLElement | null = el; n && n.id !== "timeline-bar";
            n = n.offsetParent as HTMLElement | null) x += n.offsetLeft;
-      setLaneLeft(x);
+      setAxisLeft(x);
     };
     const ro = new ResizeObserver(measure);
     ro.observe(el);
@@ -234,9 +256,6 @@ export function TimelineBar() {
   }, []);
 
   // One open thing at a time: the list of a crowded spot, or the speed menu.
-  // A spot holding several moments opens a list instead of seeking — one
-  // glyph covers most of a minute on a long round, and seeking to the first
-  // moment in it would make the rest unreachable.
   const [menu, setMenu] = useState<string | null>(null);
   const [hover, setHover] = useState<string | null>(null);
   useEffect(() => {
@@ -252,6 +271,12 @@ export function TimelineBar() {
       window.removeEventListener("mousedown", onDown);
     };
   }, [menu]);
+
+  // Both teams' tickets, for the race view. Re-sampled as the download grows;
+  // a few hundred points, so it is cheap at four flushes a second.
+  const series: TicketPoint[] = useMemo(
+    () => (view === "race" ? sampleTickets(frames, frameCount) : []),
+    [view, frames, frameCount]);
 
   if (mode !== "replay" || frameCount === 0) return null;
 
@@ -349,20 +374,8 @@ export function TimelineBar() {
       ?? (team ? `Team ${team}` : "Neutral");
   const asPct = (ms: number) =>
     Math.max(0, Math.min(100, ((ms - startMs) / durationMs) * 100));
-
-  const toPx = (t: number) => (asPct(t) / 100) * lanePx;
-  const lanes = LANES.map((l) => ({
-    ...l,
-    spots: lanePx > 0
-      ? clusterMarkers(markers.filter((m) => l.kinds.includes(m.kind)), toPx, l.gapPx)
-      : [] as MarkerCluster[],
-  }));
-  // Looked up every render: a marker arriving mid-download can change a spot's
-  // members and so its key, and then the card simply closes.
-  const allSpots = lanes.flatMap((l) => l.spots);
-  const openSpot = menu && menu !== "speed" ? allSpots.find((c) => c.key === menu) ?? null : null;
-  const hoverSpot = !openSpot && hover ? allSpots.find((c) => c.key === hover) ?? null : null;
-  const card = openSpot ?? hoverSpot;
+  const toPx = (t: number) => (asPct(t) / 100) * axisPx;
+  const playX = toPx(curMs);
 
   // How much of the match is in hand, on the same axis. The band runs from where
   // the window begins — not from zero, because after a seek the earlier part of
@@ -373,91 +386,265 @@ export function TimelineBar() {
   const bufFrom = whollyHeld ? pct : asPct(windowStart);
   const bufTo = whollyHeld ? pct : Math.max(pct, asPct(bufferedMs));
 
+  const caps = markers.filter((m) => m.kind === "cap");
+  const losses = markers.filter((m) => m.kind !== "cap");
+  const ready = axisPx > 0;
+
+  // Every spot the active view draws, so the card can find what it describes.
+  const spots = new Map<string, Spot>();
+  const reg = (s: Spot) => { spots.set(s.key, s); return s; };
+  const future = (s: Spot) => s.members[0]!.tMs > curMs;
+
+  /** The shared behaviour of a drawn moment: hover for the card, click to go. */
+  const spotProps = (s: Spot) => {
+    const n = s.members.length;
+    const label = s.members
+      .map((x) => `${fmtMMSS(x.tMs - startMs)} ${markerText(x, sideName(x.team))}`)
+      .join("; ");
+    return {
+      "aria-label": label,
+      "aria-haspopup": n > 1 ? ("menu" as const) : undefined,
+      "aria-expanded": n > 1 ? menu === s.key : undefined,
+      onMouseEnter: () => setHover(s.key),
+      onMouseLeave: () => setHover((h) => (h === s.key ? null : h)),
+      onFocus: () => setHover(s.key),
+      onBlur: () => setHover((h) => (h === s.key ? null : h)),
+      onClick: () => (n > 1
+        ? setMenu((k) => (k === s.key ? null : s.key))
+        : seekBefore(s.lead)),
+    };
+  };
+
+  const track = (
+    <div className="tb-track">
+      <input className="tb-scrub" type="range"
+             min={0} max={100} step={0.05}
+             value={pct} onChange={onScrub}
+             aria-label="Timeline"
+             style={{ "--pct": `${pct}%`,
+                      "--buf0": `${bufFrom}%`,
+                      "--buf": `${bufTo}%` } as React.CSSProperties} />
+    </div>
+  );
+  const times = (
+    <div className="tb-times">
+      <b>{fmtMMSS(elapsedMs)}</b><span>{fmtMMSS(durationMs)}</span>
+    </div>
+  );
+
+  // ---------------------------------------------------------------- race view
+  let body: React.ReactNode;
+  if (view === "race") {
+    const H = 92, PT = 22, PB = 6;
+    const vals = series.flatMap((p) => [p.t1, p.t2]).filter((v): v is number => v != null);
+    // The axis spans the tickets this match actually had, not 0..max: from
+    // zero both lines hug the top edge and every swing is a few pixels tall.
+    const lo = vals.length ? Math.min(...vals) - 8 : 0;
+    const hi = vals.length ? Math.max(...vals) + 6 : 1;
+    const yv = (v: number) => PT + (1 - (v - lo) / (hi - lo || 1)) * (H - PT - PB);
+    const path = (team: 1 | 2, pts: TicketPoint[]) => {
+      let d = "";
+      for (const p of pts) {
+        const v = team === 1 ? p.t1 : p.t2;
+        if (v == null) continue;
+        d += `${d ? "L" : "M"}${toPx(p.tMs).toFixed(1)},${yv(v).toFixed(1)}`;
+      }
+      return d;
+    };
+    const lineAt = (team: 1 | 2, tMs: number) => {
+      const v = ticketsAt(series, team, tMs);
+      return v == null ? H - PB : yv(v);
+    };
+    const flagSpots = ready ? clusterMarkers(caps, toPx, 18).map(reg) : [];
+    const dotSpots = ready
+      ? ([1, 2] as const).flatMap((team) =>
+          clusterMarkers(losses.filter((m) => m.team === team && m.kind !== "tickets"), toPx, 9))
+          .map(reg)
+      : [];
+    const collapses = ready ? losses.filter((m) => m.kind === "tickets") : [];
+    body = (
+      <>
+        <div className="tb-race" ref={axisRef}>
+          {ready && (
+            <svg className="tb-race-svg" width={axisPx} height={H} viewBox={`0 0 ${axisPx} ${H}`}>
+              <defs>
+                <clipPath id="tb-past"><rect x="0" y="0" width={Math.max(0, playX)} height={H} /></clipPath>
+                <clipPath id="tb-future"><rect x={playX} y="0" width={Math.max(0, axisPx - playX)} height={H} /></clipPath>
+              </defs>
+              {[0, 0.5, 1].map((f) => {
+                const yy = PT + f * (H - PT - PB);
+                return <line key={f} x1="0" x2={axisPx} y1={yy} y2={yy} className="tb-race-grid" />;
+              })}
+              {([1, 2] as const).map((team) => {
+                const d = path(team, series);
+                if (!d) return null;
+                const first = series.find((p) => (team === 1 ? p.t1 : p.t2) != null)!;
+                const last = [...series].reverse().find((p) => (team === 1 ? p.t1 : p.t2) != null)!;
+                const area = `${d}L${toPx(last.tMs).toFixed(1)},${H - PB}L${toPx(first.tMs).toFixed(1)},${H - PB}Z`;
+                return (
+                  <g key={team} style={{ color: teamColor(team) }}>
+                    <path d={area} className="tb-race-area" clipPath="url(#tb-past)" />
+                    <path d={area} className="tb-race-area future" clipPath="url(#tb-future)" />
+                    <path d={d} className="tb-race-line" clipPath="url(#tb-past)" />
+                    <path d={d} className="tb-race-line future" clipPath="url(#tb-future)" />
+                  </g>
+                );
+              })}
+              {/* A collapse IS the line falling: thicken it over that minute. */}
+              {collapses.map((m) => {
+                const team = m.team as 1 | 2;
+                const pts = series.filter((p) => p.tMs >= m.tMs && p.tMs <= m.tMs + 60_000);
+                const d = path(team, pts);
+                if (!d || pts.length < 2) return null;
+                const s = reg(single(m, toPx(m.tMs)));
+                const sp = spotProps(s);
+                return (
+                  <path key={m.key} d={d} className={`tb-collapse tb-spot${m.tMs > curMs ? " future" : ""}`}
+                        style={{ color: teamColor(team) }} tabIndex={0} role="button"
+                        aria-label={sp["aria-label"]}
+                        onMouseEnter={sp.onMouseEnter} onMouseLeave={sp.onMouseLeave}
+                        onFocus={sp.onFocus} onBlur={sp.onBlur} onClick={sp.onClick} />
+                );
+              })}
+              {flagSpots.map((s) => (
+                <line key={s.key} x1={s.px} x2={s.px} y1={PT - 2} y2={H - PB}
+                      className="tb-race-guide" style={{ color: capColor(s.lead) }} />
+              ))}
+              <line x1={playX} x2={playX} y1="0" y2={H} className="tb-race-playhead" />
+            </svg>
+          )}
+          {flagSpots.map((s) => (
+            <button key={s.key} className={`tb-spot tb-pin${future(s) ? " future" : ""}${menu === s.key ? " open" : ""}`}
+                    style={{ left: s.px, top: 10 }} {...spotProps(s)}>
+              <MaskIcon src={OBJECTIVE} size={15} color={capColor(s.lead)} />
+            </button>
+          ))}
+          {dotSpots.map((s) => {
+            const m = s.lead;
+            const r = 3 + 2.5 * Math.max(...s.members.map((x) => x.weight));
+            return (
+              <button key={s.key} className={`tb-spot tb-dot${future(s) ? " future" : ""}${menu === s.key ? " open" : ""}`}
+                      style={{ left: s.px, top: lineAt(m.team as 1 | 2, m.tMs) }} {...spotProps(s)}>
+                {m.kind === "radio"
+                  ? <MaskIcon src={FOB} size={14} color={teamColor(m.team)} />
+                  : <span className="tb-dot-c" style={{ width: 2 * r, height: 2 * r, background: teamColor(m.team) }} />}
+              </button>
+            );
+          })}
+        </div>
+        {track}
+      </>
+    );
+  // --------------------------------------------------------------- ticks view
+  } else if (view === "ticks") {
+    const flagSpots = ready ? clusterMarkers(caps, toPx, 16).map(reg) : [];
+    const tickSpots = ready ? clusterMarkers(losses, toPx, 5).map(reg) : [];
+    body = (
+      <>
+        {times}
+        <div className="tb-ticks" ref={axisRef}>
+          {flagSpots.map((s) => (
+            <button key={s.key} className={`tb-spot tb-pin${future(s) ? " future" : ""}${menu === s.key ? " open" : ""}`}
+                    style={{ left: s.px, top: 9 }} {...spotProps(s)}>
+              <MaskIcon src={OBJECTIVE} size={14} color={capColor(s.lead)} />
+            </button>
+          ))}
+          {tickSpots.map((s) => (
+            <button key={s.key} className={`tb-spot tb-tickspot${future(s) ? " future" : ""}${menu === s.key ? " open" : ""}`}
+                    style={{ left: s.px }} {...spotProps(s)}>
+              {s.members.map((m) => (
+                <i key={m.key}
+                   className={`tb-tick k-${m.kind}`}
+                   style={{ left: toPx(m.tMs) - s.px + 6,
+                            height: m.kind === "radio" ? 14 : m.kind === "tickets" ? 12 : 5 + 6 * m.weight,
+                            background: teamColor(m.team) }} />
+              ))}
+            </button>
+          ))}
+        </div>
+        {track}
+      </>
+    );
+  // --------------------------------------------------------------- lanes view
+  } else {
+    const flagSpots = ready ? clusterMarkers(caps, toPx, 22).map(reg) : [];
+    const lossSpots = ready ? clusterMarkers(losses, toPx, 32).map(reg) : [];
+    const lane = (list: Spot[], first: boolean) => (
+      <div className="tb-lane">
+        <div className="tb-lane-in" ref={first ? axisRef : undefined}>
+          <span className="tb-playhead" style={{ left: `${pct}%` }} />
+          {list.map((s) => {
+            const m = s.lead;
+            return (
+              <button key={s.key} className={`tb-spot tb-lanespot${future(s) ? " future" : ""}${menu === s.key ? " open" : ""}`}
+                      style={{ left: s.px }} {...spotProps(s)}>
+                {m.kind === "vehicle"
+                  ? <span className="tb-veh-under" style={{ "--c": teamColor(m.team) } as React.CSSProperties}>
+                      <VehicleIcon m={m} len={Math.round(18 + 5 * m.weight)} />
+                    </span>
+                  : <MomentIcon m={m} size={14} />}
+                {s.members.length > 1 && <b>+{s.members.length - 1}</b>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+    body = (
+      <>
+        {times}
+        <div className="tb-lanes">
+          <span className="tb-lane-label" title="Flags"><MaskIcon src={OBJECTIVE} size={13} color="currentColor" /></span>
+          {lane(flagSpots, true)}
+          <span className="tb-lane-label" title="Losses"><MaskIcon src={DEATHS} size={12} color="currentColor" /></span>
+          {lane(lossSpots, false)}
+          <span />
+          {track}
+        </div>
+      </>
+    );
+  }
+
+  const openSpot = menu && menu !== "speed" ? spots.get(menu) ?? null : null;
+  const hoverSpot = !openSpot && hover ? spots.get(hover) ?? null : null;
+  const card = openSpot ?? hoverSpot;
   const playTitle = stalled ? "Buffering — waiting for the download"
                   : playing ? "Pause (Space)" : "Play (Space)";
 
   return (
-    <div id="timeline-bar">
-      <div className="tb-grid">
-        <span className="tb-time" aria-label="elapsed">{fmtMMSS(elapsedMs)}</span>
-        <div className="tb-track">
-          <input className="tb-scrub" type="range"
-                 min={0} max={100} step={0.05}
-                 value={pct} onChange={onScrub}
-                 aria-label="Timeline"
-                 style={{ "--pct": `${pct}%`,
-                          "--buf0": `${bufFrom}%`,
-                          "--buf": `${bufTo}%` } as React.CSSProperties} />
-        </div>
-        <span className="tb-time tb-time-end" aria-label="length">{fmtMMSS(durationMs)}</span>
-
-        {lanes.map((lane, i) => (
-          <Fragment key={lane.id}>
-            <span className="tb-lane-label">{lane.label}</span>
-            <div className="tb-lane">
-              <div className="tb-lane-in" ref={i === 0 ? laneRef : undefined}>
-                <span className="tb-playhead" style={{ left: `${pct}%` }} />
-                {lane.spots.map((c) => {
-                  const m = c.lead;
-                  const n = c.members.length;
-                  const label = c.members
-                    .map((x) => `${fmtMMSS(x.tMs - startMs)} ${markerText(x, sideName(x.team))}`)
-                    .join("; ");
-                  return (
-                    <button key={c.key}
-                            className={`tb-spot k-${m.kind}`
-                                       + (m.capture === "lost" ? " lost" : "")
-                                       + (menu === c.key ? " open" : "")}
-                            style={{ left: `${c.px}px`,
-                                     "--c": momentIcon(m).color,
-                                   } as React.CSSProperties}
-                            aria-label={label}
-                            aria-haspopup={n > 1 ? "menu" : undefined}
-                            aria-expanded={n > 1 ? menu === c.key : undefined}
-                            onMouseEnter={() => setHover(c.key)}
-                            onMouseLeave={() => setHover((h) => (h === c.key ? null : h))}
-                            onFocus={() => setHover(c.key)}
-                            onBlur={() => setHover((h) => (h === c.key ? null : h))}
-                            onClick={() => n > 1
-                              ? setMenu((k) => (k === c.key ? null : c.key))
-                              : seekBefore(m)}>
-                      <MomentIcon m={m}
-                                  size={laneIconSize(m, Math.max(...c.members.map((x) => x.weight)))} />
-                      {n > 1 && <b>{n}</b>}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            <span />
-          </Fragment>
-        ))}
-      </div>
+    <div id="timeline-bar" className={`tb-view-${view}`}>
+      {body}
 
       <div className="tb-controls">
-        <div className="tb-group tb-left">
-          <button className="tb-icon" onClick={() => stepReplayFrame(-1)}
-                  title="Previous frame ( , )" aria-label="Previous frame">
-            <StepIcon dir={-1} /></button>
-          <button className="tb-icon" onClick={() => stepReplayFrame(1)}
-                  title="Next frame ( . )" aria-label="Next frame">
-            <StepIcon dir={1} /></button>
+        <button className={`tb-play${stalled ? " tb-buffering" : ""}`}
+                onClick={togglePlay} title={playTitle} aria-label={playTitle}>
+          {playing ? <PauseIcon /> : <PlayIcon />}
+        </button>
+        <button className="tb-icon" onClick={() => seekDeltaMs(-30_000)}
+                title="Back 30 s" aria-label="Back 30 seconds"><SkipIcon dir={-1} n={30} /></button>
+        <button className="tb-icon" onClick={() => seekDeltaMs(-10_000)}
+                title="Back 10 s" aria-label="Back 10 seconds"><SkipIcon dir={-1} n={10} /></button>
+        <button className="tb-icon" onClick={() => seekDeltaMs(10_000)}
+                title="Forward 10 s" aria-label="Forward 10 seconds"><SkipIcon dir={1} n={10} /></button>
+        <button className="tb-icon" onClick={() => seekDeltaMs(30_000)}
+                title="Forward 30 s" aria-label="Forward 30 seconds"><SkipIcon dir={1} n={30} /></button>
+        <span className="tb-sep" />
+        <button className="tb-icon" onClick={() => stepReplayFrame(-1)}
+                title="Previous frame ( , )" aria-label="Previous frame"><StepIcon dir={-1} /></button>
+        <button className="tb-icon" onClick={() => stepReplayFrame(1)}
+                title="Next frame ( . )" aria-label="Next frame"><StepIcon dir={1} /></button>
+        <span className="tb-clock"><b>{fmtMMSS(elapsedMs)}</b> / {fmtMMSS(durationMs)}</span>
+        <span className="tb-spacer" />
+        <div className="tb-views" role="radiogroup" aria-label="Timeline style">
+          {VIEWS.map((v) => (
+            <button key={v.id} role="radio" aria-checked={view === v.id}
+                    className={view === v.id ? "on" : ""} title={v.label} aria-label={v.label}
+                    onClick={() => pickView(v.id)}>
+              <ViewIcon id={v.id} />
+            </button>
+          ))}
         </div>
-        <div className="tb-group tb-center">
-          <button className="tb-icon" onClick={() => seekDeltaMs(-30_000)}
-                  title="Back 30 s" aria-label="Back 30 seconds"><SkipIcon dir={-1} n={30} /></button>
-          <button className="tb-icon" onClick={() => seekDeltaMs(-10_000)}
-                  title="Back 10 s" aria-label="Back 10 seconds"><SkipIcon dir={-1} n={10} /></button>
-          <button className={`tb-play${stalled ? " tb-buffering" : ""}`}
-                  onClick={togglePlay} title={playTitle} aria-label={playTitle}>
-            {playing ? <PauseIcon /> : <PlayIcon />}
-          </button>
-          <button className="tb-icon" onClick={() => seekDeltaMs(10_000)}
-                  title="Forward 10 s" aria-label="Forward 10 seconds"><SkipIcon dir={1} n={10} /></button>
-          <button className="tb-icon" onClick={() => seekDeltaMs(30_000)}
-                  title="Forward 30 s" aria-label="Forward 30 seconds"><SkipIcon dir={1} n={30} /></button>
-        </div>
-        <div className="tb-group tb-right">
+        <div className="tb-speed-wrap">
           <button className={`tb-speed${menu === "speed" ? " open" : ""}`}
                   aria-haspopup="menu" aria-expanded={menu === "speed"}
                   title="Playback speed"
@@ -478,17 +665,17 @@ export function TimelineBar() {
         </div>
       </div>
 
-      {/* One card for both: what is under the pointer, or — once a crowded
-          spot is clicked — a list to pick from. Centred on its spot, never
-          hanging off either end of the bar. */}
+      {/* One card for every view: what is under the pointer, or — once a
+          crowded spot is clicked — a list to pick from. Centred on its spot,
+          never hanging off either end of the bar. */}
       {card && (
         <div className={`tb-card tb-moments${openSpot ? " pick" : ""}`}
              role={openSpot ? "menu" : "tooltip"}
-             style={{ left: `clamp(150px, ${laneLeft + card.px}px, calc(100% - 150px))` }}>
+             style={{ left: `clamp(150px, ${axisLeft + card.px}px, calc(100% - 150px))` }}>
           {card.members.map((x) => {
             const row = (
               <>
-                <MomentIcon m={x} size={18} />
+                <span className="tb-card-ico"><MomentIcon m={x} size={16} /></span>
                 <span className="tb-card-time">{fmtMMSS(x.tMs - startMs)}</span>
                 <span className="tb-card-text">{markerText(x, sideName(x.team))}</span>
               </>
