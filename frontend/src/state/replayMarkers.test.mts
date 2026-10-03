@@ -181,6 +181,43 @@ function run(frames: Snapshot[], chunks = 1): ReplayMarker[] {
   }
 }
 
+// --- where it happened: the camera is taken there on click ---------------------
+{
+  // A flag knows its zone, a wreck its spot.
+  const withZone = (sec: number, owner: number) => {
+    const f = frame(sec, { zones: [["a", owner]] }) as unknown as Record<string, any>;
+    f.captureZones[0].position = { x: 5000, y: -7000, z: 0 };
+    return f as unknown as Snapshot;
+  };
+  const caps = run([withZone(0, 0), withZone(2, 1), withZone(4, 1), withZone(6, 1)]);
+  ok(caps[0]?.at?.x === 5000 && caps[0]?.at?.y === -7000, "a flag is placed on its zone");
+  const v = (h: number) => [{ id: "v1", team: 2, health: h, kind: "MBT", position: { x: 100, y: 200, z: 0 } }];
+  const veh = run([frame(0, { veh: v(500) }), frame(2, { veh: v(0) })]);
+  ok(veh[0]?.at?.x === 100 && veh[0]?.at?.y === 200, "a vehicle is placed where it died");
+}
+{
+  // Team 2 loses 40 tickets in 40 s while four of its players go down around
+  // (30000, 40000) — and one alone on the far side of the map.
+  const fr: Snapshot[] = [];
+  let t2 = 250;
+  const spots = [[30000, 40000], [31000, 39500], [29500, 41000], [30500, 40500], [-150000, -150000]];
+  for (let sec = 0; sec <= 120; sec += 2) {
+    if (sec > 20 && sec <= 60) t2 -= 2;
+    const f = frame(sec, { t2 }) as unknown as Record<string, unknown>;
+    f.players = spots.map(([x, y], i) => ({
+      eosId: `p${i}`, teamId: 2,
+      soldier: { health: sec >= 24 + i * 6 ? 0 : 100, position: { x, y, z: 0 } },
+    }));
+    fr.push(f as unknown as Snapshot);
+  }
+  const m = run(fr).filter((x) => x.kind === "tickets")[0];
+  ok(!!m?.at, "a collapse is placed where its side was going down");
+  ok(Math.abs((m?.at?.x ?? 0) - 30250) < 1500 && Math.abs((m?.at?.y ?? 0) - 40250) < 1500,
+     `on the fight, not dragged toward the lone player (${Math.round(m?.at?.x ?? 0)}, ${Math.round(m?.at?.y ?? 0)})`);
+  // The same answer in pieces as in one pass.
+  ok(JSON.stringify(run(fr, 9)) === JSON.stringify(run(fr, 1)), "placing is chunk-independent too");
+}
+
 // --- drawing: overlapping moments become one clickable spot -------------------
 {
   const mk = (kind: ReplayMarker["kind"], sec: number, weight = 0.5): ReplayMarker =>

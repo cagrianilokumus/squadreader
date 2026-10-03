@@ -42,6 +42,13 @@ export interface ReplayMarker {
    * the UI's business, and this module stays free of anything DOM.
    */
   vehicle?: { classShort: string | null; kind: string | null };
+  /**
+   * Where it happened, in world units (cm), and how much of the map around it
+   * to show when the viewer is taken there. A flag is its zone, a vehicle or a
+   * radio the spot it died on, and a ticket collapse the place its side's
+   * players were going down that minute. Absent when nothing places it.
+   */
+  at?: { x: number; y: number; r: number };
   /** 0..1, how prominently to draw it. */
   weight: number;
 }
@@ -58,7 +65,16 @@ export const SWING_THRESHOLD = 25;
 // timeline. Two seconds is one frame at the slowest recording rate.
 export const CAP_CONFIRM_MS = 2_000;
 
+// How much map to frame around a moment, in world cm. A zone is a few hundred
+// metres across. A wreck or a radio is a point, but what killed it usually is
+// not on it — an AT team or a tank fires from one to three hundred metres off —
+// so a point gets enough surroundings to show the other end of the shot.
+const FRAME_ZONE_CM = 12_000;
+const FRAME_POINT_CM = 10_000;
+const FRAME_MAX_CM = 40_000;
+
 interface Loss { tMs: number; n: number }
+interface Down { tMs: number; x: number; y: number }
 interface Burst { marker: ReplayMarker; until: number }
 
 export interface MarkerState {
@@ -74,6 +90,10 @@ export interface MarkerState {
   /** A change waiting for CAP_CONFIRM_MS, per zone id. */
   pending: Map<string, { owner: number; tMs: number }>;
   losses: Record<1 | 2, Loss[]>;
+  /** Where each side's players went down, inside the same trailing window. */
+  downs: Record<1 | 2, Down[]>;
+  /** Last health seen per player, to catch the frame they go down. */
+  health: Map<string, number>;
   burst: Record<1 | 2, Burst | null>;
 }
 
@@ -81,6 +101,7 @@ export function createMarkerState(): MarkerState {
   return {
     upTo: 0, prev: null, owners: new Map(), pending: new Map(),
     radios: new Map(), radioPending: new Map(),
+    downs: { 1: [], 2: [] }, health: new Map(),
     losses: { 1: [], 2: [] }, burst: { 1: null, 2: null },
   };
 }
@@ -114,6 +135,30 @@ function ticketsOf(s: Snapshot, team: 1 | 2): number | null {
   return typeof t === "number" ? t : null;
 }
 
+const xy = (p: { x?: number | null; y?: number | null } | null | undefined) =>
+  p && typeof p.x === "number" && typeof p.y === "number" ? { x: p.x, y: p.y } : null;
+
+function median(v: number[]): number {
+  const s = [...v].sort((a, b) => a - b);
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m]! : (s[m - 1]! + s[m]!) / 2;
+}
+
+/**
+ * Where a side was bleeding: the median of where its players went down, and
+ * a radius that takes in most of them. Median rather than mean, so the odd
+ * player shot at the other end of the map does not drag the view into an
+ * empty field between two fights.
+ */
+function collapseSite(downs: Down[]): { x: number; y: number; r: number } | undefined {
+  if (!downs.length) return undefined;
+  const x = median(downs.map((d) => d.x));
+  const y = median(downs.map((d) => d.y));
+  const dist = downs.map((d) => Math.hypot(d.x - x, d.y - y)).sort((a, b) => a - b);
+  const r80 = dist[Math.min(dist.length - 1, Math.floor(dist.length * 0.8))]!;
+  return { x, y, r: Math.min(FRAME_MAX_CM, Math.max(FRAME_POINT_CM, r80 * 1.15)) };
+}
+
 /** Look at every frame from `st.upTo` to the end, reporting new moments to `emit`. */
 export function extendMarkers(st: MarkerState, frames: Snapshot[], emit: MarkerSink): void {
   for (let i = st.upTo; i < frames.length; i++) {
@@ -129,6 +174,7 @@ export function extendMarkers(st: MarkerState, frames: Snapshot[], emit: MarkerS
       st.pending.clear();
       st.radioPending.clear();
       st.losses = { 1: [], 2: [] };
+      st.downs = { 1: [], 2: [] };
       st.burst = { 1: null, 2: null };
       continue;
     }
@@ -156,9 +202,11 @@ export function extendMarkers(st: MarkerState, frames: Snapshot[], emit: MarkerS
       const taken = owner !== 0;
       const team = taken ? asTeam(owner) : asTeam(was);
       if (!team) continue;            // neutral to neutral: nothing happened
+      const zp = xy(z.position) ?? xy(z.staticPosition as { x: number; y: number } | null);
       emit({
         key: `cap:${z.id}:${owner}:${p.tMs}`, kind: "cap", tMs: p.tMs, team,
         subject: zoneName(z), capture: taken ? "taken" : "lost", weight: 1,
+        at: zp ? { ...zp, r: FRAME_ZONE_CM } : undefined,
       });
     }
 
@@ -189,10 +237,30 @@ export function extendMarkers(st: MarkerState, frames: Snapshot[], emit: MarkerS
       st.radioPending.delete(d.id);
       const team = asTeam(d.team);
       if (!bleeding || !team) continue;    // only the fall is a moment
+      const rp = xy(d.position);
       emit({
         key: `radio:${d.id}`, kind: "radio", tMs: p.tMs, team,
         subject: "FOB radio", weight: 0.9,
+        at: rp ? { ...rp, r: FRAME_POINT_CM } : undefined,
       });
+    }
+
+    // --- players going down, for placing a ticket collapse ---------------------
+    for (const pl of cur.players ?? []) {
+      const k = pl.eosId || (pl.playerId != null ? String(pl.playerId) : "") || pl.name || "";
+      const h = pl.soldier?.health;
+      if (!k || typeof h !== "number") continue;
+      const was = st.health.get(k);
+      st.health.set(k, h);
+      const team = asTeam(pl.teamId);
+      const where = xy(pl.soldier?.position);
+      if (was !== undefined && was > 0 && h <= 0 && team && where) {
+        st.downs[team].push({ tMs, ...where });
+      }
+    }
+    for (const team of [1, 2] as const) {
+      const w = st.downs[team];
+      while (w.length && w[0]!.tMs <= tMs - SWING_WINDOW_MS) w.shift();
     }
 
     if (!prev || !live(prev)) continue;
@@ -208,6 +276,7 @@ export function extendMarkers(st: MarkerState, frames: Snapshot[], emit: MarkerS
         key: `veh:${v.id}:${tMs}`, kind: "vehicle", tMs, team,
         subject: vehicleDisplayName(v.classShort), amount: cost,
         vehicle: { classShort: v.classShort ?? null, kind: v.kind ?? null },
+        at: (() => { const vp = xy(v.position); return vp ? { ...vp, r: FRAME_POINT_CM } : undefined; })(),
         weight: Math.max(0.35, Math.min(1, cost / 20)),
       });
     }
@@ -227,6 +296,11 @@ export function extendMarkers(st: MarkerState, frames: Snapshot[], emit: MarkerS
         if (lost > (open.marker.amount ?? 0)) {
           open.marker.amount = lost;
           open.marker.weight = Math.min(1, lost / 50);
+          // Re-placed only while it deepens. Once the losing stops, the
+          // trailing window keeps sliding and sheds the downs that WERE the
+          // collapse, until what is left is whoever happened to fall last —
+          // possibly at the other end of the map.
+          open.marker.at = collapseSite(st.downs[team]) ?? open.marker.at;
         }
         continue;
       }
@@ -238,6 +312,7 @@ export function extendMarkers(st: MarkerState, frames: Snapshot[], emit: MarkerS
       const marker = emit({
         key: `tix:${team}:${start}`, kind: "tickets", tMs: start, team,
         subject: "", amount: lost, weight: Math.min(1, lost / 50),
+        at: collapseSite(st.downs[team]),
       });
       st.burst[team] = { marker, until: tMs + SWING_WINDOW_MS };
     }

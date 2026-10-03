@@ -22,6 +22,7 @@ import { clusterMarkers, type MarkerCluster, type ReplayMarker } from "../state/
 import { sampleTickets, ticketsAt, type TicketPoint } from "../state/ticketSeries";
 import { teamColor } from "../canvas/draw";
 import { vehicleIconUrl, vehicleTurretIconUrl } from "../canvas/icons";
+import { flyTo } from "../canvas/flyTo";
 
 function fmtMMSS(ms: number): string {
   if (!Number.isFinite(ms) || ms < 0) return "—";
@@ -363,8 +364,12 @@ export function TimelineBar() {
   const seekDeltaMs = (deltaMs: number) => {
     seekToMs(curMs + deltaMs, deltaMs < 0 ? "before" : "after");
   };
-  // A marker click lands BEFORE its moment, whatever holes are in the way.
-  const seekBefore = (m: ReplayMarker) => seekToMs(m.tMs - LEAD_MS[m.kind], "before");
+  // A marker click lands BEFORE its moment, whatever holes are in the way —
+  // and takes the map to WHERE it happened, framed with its surroundings.
+  const seekBefore = (m: ReplayMarker) => {
+    seekToMs(m.tMs - LEAD_MS[m.kind], "before");
+    if (m.at) flyTo(m.at.x, m.at.y, m.at.r);
+  };
 
   const onScrub = (e: React.ChangeEvent<HTMLInputElement>) => {
     seekToMs(startMs + (parseFloat(e.target.value) / 100) * durationMs);
