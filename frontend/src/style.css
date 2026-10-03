@@ -1540,6 +1540,15 @@ html, body, #root {
   filter: drop-shadow(0 0 .6px rgba(0, 0, 0, .6));
 }
 
+/* A FOB radio: a white mast with its signal, on a disc of its side's colour,
+   ringed in the bar's own colour so it stands clear of the line under it. */
+#timeline-bar .tb-radio {
+  display: grid; place-items: center; flex: none;
+  border-radius: 50%;
+  color: #fff;
+  box-shadow: 0 0 0 1.5px var(--glass-2), 0 1px 3px rgba(0, 0, 0, .45);
+}
+
 /* ---- race: both teams' tickets ---- */
 #timeline-bar .tb-race {
   position: relative;
@@ -1567,34 +1576,6 @@ html, body, #root {
   display: block; border-radius: 50%;
   box-shadow: 0 0 0 1.5px var(--glass-2);
 }
-
-/* ---- ticks: the quietest ---- */
-#timeline-bar .tb-ticks {
-  position: relative;
-  height: 40px;
-  margin: 0 calc(var(--tb-thumb) / 2);
-}
-#timeline-bar button.tb-tickspot {
-  top: auto; bottom: 0;
-  transform: translateX(-50%);
-  width: 12px; height: 22px;
-}
-#timeline-bar .tb-tick {
-  position: absolute; bottom: 0;
-  width: 2px; margin-left: -1px;
-  border-radius: 1px;
-}
-#timeline-bar .tb-tick.k-tickets { width: 3px; margin-left: -1.5px; }
-/* A radio: the tick with a round head, like a pin. */
-#timeline-bar .tb-tick.k-radio::before {
-  content: ""; position: absolute;
-  top: -3px; left: -2px;
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: inherit;
-}
-#timeline-bar button.tb-tickspot:hover > *,
-#timeline-bar button.tb-tickspot.open > * { transform: scaleY(1.25); transform-origin: bottom; }
 
 /* ---- lanes: a flags lane and a losses lane ---- */
 #timeline-bar .tb-lanes {

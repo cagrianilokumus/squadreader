@@ -6,15 +6,14 @@
 // fixed step count.
 //
 // The match's important moments (flags, FOB radios, vehicles, ticket
-// collapses) can be drawn three ways, and the viewer picks one:
+// collapses) can be drawn two ways, and the viewer picks one:
 //
 //   race   — both teams' ticket lines, flags pinned above, losses ON the line
 //            of the side that suffered them, collapses as the line thickening
-//   ticks  — thin ticks over the track and small flags: the quietest
 //   lanes  — a flags lane and a losses lane, each with its own small icon
 //
-// All three share one time axis with the track, so a moment sits exactly
-// where the thumb would be at that time.
+// Both share one time axis with the track, so a moment sits exactly where the
+// thumb would be at that time.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useViewerStore } from "../state/viewerStore";
@@ -52,17 +51,17 @@ const LEAD_MS: Record<ReplayMarker["kind"], number> = {
 
 // --- views --------------------------------------------------------------------
 
-type ViewId = "race" | "ticks" | "lanes";
+type ViewId = "race" | "lanes";
 const VIEWS: { id: ViewId; label: string }[] = [
   { id: "race", label: "Ticket race" },
-  { id: "ticks", label: "Minimal" },
   { id: "lanes", label: "Lanes" },
 ];
 const VIEW_KEY = "sqr.timelineView";
 function readView(): ViewId {
   try {
     const v = localStorage.getItem(VIEW_KEY);
-    if (v === "race" || v === "ticks" || v === "lanes") return v;
+    // A stored "ticks" — a view that no longer exists — falls through.
+    if (v === "race" || v === "lanes") return v;
   } catch { /* private window, blocked storage: fall through */ }
   return "race";
 }
@@ -88,11 +87,13 @@ function markerText(m: ReplayMarker, side: string): string {
 
 // --- the moments' icons ---------------------------------------------------------
 // The art the map already draws with, served next to the page: Squad's own
-// objective flag, FOB marker and casualty skull, and each vehicle's own icon.
+// objective flag and casualty skull, and each vehicle's own icon. A FOB radio
+// gets a glyph of its own (RadioBadge): the map's FOB icon is a castle inside
+// an opaque grey frame, and painted through a mask the two melt into one
+// shapeless wedge — and a castle says "FOB", not "radio".
 
 const OBJECTIVE = "./icons/scoreboard/objective.png";
 const DEATHS = "./icons/scoreboard/deaths.png";
-const FOB = "./icons/markers/fob.png";
 const VEHICLE_FALLBACK = "./icons/scoreboard/vehicle.png";
 
 // Absolute, because a relative url() in an inline style is resolved against
@@ -137,11 +138,32 @@ function VehicleIcon({ m, len }: { m: ReplayMarker; len: number }) {
   );
 }
 
+/**
+ * A FOB radio: a mast with its signal, white on a disc of its side's colour —
+ * the same badge language as a vehicle's chip, crisp at any size.
+ */
+function RadioBadge({ team, size }: { team: 1 | 2 | null; size: number }) {
+  return (
+    <span className="tb-radio" style={{ width: size, height: size, background: teamColor(team) }}>
+      <svg viewBox="0 0 24 24" width={Math.round(size * 0.78)} height={Math.round(size * 0.78)}
+           aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.2"
+           strokeLinecap="round" strokeLinejoin="round">
+        {/* A mast on a short tripod. An A-frame with a crossbar read as the
+            letter A at timeline size. */}
+        <path d="M12 10.2v11.3M8.8 21.5 12 17.6l3.2 3.9" />
+        <circle cx="12" cy="8" r="1.6" fill="currentColor" stroke="none" />
+        <path d="M8.6 4.6a4.8 4.8 0 0 0 0 6.8M15.4 4.6a4.8 4.8 0 0 1 0 6.8" />
+        <path d="M5.8 2a8.6 8.6 0 0 0 0 12M18.2 2a8.6 8.6 0 0 1 0 12" opacity=".55" />
+      </svg>
+    </span>
+  );
+}
+
 /** The icon a moment gets in a card or a lane. */
 function MomentIcon({ m, size }: { m: ReplayMarker; size: number }) {
   switch (m.kind) {
     case "cap": return <MaskIcon src={OBJECTIVE} size={size} color={capColor(m)} />;
-    case "radio": return <MaskIcon src={FOB} size={size} color={teamColor(m.team)} />;
+    case "radio": return <RadioBadge team={m.team} size={size + 2} />;
     case "tickets": return <MaskIcon src={DEATHS} size={size - 1} color={teamColor(m.team)} />;
     case "vehicle":
       return (
@@ -195,7 +217,6 @@ const ViewIcon = ({ id }: { id: ViewId }) => (
   <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none"
        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     {id === "race" && <path d="M3 7l5 3 4-2 4 6 5 2" />}
-    {id === "ticks" && <path d="M5 18V12M9.5 18V8M14 18v-5M18.5 18V9" />}
     {id === "lanes" && <><path d="M3 8h18M3 16h18" opacity=".45" />
                          <circle cx="8" cy="8" r="1.8" fill="currentColor" />
                          <circle cx="15" cy="16" r="1.8" fill="currentColor" /></>}
@@ -526,41 +547,11 @@ export function TimelineBar() {
               <button key={s.key} className={`tb-spot tb-dot${future(s) ? " future" : ""}${menu === s.key ? " open" : ""}`}
                       style={{ left: s.px, top: lineAt(m.team as 1 | 2, m.tMs) }} {...spotProps(s)}>
                 {m.kind === "radio"
-                  ? <MaskIcon src={FOB} size={14} color={teamColor(m.team)} />
+                  ? <RadioBadge team={m.team} size={17} />
                   : <span className="tb-dot-c" style={{ width: 2 * r, height: 2 * r, background: teamColor(m.team) }} />}
               </button>
             );
           })}
-        </div>
-        {track}
-      </>
-    );
-  // --------------------------------------------------------------- ticks view
-  } else if (view === "ticks") {
-    const flagSpots = ready ? clusterMarkers(caps, toPx, 16).map(reg) : [];
-    const tickSpots = ready ? clusterMarkers(losses, toPx, 5).map(reg) : [];
-    body = (
-      <>
-        {times}
-        <div className="tb-ticks" ref={axisRef}>
-          {flagSpots.map((s) => (
-            <button key={s.key} className={`tb-spot tb-pin${future(s) ? " future" : ""}${menu === s.key ? " open" : ""}`}
-                    style={{ left: s.px, top: 9 }} {...spotProps(s)}>
-              <MaskIcon src={OBJECTIVE} size={14} color={capColor(s.lead)} />
-            </button>
-          ))}
-          {tickSpots.map((s) => (
-            <button key={s.key} className={`tb-spot tb-tickspot${future(s) ? " future" : ""}${menu === s.key ? " open" : ""}`}
-                    style={{ left: s.px }} {...spotProps(s)}>
-              {s.members.map((m) => (
-                <i key={m.key}
-                   className={`tb-tick k-${m.kind}`}
-                   style={{ left: toPx(m.tMs) - s.px + 6,
-                            height: m.kind === "radio" ? 14 : m.kind === "tickets" ? 12 : 5 + 6 * m.weight,
-                            background: teamColor(m.team) }} />
-              ))}
-            </button>
-          ))}
         </div>
         {track}
       </>
