@@ -1,128 +1,191 @@
-// Replay loader. When `id` becomes non-null while in replay mode,
-// fetch the full NDJSON stream once, parse it into Snapshot[], and
-// populate the store's `replay` slice. Cancellable across rapid
-// switches.
+// Replay loader. When `id` becomes non-null while in replay mode, stream the
+// NDJSON recording and publish frames into the store AS THEY ARRIVE.
 //
-// Lifetime: mounted from App.tsx. Reads `mode` + `replay.id` from the
-// store; when the pair (live → replay+id) flips, it runs once. On
-// successful load it sets:
-//   - replay.frames = [...]
-//   - replay.currentIdx = 0   ("playhead at start" — watch from the beginning)
-//   - replay.playing = false
-//   - replay.baseWallMs = 0, replay.baseSnapMs = 0
-//   - also ingestLive(firstFrame) so the canvas renders immediately
+// Lifetime: mounted from App.tsx. Reads `mode` + `replay.id` from the store;
+// when the pair (live → replay+id) flips, it runs once.
+//
+// It used to wait for the last byte before anything reached the screen — one
+// `.then()` that sorted, published, and pre-computed the kill feed over the
+// whole match. On a 168 MB recording that is a long stare at a loading card
+// while the data needed to show the first second was already in memory. Now:
+//
+//   * frames are flushed into the store about four times a second;
+//   * the viewer installs once ~4 s of match exists (REPLAY_PREBUFFER_MS) and
+//     is immediately playable, with the rest arriving behind the playhead;
+//   * the kill feed is diffed forward in the same chunks, which is exactly the
+//     order the one-shot pass used, so its output is unchanged;
+//   * the whole-recording duration is fetched separately so the timeline axis
+//     is right from the first frame instead of growing all download long.
 //
 // On switch back to live, the loader DROPS frames to free memory.
 
 import { useEffect } from "react";
-import { fetchRecordingFrames, fetchRecordingMeta } from "./recordings";
+import { fetchRecordingFrames, fetchReplayTiming } from "./recordings";
 import { useViewerStore } from "../state/viewerStore";
-import { replayLoad } from "../state/replayLoad";
+import {
+  replayLoad, REPLAY_PREBUFFER_MS, REPLAY_PREBUFFER_MIN_FRAMES,
+} from "../state/replayLoad";
 import { createDiffState, diffSnapshot } from "../killfeed/diff";
-import type { KillFeedEntry } from "../state/types";
+import type { KillFeedEntry, Snapshot } from "../state/types";
+
+/** First frame at or after `ms`, by binary search. */
+function indexAtMs(frames: Snapshot[], ms: number): number {
+  let lo = 0, hi = frames.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (Date.parse(frames[mid]!.timestamp ?? "") < ms) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
 
 export function useReplayLoader() {
   const mode = useViewerStore((s) => s.mode);
   const id = useViewerStore((s) => s.replay.id);
   const loadNonce = useViewerStore((s) => s.replay.loadNonce);
+  const windowFromMs = useViewerStore((s) => s.replay.windowFromMs);
   const setReplay = useViewerStore((s) => s.setReplay);
   const ingestLive = useViewerStore((s) => s.ingestLive);
   const setStatus = useViewerStore((s) => s.setStatus);
   const setReplayKillTimeline = useViewerStore((s) => s.setReplayKillTimeline);
+  const appendReplayFrames = useViewerStore((s) => s.appendReplayFrames);
+  const setReplayTiming = useViewerStore((s) => s.setReplayTiming);
+  const finishReplayLoad = useViewerStore((s) => s.finishReplayLoad);
 
   useEffect(() => {
     // Drop frames when leaving replay mode — keeps the heap free.
     if (mode !== "replay") {
       setReplay((r) => r.frames.length
-        ? { ...r, frames: [], currentIdx: 0, playing: false }
+        ? { ...r, frames: [], frameCount: 0, currentIdx: 0, playing: false,
+            loading: false, stalled: false, startMs: 0, bufferedMs: 0 }
         : r);
       return;
     }
     if (!id) return;
+
     let cancelled = false;
+    // Not optional. React StrictMode mounts this effect twice in development,
+    // and switching recordings mid-download used to leave the old stream
+    // running — with progressive flushes BOTH would publish, racing two
+    // different arrays into a store field whose whole design rests on identity.
+    const ac = new AbortController();
+
     setStatus("connecting");
-    // Loading UI state (read by BufferOverlay). Reset, then fetch the frame
-    // count from the tiny meta sidecar so the progress bar has a denominator.
     replayLoad.active = true;
     replayLoad.loaded = 0;
     replayLoad.total = 0;
     replayLoad.error = false;
-    fetchRecordingMeta(id)
-      .then((m) => { if (!cancelled) replayLoad.total = m.ticks ?? 0; })
-      .catch(() => { /* denominator is best-effort; bar falls back to count */ });
-    fetchRecordingFrames(id, (n) => { replayLoad.loaded = n; }).then((rawFrames) => {
-      replayLoad.active = false;
+    setReplay((r) => ({ ...r, loading: true, stalled: false, truncated: false }));
+
+    // Fire-and-forget: the frames must not wait on it. It usually lands within
+    // the first prebuffer, so the axis is correct before anything is drawn.
+    void fetchReplayTiming(id, ac.signal).then((t) => {
       if (cancelled) return;
-      // Playback (and the timeline bracket) assumes frames ascend by
-      // timestamp. Recordings are written in order, but be robust: if any
-      // frame carries a valid timestamp, drop the unplaceable ones (a
-      // stray unparseable timestamp otherwise sorts to epoch 0 and
-      // corrupts the bracket around it) and sort ascending. If none parse,
-      // fall back to stream order.
-      // Parse each timestamp exactly ONCE (the old code re-parsed inside a
-      // .some(), a .filter(), AND the .sort() comparator — ~2·n·log₂n Date.parse
-      // calls on data that is virtually always already time-ordered). Keep only
-      // placeable frames; only sort if the stream isn't already ascending.
-      let frames = rawFrames;                     // fallback: stream order
-      const withT: { f: (typeof rawFrames)[number]; t: number }[] = [];
-      for (const f of rawFrames) {
-        const t = Date.parse(f?.timestamp ?? "");
-        if (Number.isFinite(t)) withT.push({ f, t });
+      setReplayTiming({ startMs: t.startMs, durationMs: t.durationMs });
+      replayLoad.total = t.ticks;
+      replayLoad.totalMs = t.durationMs;
+    });
+
+    // Per-load incremental state. The kill feed is a forward-only diff, so it
+    // extends naturally — this is the same `createDiffState` fed the same
+    // frames in the same order as the old whole-match loop, just in chunks.
+    const dstate = createDiffState();
+    const timeline: (KillFeedEntry & { frameIdx: number })[] = [];
+    let diffedUpTo = 0;
+    let installed = false;
+
+    const extendKills = (frames: Snapshot[]) => {
+      for (let i = diffedUpTo; i < frames.length; i++) {
+        const res = diffSnapshot(dstate, frames[i]!);
+        for (const e of res.newEntries) timeline.push({ ...e, frameIdx: i });
       }
-      if (withT.length) {
-        let ascending = true;
-        for (let i = 1; i < withT.length; i++) {
-          if (withT[i]!.t < withT[i - 1]!.t) { ascending = false; break; }
+      diffedUpTo = frames.length;
+    };
+
+    const spans = (frames: Snapshot[]) => {
+      const a = Date.parse(frames[0]?.timestamp ?? "");
+      const b = Date.parse(frames[frames.length - 1]?.timestamp ?? "");
+      return Number.isFinite(a) && Number.isFinite(b) ? b - a : 0;
+    };
+
+    const onFlush = (frames: Snapshot[], final = false) => {
+      if (cancelled || !frames.length) return;
+      // Kills first, so a frame and the kills it carries become visible in the
+      // same store update — never a frame whose kill row arrives a tick later.
+      extendKills(frames);
+      replayLoad.loaded = frames.length;
+      replayLoad.bufferedMs = spans(frames);
+
+      if (!installed) {
+        // Time, not frame count: the same recording may be 0.5 Hz or 4 Hz, and
+        // what makes playback feel ready is seconds of match, not rows.
+        const ready = final
+          || (spans(frames) >= REPLAY_PREBUFFER_MS
+              && frames.length >= REPLAY_PREBUFFER_MIN_FRAMES);
+        if (!ready) return;
+        installed = true;
+        // Twice, so prev == cur — no lerp glitch on the first rendered frame.
+        ingestLive(frames[0]!);
+        ingestLive(frames[0]!);
+        setReplayKillTimeline(timeline);
+        appendReplayFrames(frames);
+        // Where the playhead lands after a seek-restart. Normally frame 0 IS
+        // the requested point, so this finds 0 and does nothing. It earns its
+        // keep against a server that does not know `from` and streams from the
+        // beginning anyway: without it the viewer would quietly start playing
+        // the match from minute zero after the user clicked minute twenty.
+        if (windowFromMs > 0) {
+          const at = indexAtMs(frames, windowFromMs);
+          if (at > 0) setReplay((r) => ({ ...r, currentIdx: at,
+                                          baseWallMs: 0, baseSnapMs: 0 }));
         }
-        if (!ascending) withT.sort((a, b) => a.t - b.t);
-        frames = withT.map((x) => x.f);
-        if (frames.length !== rawFrames.length) {
-          console.warn(`[replay] dropped ${rawFrames.length - frames.length} `
-            + `frame(s) with an unusable timestamp`);
-        }
+        replayLoad.active = false;
+        setStatus("replay");
+        return;
       }
-      if (!frames.length) {
+      appendReplayFrames(frames);
+    };
+
+    fetchRecordingFrames(id, (n) => { replayLoad.loaded = n; }, {
+      signal: ac.signal,
+      fromMs: windowFromMs,
+      onFlush: (frames) => onFlush(frames),
+    }).then((frames) => {
+      if (cancelled) return;
+      onFlush(frames, true);          // install even a recording shorter than the prebuffer
+      replayLoad.active = false;
+      if (!installed) {               // genuinely empty: nothing playable at all
+        setReplay((r) => ({ ...r, loading: false, stalled: false }));
         replayLoad.error = true;
         setStatus("idle");
         return;
       }
-      setReplay((r) => ({
-        ...r,
-        frames,
-        currentIdx: 0,
-        playing: false,
-        speed: r.speed || 1,
-        baseWallMs: 0,
-        baseSnapMs: 0,
-      }));
-      // Pre-compute the ENTIRE kill feed once — a single forward diff pass over
-      // every frame, exactly as the live path would see them in order, so each
-      // attacker is resolved from the full frame that carried its damage event.
-      // The visible feed is then a pure filter of this list to the playhead
-      // (useReplayKillFeed), which is why scrubbing rewinds cleanly and never
-      // manufactures "?" rows — unlike the incremental live diff, whose attack
-      // buffer is consumed once and can't survive a seek.
-      const dstate = createDiffState();
-      const timeline: (KillFeedEntry & { frameIdx: number })[] = [];
-      for (let i = 0; i < frames.length; i++) {
-        const res = diffSnapshot(dstate, frames[i]!);
-        for (const e of res.newEntries) timeline.push({ ...e, frameIdx: i });
-      }
-      setReplayKillTimeline(timeline);
-      // Open at the FIRST frame so a replay starts at the beginning of the
-      // match (was frames.length-1 = the end). Push it into curSnap twice so
-      // prev == cur — no lerp glitch on the very first rendered frame.
-      ingestLive(frames[0]!);
-      ingestLive(frames[0]!);
-      setStatus("replay");
+      finishReplayLoad();
     }).catch((err) => {
+      if (cancelled || ac.signal.aborted) return;
       replayLoad.active = false;
+      if (installed) {
+        // Keep what arrived. Half a match you can watch beats an error card
+        // over frames that are already in memory.
+        console.warn("[replay-loader] stream ended early:", err);
+        finishReplayLoad({ truncated: true });
+        return;
+      }
+      // Clear `loading` as well: left set, every rule that asks "is this the
+      // end of the match or just the end of the download?" answers wrongly
+      // for the rest of the session.
+      setReplay((r) => ({ ...r, loading: false, stalled: false }));
       replayLoad.error = true;
-      if (cancelled) return;
       console.error("[replay-loader] failed:", err);
       setStatus("idle");
     });
-    return () => { cancelled = true; };
+
+    return () => { cancelled = true; ac.abort(); };
     // loadNonce in the deps lets a retry re-run this for the same id.
-  }, [mode, id, loadNonce, setReplay, ingestLive, setStatus, setReplayKillTimeline]);
+    // windowFromMs is read, not depended on: `restartReplayAt` bumps the nonce
+    // in the same update, and listing both would run this effect twice.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, id, loadNonce, setReplay, ingestLive, setStatus,
+      setReplayKillTimeline, appendReplayFrames, setReplayTiming,
+      finishReplayLoad]);
 }

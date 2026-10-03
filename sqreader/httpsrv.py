@@ -25,6 +25,7 @@ started with a `recordings_dir` (passed through from
 """
 from __future__ import annotations
 
+import datetime
 import http.server
 import json
 import os
@@ -342,6 +343,61 @@ def _resolve_sqmap(sqmaps_dir: Path, name: str) -> Optional[Path]:
                 return p
     return None
 
+
+
+def _replay_ts_ms(line: str) -> "int | None":
+    """A recording line's timestamp, without parsing the whole line.
+
+    A seek walks the file to find where to start, and json.loads on every line
+    of a quarter-gigabyte recording is seconds of CPU per request. The
+    timestamp is a fixed-shape ISO string, so finding it is a substring search.
+    """
+    at = line.find('"timestamp"')
+    if at < 0:
+        return None
+    start = line.find('"', at + 11)
+    if start < 0:
+        return None
+    end = line.find('"', start + 1)
+    if end < 0:
+        return None
+    try:
+        return int(datetime.datetime.fromisoformat(
+            line[start + 1:end]).timestamp() * 1000)
+    except ValueError:
+        return None
+
+
+def _replay_from(lines, from_ms: int):
+    """Drop everything before the first FULL frame at or after `from_ms`.
+
+    It must be a FULL frame: a two-tier recording interleaves compact
+    ``{"t":"pos"}`` position frames that mean nothing alone — the viewer folds
+    them onto the last full frame it saw. Starting on one would hand the client
+    a delta against a frame it was never sent.
+    """
+    started = False
+    last_full = None
+    for line in lines:
+        if not started:
+            head = line[:24]
+            if '"t":"pos"' in head or '"t": "pos"' in head:
+                continue
+            ts = _replay_ts_ms(line)
+            if ts is None:
+                continue
+            if ts < from_ms:
+                last_full = line          # remembered in case we overshoot
+                continue
+            started = True
+        yield line
+    if not started and last_full is not None:
+        # A seek PAST the end of the recording — easy to reach, because the
+        # timeline's length comes from the match row and a recording can stop
+        # before the round does. An empty body would reach the viewer as a
+        # failed load; the honest answer to "start after the match ended" is
+        # its last frame.
+        yield last_full
 
 def _make_handler(
     heartbeat: _TickBeat,
@@ -949,7 +1005,19 @@ def _make_handler(
             # 404s everything else — so zstd passthrough and long-lived caching
             # are always safe.
             finalized = True
-            enc = self._negotiate_encoding(allow_zstd=finalized)
+            # Start the stream part-way in, at an epoch-ms point on the match
+            # clock. There is no Range support here and none is possible: the
+            # body is a compressed stream with no index, so a byte offset means
+            # nothing. Walking the file locally costs a fraction of a second
+            # and saves the viewer downloading everything before the point
+            # somebody clicked.
+            try:
+                from_ms = int((self._query().get("from") or ["0"])[0])
+            except (TypeError, ValueError):
+                from_ms = 0
+            # zstd is served by handing the stored frames over untouched, which
+            # cannot be done when the point is to leave some of them out.
+            enc = self._negotiate_encoding(allow_zstd=finalized and from_ms <= 0)
 
             etag: str | None = None
             if finalized:
@@ -957,7 +1025,13 @@ def _make_handler(
                 # Encoding is part of the representation, so it is baked into the
                 # ETag (belt-and-suspenders with Vary: Accept-Encoding below, so a
                 # shared cache can't hand a gzip body to a zstd-expecting client).
-                etag = f'"{rec_id}-{_st.st_size}-{_st.st_mtime_ns}-{enc}"'
+                # `from` belongs in the tag too: a seeked body and a whole
+                # one differ only by a query string. Only when there IS one,
+                # though — adding a suffix to every tag would invalidate the
+                # cached copy in every viewer that already has one, for a
+                # response whose bytes have not changed.
+                etag = (f'"{rec_id}-{_st.st_size}-{_st.st_mtime_ns}-{enc}'
+                        + (f'-f{from_ms}' if from_ms > 0 else '') + '"')
                 if self.headers.get("If-None-Match") == etag:
                     self.send_response(304)
                     self.send_header("ETag", etag)
@@ -1025,15 +1099,17 @@ def _make_handler(
                     if enc == "zstd":
                         for raw in r.raw_body():
                             _chunk(raw)
-                    elif enc == "gzip":
-                        co = zlib.compressobj(
-                            _REPLAY_GZIP_LEVEL, zlib.DEFLATED, 31)  # 31 → gzip
-                        for line in r:
-                            _chunk(co.compress(line.encode("utf-8") + b"\n"))
-                        _chunk(co.flush())  # Z_FINISH: emit gzip trailer
-                    else:  # identity — original behavior
-                        for line in r:
-                            _chunk(line.encode("utf-8") + b"\n")
+                    else:
+                        kept = _replay_from(r, from_ms) if from_ms > 0 else r
+                        if enc == "gzip":
+                            co = zlib.compressobj(
+                                _REPLAY_GZIP_LEVEL, zlib.DEFLATED, 31)  # 31 → gzip
+                            for line in kept:
+                                _chunk(co.compress(line.encode("utf-8") + b"\n"))
+                            _chunk(co.flush())  # Z_FINISH: emit gzip trailer
+                        else:  # identity — original behavior
+                            for line in kept:
+                                _chunk(line.encode("utf-8") + b"\n")
                 if chunked:
                     self.wfile.write(b"0\r\n\r\n")
                 self.wfile.flush()

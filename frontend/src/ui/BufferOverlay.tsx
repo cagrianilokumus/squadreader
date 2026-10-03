@@ -23,7 +23,8 @@ import { useViewerStore, RENDER_DELAY_MS } from "../state/viewerStore";
 import { replayLoad } from "../state/replayLoad";
 
 type Phase = "connecting" | "warmup" | "stalled"
-           | "replayload" | "replayerror" | "live";
+           | "replayload" | "replaybuffer" | "replaytruncated"
+           | "replayerror" | "live";
 
 interface BufState {
   phase: Phase;
@@ -45,14 +46,29 @@ function computeState(): BufState {
   const base = { staleSec: 0, loaded: 0, total: 0, reconnecting };
 
   if (s.mode === "replay") {
+    // Progress is TIME, not frames. `replayLoad.total` counts full frames only,
+    // so on a two-tier recording the reconstructed stream is several times
+    // longer than that denominator and the old ratio sailed past 100%.
+    const pct = replayLoad.totalMs > 0
+      ? Math.max(0, Math.min(1, replayLoad.bufferedMs / replayLoad.totalMs)) : 0;
     if (replayLoad.active) {
-      const pct = replayLoad.total > 0
-        ? Math.max(0, Math.min(1, replayLoad.loaded / replayLoad.total)) : 0;
+      // Only until enough exists to watch — a few seconds. After that the
+      // download continues behind a visible, playable map.
       return { phase: "replayload", pct, staleSec: 0,
                loaded: replayLoad.loaded, total: replayLoad.total, reconnecting };
     }
     if (replayLoad.error) {
       return { phase: "replayerror", pct: 0, ...base };
+    }
+    if (s.replay.stalled) {
+      // Caught up with the download mid-playback: a thin banner, never a card.
+      // Covering the map here would hide the thing the user is waiting to see.
+      return { phase: "replaybuffer", pct, staleSec: 0,
+               loaded: replayLoad.loaded, total: replayLoad.total, reconnecting };
+    }
+    if (s.replay.truncated) {
+      return { phase: "replaytruncated", pct, staleSec: 0,
+               loaded: replayLoad.loaded, total: replayLoad.total, reconnecting };
     }
     return { phase: "live", pct: 1, ...base };  // replay running → hidden
   }
@@ -142,26 +158,55 @@ export function BufferOverlay() {
     );
   }
 
-  // ---- Replay loading (frame-count progress) ----
+  // ---- Buffering mid-playback, or a stream that died early ----
+  if (phase === "replaybuffer" || phase === "replaytruncated") {
+    const buffering = phase === "replaybuffer";
+    // Time, not a percentage. Fourteen seconds of a sixty-two minute match is
+    // a true "0%", and a banner reading 0% while the bar visibly fills looks
+    // like a broken readout rather than an honest one.
+    const mmss = (ms: number) => {
+      const t = Math.max(0, Math.round(ms / 1000));
+      return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
+    };
+    return (
+      <div className="buf-banner" role="status">
+        {buffering ? <span className="buf-spin" /> : null}
+        <span>
+          {buffering
+            ? `Buffering — ${mmss(replayLoad.bufferedMs)} of `
+              + `${mmss(replayLoad.totalMs)} downloaded`
+            : `Download interrupted — only the first ${mmss(replayLoad.bufferedMs)} `
+              + "is available"}
+        </span>
+        {buffering ? null : (
+          <button className="btn btn-sm"
+                  onClick={() => useViewerStore.getState().retryReplayLoad()}>
+            Try again
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // ---- Replay prebuffer: the only full-screen state, and a short one ----
   if (phase === "replayload") {
     const loaded = PREVIEW ? 430 : st.loaded;
     const total = PREVIEW ? 1074 : st.total;
-    const pct = PREVIEW === "replayload" ? 0.4
-              : total > 0 ? Math.max(0, Math.min(1, loaded / total)) : 0;
+    const pct = PREVIEW === "replayload" ? 0.4 : st.pct;
     return (
       <div className="buf-overlay" role="status">
         <div className="buf-card">
           <div className="buf-ring" />
           <div className="buf-title">Loading recording</div>
           <div className="buf-sub">
-            Downloading and preparing the match recording…
+            Starting playback as soon as the first seconds arrive…
           </div>
           <div className="buf-bar">
-            <div className={"buf-bar-fill" + (total > 0 ? "" : " buf-bar-indet")}
-                 style={total > 0 ? { width: `${Math.round(pct * 100)}%` } : undefined} />
+            <div className={"buf-bar-fill" + (pct > 0 ? "" : " buf-bar-indet")}
+                 style={pct > 0 ? { width: `${Math.round(pct * 100)}%` } : undefined} />
           </div>
           <div className="buf-meta">
-            <span>{total > 0 ? `${Math.round(pct * 100)}%` : "…"}</span>
+            <span>{pct > 0 ? `${Math.round(pct * 100)}%` : "…"}</span>
             <span>{loaded}{total > 0 ? ` / ${total}` : ""} frames</span>
           </div>
         </div>

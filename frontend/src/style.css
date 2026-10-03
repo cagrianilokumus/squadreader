@@ -1462,9 +1462,17 @@ html, body, #root {
   -webkit-appearance: none;
   appearance: none;
   height: 6px;
+  /* Three bands: watched, downloaded-but-not-watched, and not here yet. The
+     middle one is the buffered track — the same thing the grey bar on a video
+     scrubber means. When the download finishes the viewer passes --buf == --pct,
+     which collapses that band to nothing and leaves the original two-tone bar. */
   background: linear-gradient(90deg, var(--accent) 0%,
                                      var(--accent) var(--pct, 0%),
                                      #1a2230 var(--pct, 0%),
+                                     #1a2230 var(--buf0, 0%),
+                                     #33496b var(--buf0, 0%),
+                                     #33496b var(--buf, 0%),
+                                     #1a2230 var(--buf, 0%),
                                      #1a2230 100%);
   border-radius: var(--radius-sm);
   outline: none;
@@ -2681,6 +2689,9 @@ html, body, #root {
   margin-left: auto; font-size: 11px; color: var(--ink-faint);
   text-transform: uppercase; letter-spacing: 0.06em; cursor: help;
 }
+/* A second note sits beside the first, not pushed to the right again. */
+#ticket-timeline .tt-note + .tt-note { margin-left: 10px; }
+#ticket-timeline .tt-note-warn { color: var(--warn, #d8a24a); }
 #ticket-timeline .tt-close {
   background: var(--surface-2); color: var(--ink-mute);
   border: 1px solid var(--glass-brd); border-radius: var(--radius-sm);

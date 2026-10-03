@@ -25,8 +25,22 @@ export function TicketTimeline() {
   const idx     = useViewerStore((s) => s.replay.currentIdx);
   const setReplay = useViewerStore((s) => s.setReplay);
 
+  const frameCount = useViewerStore((s) => s.replay.frameCount);
+  const loading = useViewerStore((s) => s.replay.loading);
+  // A seek part-way into a match restarts the download there, so the frames in
+  // hand are a WINDOW. The chart is honest about what it drew rather than
+  // refusing to draw: a graph of the second half is still useful, a graph
+  // labelled as the whole match is not.
+  const windowFromMs = useViewerStore((s) => s.replay.windowFromMs);
+  // `frames` keeps its identity while it grows, so it alone would pin this memo
+  // to whatever prefix existed when the chart first opened. Recompute on a
+  // COARSE step instead — this is an O(n) pass over the whole match, and
+  // running it on every flush would be four full-match analyses a second.
+  const coarse = frameCount >> 9;                 // ≈ every 512 frames
   const analysis = useMemo(
-    () => (frames.length ? computeTicketAnalysis(frames) : null), [frames]);
+    () => (frameCount ? computeTicketAnalysis(frames) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [frames, coarse, loading]);
 
   const [hover, setHover] = useState<{ x: number; y: number; text: string } | null>(null);
   const [w, setW] = useState(900);
@@ -148,6 +162,12 @@ export function TicketTimeline() {
                 title="The lines and per-team totals are exact ground truth. Splitting each loss into death / vehicle / bleed is a best-effort estimate.">
             totals exact · causes estimated
           </span>
+          {windowFromMs > 0 && (
+            <span className="tt-note tt-note-warn"
+                  title="You jumped into the middle of this match, so only the part downloaded since then is charted. Reload the replay from the start for the full picture.">
+              from the jump point on
+            </span>
+          )}
           <button className="tt-close" onClick={() => close(false)} title="close (G / Esc)">✕</button>
         </header>
 

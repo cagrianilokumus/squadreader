@@ -32,7 +32,7 @@ import { useViewerStore } from "./state/viewerStore";
 export default function App() {
   const mode = useViewerStore((s) => s.mode);
   const setMode = useViewerStore((s) => s.setMode);
-  const setReplay = useViewerStore((s) => s.setReplay);
+  const openReplay = useViewerStore((s) => s.openReplay);
 
   // Boot from URL params (one-shot on mount): `?mode=replay&id=...`
   // → flip to replay and seed the replay slice. The picker auto-opens
@@ -45,9 +45,7 @@ export default function App() {
     const id = url.searchParams.get("id");
     if (m === "replay") {
       if (id) {
-        setReplay((r) => ({ ...r, id, frames: [], currentIdx: 0,
-                            playing: false, speed: 1,
-                            baseWallMs: 0, baseSnapMs: 0 }));
+        openReplay(id);
         setMode("replay");
       } else {
         setMode("replay");
@@ -134,17 +132,19 @@ export default function App() {
       } else if (e.key === "g" || e.key === "G") {
         // Ticket-loss timeline (replay only).
         const s = useViewerStore.getState();
-        if (s.mode === "replay" && s.replay.frames.length) toggleTimeline();
+        if (s.mode === "replay" && s.replay.frameCount) toggleTimeline();
       } else if (e.key === " " || e.code === "Space") {
         // Space toggles play/pause in replay mode; ignored in live.
         const s = useViewerStore.getState();
-        if (s.mode === "replay" && s.replay.frames.length) {
+        if (s.mode === "replay" && s.replay.frameCount) {
           e.preventDefault();
           s.setReplay((r) => ({
             ...r,
             playing: !r.playing,
             baseWallMs: 0, baseSnapMs: 0,
-            currentIdx: r.currentIdx >= r.frames.length - 1
+            // Only a finished recording rewinds; at the download frontier
+            // this would throw away everything watched so far.
+            currentIdx: (r.currentIdx >= r.frameCount - 1 && !r.loading)
               ? 0 : r.currentIdx,
           }));
         }

@@ -63,7 +63,7 @@ export function RecordingPicker() {
   const setRecordings        = useViewerStore((s) => s.setRecordings);
   const setRecordingsLoading = useViewerStore((s) => s.setRecordingsLoading);
   const setRecordingsError   = useViewerStore((s) => s.setRecordingsError);
-  const setReplay = useViewerStore((s) => s.setReplay);
+  const openReplay = useViewerStore((s) => s.openReplay);
   const setMode   = useViewerStore((s) => s.setMode);
 
   const [q, setQ] = useState("");
@@ -90,16 +90,7 @@ export function RecordingPicker() {
   }, [setRecordings, setRecordingsLoading, setRecordingsError]);
 
   const pick = (rec: RecordingMeta) => {
-    setReplay((r) => ({
-      ...r,
-      id: rec.id,
-      frames: [],
-      currentIdx: 0,
-      playing: false,
-      speed: 1,
-      baseWallMs: 0,
-      baseSnapMs: 0,
-    }));
+    openReplay(rec.id);
     setMode("replay");
     const url = new URL(window.location.href);
     url.searchParams.set("mode", "replay");

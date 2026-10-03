@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import { useViewerStore } from "./state/viewerStore";
 import "./style.css";
 import "./theme-apple.css";
 import "./theme-site.css";
@@ -22,3 +23,10 @@ if (import.meta.env.VITE_THEME === "apple") {
 const root = document.getElementById("root");
 if (!root) throw new Error("missing #root element");
 createRoot(root).render(<StrictMode><App /></StrictMode>);
+
+// Dev-only handle for the end-to-end harness: progressive loading is mostly
+// INVISIBLE state (buffered-to, stalled, loading) and asserting on pixels
+// alone would not tell a stall from a stutter.
+if (import.meta.env.DEV) {
+  (window as unknown as Record<string, unknown>).__viewer = useViewerStore;
+}

@@ -31,6 +31,10 @@ export function useReplayPlayback() {
   const rafRef = useRef<number | null>(null);
   // Local mirrors so the rAF tick reads fresh state without rebinding.
   const lastIdxRef = useRef(-1);
+  // True while playback is parked at the download frontier. Kept in a ref so a
+  // stalled tick costs nothing: without it, "still waiting" would write to the
+  // store sixty times a second.
+  const stalledRef = useRef(false);
 
   useEffect(() => {
     const tick = () => {
@@ -42,13 +46,18 @@ export function useReplayPlayback() {
       }
       const r = s.replay;
       const N = r.frames.length;
-      const lastIdx = N - 1;
+      // The last frame we HOLD, which while downloading is the frontier rather
+      // than the end of the match. Everything below clamps to this; only
+      // `complete` decides whether reaching it means the match is over.
+      const frontier = N - 1;
+      const complete = !r.loading;
 
       // Pause: FREEZE the playhead exactly where playback stopped (possibly
       // mid-way between two frames) so pausing never rewinds the picture to
       // the frame boundary — that was the "pause jumps back a few frames"
       // bug. Only a seek (currentIdx changed externally) moves it.
       if (!r.playing) {
+        stalledRef.current = false;
         if (lastIdxRef.current !== r.currentIdx) {
           // Seek while paused — jump the playhead to the picked frame.
           replayClock.ms = snapMs(r.frames[r.currentIdx]);
@@ -65,13 +74,35 @@ export function useReplayPlayback() {
 
       // Playing. Compute the target frame by wall-clock × speed.
       const now = performance.now();
+
+      // Parked at the download frontier. This has to be handled BEFORE the
+      // rebase below, because the rebase would re-anchor to `now` and then
+      // wall time would keep accruing while nothing plays — the next tick
+      // would find the target even further past the frontier and stall again,
+      // for ever, which is exactly what it did. Holding here instead costs no
+      // store writes at all until the download actually moves.
+      if (stalledRef.current) {
+        if (frontier > r.currentIdx) {
+          stalledRef.current = false;
+          // Zeroing the anchors makes the next tick rebase from the FROZEN
+          // playhead, so playback continues from where it stopped rather than
+          // skipping the stall's worth of match.
+          s.setReplay((rr) => ({ ...rr, stalled: false,
+                                 baseWallMs: 0, baseSnapMs: 0 }));
+        } else {
+          replayClock.ms = snapMs(r.frames[frontier]);
+          replayClock.valid = true;
+          rafRef.current = requestAnimationFrame(tick);
+          return;
+        }
+      }
       let baseWallMs = r.baseWallMs;
       let baseSnapMs = r.baseSnapMs;
       // First tick of play, or seek/speed-change rebase needed.
       if (baseWallMs === 0 || baseSnapMs === 0
           || lastIdxRef.current !== r.currentIdx) {
         const fa = snapMs(r.frames[r.currentIdx]);
-        const fb = r.currentIdx < lastIdx
+        const fb = r.currentIdx < frontier
           ? snapMs(r.frames[r.currentIdx + 1]) : Infinity;
         // Resume/speed-change: continue from the FROZEN mid-span playhead
         // when it still falls inside the current frame pair, so play→pause→
@@ -100,26 +131,47 @@ export function useReplayPlayback() {
       // Publish the continuous playhead (clamped to the recording) for the
       // canvas to interpolate against. Updated every frame, even between
       // idx boundaries, which is what makes replay motion smooth.
-      replayClock.ms = Math.min(targetSnap, snapMs(r.frames[lastIdx]));
+      replayClock.ms = Math.min(targetSnap, snapMs(r.frames[frontier]));
       replayClock.valid = true;
 
       // Advance idx forward to the largest frame <= targetSnap.
       let idx = r.currentIdx;
-      while (idx + 1 <= lastIdx
+      while (idx + 1 <= frontier
              && snapMs(r.frames[idx + 1]) <= targetSnap) {
         idx++;
       }
-      if (idx >= lastIdx) {
+      if (idx >= frontier && !complete) {
+        // Caught up with the download, not with the match. Hold the picture and
+        // keep `playing` true, so this reads as buffering rather than as an end
+        // — and so nothing has to be pressed again when the bytes arrive.
+        if (!stalledRef.current) {
+          stalledRef.current = true;
+          // Zeroing the anchors is what makes the resume seamless: the rebase
+          // above then prefers the FROZEN replayClock, instead of counting the
+          // stall as watched time and jump-cutting forward by its length.
+          s.setReplay((rr) => ({
+            ...rr, currentIdx: frontier, stalled: true,
+            baseWallMs: 0, baseSnapMs: 0,
+          }));
+          s.ingestLive(r.frames[frontier]!);
+          lastIdxRef.current = frontier;
+        }
+        replayClock.ms = snapMs(r.frames[frontier]);
+        replayClock.valid = true;
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+      if (idx >= frontier) {
         // Reached the end → pause + clamp at last frame.
         s.setReplay((rr) => ({
           ...rr,
-          currentIdx: lastIdx,
+          currentIdx: frontier,
           playing: false,
           baseWallMs: 0,
           baseSnapMs: 0,
         }));
-        s.ingestLive(r.frames[lastIdx]!);
-        lastIdxRef.current = lastIdx;
+        s.ingestLive(r.frames[frontier]!);
+        lastIdxRef.current = frontier;
       } else if (idx !== r.currentIdx) {
         s.setReplay((rr) => ({ ...rr, currentIdx: idx }));
         s.ingestLive(r.frames[idx]!);
