@@ -6,6 +6,35 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- The reader can run in its own container beside a Squad server you already
+  run, reading the game's memory across the container boundary. Getting there
+  by hand is a research project - the game process lives in another PID
+  namespace or on the host, `/proc/<pid>/maps` is gated by ptrace and
+  `/proc/<pid>/mem` by DAC on top of it, and AppArmor's `docker-default`
+  refuses ptrace toward anything not under the same profile. `docker compose
+  up -d` after `cp .env.example .env`; the stack never starts a game server,
+  and the two things it cannot guess - which process to attach to, and where
+  the install lives - are required rather than defaulted, so a wrong guess
+  cannot quietly cost you half the kill feed.
+- The container prunes its own recordings on the same policy as the systemd
+  timer in `deploy/`. Recordings grow by hundreds of MB a day, nothing else
+  deletes them, and on a box that also runs the game a full disk takes Squad
+  down with it - so the valve sits next to the thing that opens it rather than
+  in a second container somebody forgets to start.
+- An optional reverse proxy in front of the replay UI, with the certificate
+  handled for you. `docker compose -f docker-compose.yml -f
+  docker-compose.proxy.yml up -d` adds a Caddy container that obtains and
+  renews a Let's Encrypt certificate on its own - no certbot sidecar, no
+  renewal timer, nothing to schedule. It lives in its own compose file because
+  a reverse proxy is the one piece of a deployment somebody usually already
+  has; without the second `-f` nothing about the stack changes. `SQREADER_SITE`
+  picks the mode by its shape - a hostname turns on automatic HTTPS and the
+  HTTP->HTTPS redirect, a bare `:80` turns ACME off entirely for a host where
+  TLS is terminated elsewhere. `LETSENCRYPT_EMAIL`, `PROXY_HTTP_PORT` and
+  `PROXY_HTTPS_PORT` cover the account e-mail and a host that already owns
+  80/443.
+
 ### Fixed
 - On a two-tier recording the viewer discarded every 4 Hz position update. The
   compact format wraps those lines so they are never diffed, and the browser's

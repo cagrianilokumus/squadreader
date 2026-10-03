@@ -141,7 +141,7 @@ def test_both_versions_deliver_identical_recordings(server):
         rest = rest[n + 2:]
 
     assert dechunked == body10
-    assert [json.loads(l)["tick"] for l in body10.strip().splitlines()] == \
+    assert [json.loads(line)["tick"] for line in body10.strip().splitlines()] == \
         [f["tick"] for f in FRAMES]
 
 
@@ -157,7 +157,7 @@ def test_a_compressed_http10_download_is_still_a_valid_gzip(server):
     assert b"transfer-encoding" not in head.lower()
     assert b"Content-Encoding: gzip" in head
     lines = gzip.decompress(body).strip().splitlines()
-    assert [json.loads(l)["tick"] for l in lines] == [f["tick"] for f in FRAMES]
+    assert [json.loads(line)["tick"] for line in lines] == [f["tick"] for f in FRAMES]
 
 
 def test_the_connection_closes_so_nothing_inherits_the_upgrade(server):

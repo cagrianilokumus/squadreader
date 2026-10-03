@@ -30,13 +30,48 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: Lint (ruff)
-        run: ruff check sqreader tests scripts
+        run: ruff check sqreader tests scripts docker
 
       - name: Type-check (mypy)
         run: mypy sqreader
 
       - name: Tests (pytest)
         run: pytest -q
+
+  # The container tests in docker/tests/ shell out to a real daemon and are not
+  # collected by `pytest` (testpaths is tests/), so nothing used to check this
+  # tree at all. These are the cheap half of that suite: the shell the image
+  # actually runs the entrypoint with, and whether both PID modes and the
+  # optional proxy file still render. The container tests stay a local step.
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # /bin/sh on the python:*-slim base is dash, and so is Ubuntu's. A bashism
+      # here would pass a developer's bash and fail at container boot.
+      - name: Entrypoint is POSIX shell
+        run: dash -n docker/entrypoint.sh
+
+      # `config` renders AND merges, so a broken two-file merge or a bad indent
+      # fails here instead of at `up -d`. Both modes, because they differ in the
+      # two values that have no default.
+      - name: Compose files render in both PID modes
+        run: |
+          for mode in 'container:my-squad' host; do
+            SQUAD_PID_MODE="$mode" SQUAD_DATA=/srv/squad SQREADER_SITE=:80 \
+              docker compose -f docker-compose.yml -f docker-compose.proxy.yml \
+              config >/dev/null
+          done
+
+      # The same promise the compose file makes to an operator: without the two
+      # unguessable values it must REFUSE, not default them.
+      - name: Compose refuses to render without the required values
+        run: |
+          if docker compose -f docker-compose.yml config >/dev/null 2>&1; then
+            echo "compose rendered with SQUAD_PID_MODE and SQUAD_DATA unset" >&2
+            exit 1
+          fi
 
   frontend:
     runs-on: ubuntu-latest

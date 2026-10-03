@@ -1,0 +1,59 @@
+# Optional reverse proxy in front of the replay UI, with Let's Encrypt handled
+# for you. Settings live in the proxy block at the end of .env.example.
+#
+#     docker compose -f docker-compose.yml -f docker-compose.proxy.yml up -d
+#
+# Omit the second -f and no proxy is created; docker-compose.yml is unchanged
+# either way. Once the proxy IS running, a later command without the second -f
+# warns about an orphan container — both share one project. Set
+# COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml in .env and plain
+# `docker compose` picks up both files by itself.
+#
+# The base 8080 publish stays: a second file can only ADD to a `ports` list,
+# never remove. If it was ever widened to 0.0.0.0, narrow it back — otherwise
+# the UI stays reachable in plaintext beside the certificate.
+
+services:
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+
+    # The Caddyfile enables an access log (client IPs, paths) to stderr. The
+    # default json-file driver never rotates, so cap it here.
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+
+    environment:
+      SQREADER_SITE: "${SQREADER_SITE:?unset — cp .env.example .env, then set it — a hostname for automatic HTTPS, or :80 for plain HTTP}"
+      # Read only if the `tls` line in deploy/Caddyfile is uncommented.
+      LETSENCRYPT_EMAIL: "${LETSENCRYPT_EMAIL:-}"
+      # No value on purpose: this forwards the variable only when .env actually
+      # sets it, so "unset" reaches Caddy as absent and its own default applies.
+      # "${SQREADER_HSTS:-}" would hand Caddy an empty string instead and turn
+      # the header off for everyone. See deploy/Caddyfile.
+      SQREADER_HSTS:
+
+    ports:
+      # Port 80 carries the HTTP-01 challenge and the HTTP->HTTPS redirect;
+      # 443 carries TLS-ALPN-01, so either one alone can still issue.
+      # In plain-HTTP mode set BOTH shifted ports: nothing listens on 443
+      # there, but the mapping still claims the host port regardless.
+      - "${PROXY_HTTP_PORT:-80}:80"
+      - "${PROXY_HTTPS_PORT:-443}:443"
+      # HTTP/3. Caddy binds udp/443 by default and advertises it via Alt-Svc;
+      # without this mapping browsers cache the advertisement and stall on a
+      # dead port before falling back to TCP.
+      - "${PROXY_HTTPS_PORT:-443}:443/udp"
+
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Certificates and the ACME account key. A named volume on purpose: lose
+      # /data and every restart orders a fresh certificate, until Let's Encrypt
+      # rate-limits the domain for a week.
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  caddy-data:
+  caddy-config:

@@ -2,6 +2,8 @@
 .ssh_config.json
 .env
 .env.*
+# ...but the mode-selection template MUST be committed; .env.* above would eat it.
+!.env.example
 *.pem
 # Per-machine runtime config (copy sqreader.config.example.json). Machine paths.
 sqreader.config.json
@@ -40,6 +42,11 @@ build/
 # Recording captures (large, runtime-generated)
 captures/
 results/
+
+# Defensive: nothing here creates this, but SQUAD_DATA points at a Squad
+# install (tens of GB) and an operator may well aim it at a path inside the
+# checkout. Never a tree `git status` should show as untracked.
+/squad-data/
 
 # Offline capzone fetch cache (raw SquadCalc responses + 404 list).
 # The committed artefact is data/static/capzones.json, not this cache.
