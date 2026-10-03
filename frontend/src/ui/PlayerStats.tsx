@@ -13,6 +13,7 @@ import {
 } from "../api/playerStats";
 import { HeatmapCanvas } from "./HeatmapCanvas";
 import { vehicleDisplayName } from "../data/vehicleDisplayNames";
+import { fmtInt } from "../format";
 import type {
   LeaderRow, PlayerProfile, PlayerSummary, WeaponStat, NemesisRow,
   PlayerMatchRow, StatsPeriod, WeaponMetaRow, LayerHeatmap, EloBadge,
@@ -25,7 +26,8 @@ const vehicleName = (cls: string | null) =>
   cls ? vehicleDisplayName(cls) : "?";
 
 const kd = (k: number, d: number) => (k / Math.max(1, d)).toFixed(2);
-const int = (n: number | null | undefined) => (n == null ? "—" : Math.round(n).toLocaleString("tr-TR"));
+// Aliased: `int` is what the 23 call sites below already say.
+const int = fmtInt;
 // Nulls stay nulls: a weapon with no positioned kill has no known range, and an
 // em-dash says that. Printing 0 m would be a fact we do not have.
 const metres = (m: number | null | undefined) =>
@@ -350,9 +352,10 @@ export function PlayerStats({ inline = false }: { inline?: boolean } = {}) {
             {!ldLoading && tab === "inf_kd" && leaders
               && leaders.length > 0 && (
               <div className="ps-note">
-                Bağlam, her kill/ölümde kullanılan silaha göredir (tank topu ·
-                coax · otomatik top · ATGM = araç; diğer tüm silahlar = piyade)
-                — oyuncunun koltukta olup olmadığına göre değil. Yaklaşık.
+                Infantry or vehicle is decided by the WEAPON behind each kill and
+                death (tank cannon · coax · autocannon · ATGM count as vehicle;
+                every other weapon counts as infantry) — not by whether the player
+                was in a seat at the time. Approximate.
               </div>
             )}
             {!ldLoading && LEADER_TABS.has(tab) && leaders && leaders.length === 0 && (

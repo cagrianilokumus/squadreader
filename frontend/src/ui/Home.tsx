@@ -7,14 +7,8 @@ import { useViewerStore } from "../state/viewerStore";
 import { listRecordings } from "../api/recordings";
 import { fetchLeaderboard } from "../api/playerStats";
 import type { RecordingMeta, LeaderRow } from "../state/types";
+import { fmtDateTime } from "../format";
 
-function fmtDate(s: string | null): string {
-  if (!s) return "—";
-  const d = new Date(s);
-  if (isNaN(+d)) return "—";
-  return d.toLocaleDateString("tr-TR", { day: "2-digit", month: "short" }) +
-    " " + d.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
-}
 function fmtDur(sec: number | null): string {
   if (!sec || sec <= 0) return "—";
   const m = Math.round(sec / 60);
@@ -96,7 +90,7 @@ export function Home() {
                   <span className="hm-match-meta">
                     <span className="chip">{r.gameMode ?? "—"}</span>
                     <span className="hm-match-dim">{fmtDur(r.durationSec)}</span>
-                    <span className="hm-match-dim">{fmtDate(r.endedAtUtc ?? r.startedAtUtc)}</span>
+                    <span className="hm-match-dim">{fmtDateTime(r.endedAtUtc ?? r.startedAtUtc)}</span>
                   </span>
                   <span className="hm-match-go">Watch ▸</span>
                 </button>

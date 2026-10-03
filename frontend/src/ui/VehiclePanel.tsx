@@ -37,20 +37,20 @@ function seatLabel(idx: number) {
   return `SEAT ${idx + 1}`;
 }
 
-const SEAT_ROLE_TR: Record<string, string> = {
+const SEAT_ROLE_LABELS: Record<string, string> = {
   Driver: "DRIVER", Gunner: "GUNNER", Passenger: "PASSENGER",
   Commander: "COMMANDER", Pilot: "PILOT", Loader: "LOADER",
   Crew: "CREW",
 };
 
 // Prefer the vehicle's REAL per-seat role from the loadout catalog (a
-// passenger seat is not "NİŞANCI"/Gunner, a commander/loader is not a
-// generic "KOLTUK N"). Fall back to the positional label only when the
-// seat isn't in the catalog. Unmapped English roles (e.g. "TOW Gunner")
-// are shown uppercased — descriptive beats a wrong Turkish label.
+// passenger seat is not a "GUNNER", a commander/loader is not a generic
+// "SEAT N"). Fall back to the positional label only when the seat is not
+// in the catalog. An unmapped role (e.g. "TOW Gunner") is shown
+// uppercased — descriptive beats a wrong one.
 function seatRoleLabel(role: string | null | undefined, idx: number): string {
   if (!role) return seatLabel(idx);
-  return SEAT_ROLE_TR[role] ?? role.toUpperCase();
+  return SEAT_ROLE_LABELS[role] ?? role.toUpperCase();
 }
 
 // Vehicle component classification — drives the panel layout. Matches
@@ -138,7 +138,7 @@ function weaponTypeFromClass(cls: string | null | undefined): string {
 }
 
 function roleDisplay(role: string): string {
-  return SEAT_ROLE_TR[role] ?? role.toUpperCase();
+  return SEAT_ROLE_LABELS[role] ?? role.toUpperCase();
 }
 
 // Live magazine readout: one pip per magazine (fill = current/max), plus a
