@@ -1515,7 +1515,7 @@ html, body, #root {
   text-align: right;
 }
 #timeline-bar .tb-lane {
-  height: 18px;
+  height: 24px;
   border-radius: 4px;
   background: var(--tb-lane);
   box-shadow: inset 0 0 0 1px var(--tb-hair);
@@ -1538,8 +1538,8 @@ html, body, #root {
 #timeline-bar .tb-spot {
   position: absolute; top: 50%;
   transform: translate(-50%, -50%);
-  height: 18px; min-width: 12px;
-  display: flex; align-items: center; justify-content: center; gap: 1px;
+  height: 24px; min-width: 14px;
+  display: flex; align-items: center; justify-content: center; gap: 2px;
   padding: 0; border: 0; background: none;
   cursor: pointer;
   z-index: 1;
@@ -1547,53 +1547,54 @@ html, body, #root {
 #timeline-bar .tb-spot:focus-visible {
   outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 3px;
 }
-#timeline-bar .tb-spot i,
-#timeline-bar .tb-glyph {
+/* The icon: a white silhouette painted in its colour through a mask. */
+#timeline-bar .tb-ico {
+  position: relative;
   display: block; flex: none;
-  background: var(--c);
   transition: transform .1s;
 }
-#timeline-bar .tb-spot:hover i,
-#timeline-bar .tb-spot.open i,
-#timeline-bar .tb-spot:focus-visible i { transform: scale(1.3); }
-/* How many moments share the spot — said with a number, in the spot's own
-   colour, instead of a scatter of grey dots. */
+#timeline-bar .tb-ico-shape {
+  position: absolute; inset: 0;
+  -webkit-mask-size: contain; mask-size: contain;
+  -webkit-mask-position: center; mask-position: center;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+}
+/* A destroyed vehicle, the way the map draws one: the icon itself, white
+   with its own detail, on a chip in the team's colour — lying on its side,
+   front to the right, the way time runs. */
+#timeline-bar .tb-veh { position: relative; display: block; flex: none; transition: transform .1s; }
+#timeline-bar .tb-veh-chip {
+  display: grid; place-items: center;
+  overflow: hidden;
+  border-radius: 5px;
+  background: var(--c);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .25);
+}
+#timeline-bar .tb-veh-in { position: relative; flex: none; transform: rotate(90deg); }
+#timeline-bar .tb-veh-in img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 .6px rgba(0, 0, 0, .55));
+}
+/* ... and the explosion, in its own colours, over its top corner. */
+#timeline-bar .tb-boom {
+  position: absolute;
+  right: -5px; top: -6px;
+  width: 13px; height: 13px;
+  background-position: center; background-size: contain; background-repeat: no-repeat;
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, .7));
+  pointer-events: none;
+}
+/* How many moments share the spot — a number in the spot's own colour. */
 #timeline-bar .tb-spot b {
-  font-size: 9px; font-weight: 700; line-height: 1;
+  font-size: 10px; font-weight: 700; line-height: 1;
   color: var(--c);
   font-variant-numeric: tabular-nums;
 }
-/* Pennant on a pole: a flag changed hands. Gone neutral: the side that lost
-   it, quieter — a loss to neutral is the smaller event of the two. */
-#timeline-bar .k-cap i,
-#timeline-bar .tb-glyph.k-cap {
-  width: 9px; height: 12px;
-  clip-path: polygon(0 0, 100% 26%, 22% 52%, 22% 100%, 0 100%);
-}
-/* Lost to neutral: the same pennant, hollow — still in the colour of the
-   side that lost it, and never mistaken for a capture. */
-#timeline-bar .k-cap.lost i,
-#timeline-bar .tb-glyph.k-cap.lost {
-  clip-path: path(evenodd, "M0 0 L9 3.12 L1.98 6.24 L1.98 12 L0 12 Z M2.6 1.75 L6.3 3.12 L2.6 4.55 Z");
-}
-/* A vehicle lost: a triangle, bigger for dearer ones. */
-#timeline-bar .k-vehicle i {
-  width: calc(7px + 4px * var(--w, 1)); height: calc(6px + 4px * var(--w, 1));
-  clip-path: polygon(50% 0, 100% 100%, 0 100%);
-}
-#timeline-bar .tb-glyph.k-vehicle {
-  width: 10px; height: 9px;
-  clip-path: polygon(50% 0, 100% 100%, 0 100%);
-}
-/* Tickets collapsing: pointing down, in the colour of the side bleeding. */
-#timeline-bar .k-tickets i {
-  width: calc(8px + 4px * var(--w, 1)); height: calc(6px + 4px * var(--w, 1));
-  clip-path: polygon(0 0, 100% 0, 50% 100%);
-}
-#timeline-bar .tb-glyph.k-tickets {
-  width: 10px; height: 9px;
-  clip-path: polygon(0 0, 100% 0, 50% 100%);
-}
+#timeline-bar .tb-spot:hover :is(.tb-ico, .tb-veh),
+#timeline-bar .tb-spot.open :is(.tb-ico, .tb-veh),
+#timeline-bar .tb-spot:focus-visible :is(.tb-ico, .tb-veh) { transform: scale(1.2); }
 
 /* ---- controls: frame step · skip & play · speed, three equal-weight groups ---- */
 #timeline-bar .tb-controls {

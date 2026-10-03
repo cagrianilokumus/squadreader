@@ -36,6 +36,12 @@ export interface ReplayMarker {
   capture?: "taken" | "lost";
   /** vehicle: its ticket cost. tickets: the largest 60 s loss in the burst. */
   amount?: number;
+  /**
+   * vehicle: what it was, so the timeline can draw THAT vehicle's silhouette
+   * rather than a generic glyph. Kept as data — resolving it to an icon is
+   * the UI's business, and this module stays free of anything DOM.
+   */
+  vehicle?: { classShort: string | null; kind: string | null };
   /** 0..1, how prominently to draw it. */
   weight: number;
 }
@@ -162,6 +168,7 @@ export function extendMarkers(st: MarkerState, frames: Snapshot[], emit: MarkerS
       emit({
         key: `veh:${v.id}:${tMs}`, kind: "vehicle", tMs, team,
         subject: vehicleDisplayName(v.classShort), amount: cost,
+        vehicle: { classShort: v.classShort ?? null, kind: v.kind ?? null },
         weight: Math.max(0.35, Math.min(1, cost / 20)),
       });
     }

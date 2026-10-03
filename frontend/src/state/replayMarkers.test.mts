@@ -103,6 +103,8 @@ function run(frames: Snapshot[], chunks = 1): ReplayMarker[] {
   ok(m.length === 1, "one destruction, not one per wreck frame");
   ok(m[0]?.tMs === T0 + 4000 && m[0]?.team === 2, "at the crossing, against the team that lost it");
   ok(m[0]?.amount === 20 && m[0]?.weight === 1, "an MBT is priced and drawn as an MBT");
+  ok(m[0]?.vehicle?.classShort === "BP_T72B3_C" && m[0]?.vehicle?.kind === "MBT",
+     "the marker says which vehicle it was, for its icon");
   const noTeam = [frame(0, { veh: v(500, 0) }), frame(2, { veh: v(0, 0) })];
   ok(run(noTeam).length === 0, "a vehicle with no team is skipped");
 }

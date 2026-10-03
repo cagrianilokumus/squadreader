@@ -17,9 +17,10 @@
 
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { useViewerStore } from "../state/viewerStore";
-import type { Snapshot } from "../state/types";
+import type { Snapshot, Vehicle } from "../state/types";
 import { clusterMarkers, type MarkerCluster, type ReplayMarker } from "../state/replayMarkers";
 import { teamColor } from "../canvas/draw";
+import { vehicleIconUrl, vehicleTurretIconUrl } from "../canvas/icons";
 
 function fmtMMSS(ms: number): string {
   if (!Number.isFinite(ms) || ms < 0) return "—";
@@ -46,13 +47,14 @@ const LEAD_MS: Record<ReplayMarker["kind"], number> = {
   cap: 15_000, vehicle: 5_000, tickets: 3_000,
 };
 
-// Markers closer than this share one spot. Wide enough for the hit area, so no
-// marker can sit under another and swallow its clicks.
-const MARK_GAP_PX = 12;
-
+// Moments closer than a lane's gap share one spot: wide enough for its widest
+// icon plus a count, so no icon sits under another and swallows its clicks. A
+// vehicle lies on its side and is the widest thing drawn.
 const LANES = [
-  { id: "flags", label: "Flags", kinds: ["cap"] as ReplayMarker["kind"][] },
-  { id: "losses", label: "Losses", kinds: ["vehicle", "tickets"] as ReplayMarker["kind"][] },
+  { id: "flags", label: "Flags", gapPx: 24,
+    kinds: ["cap"] as ReplayMarker["kind"][] },
+  { id: "losses", label: "Losses", gapPx: 40,
+    kinds: ["vehicle", "tickets"] as ReplayMarker["kind"][] },
 ];
 
 const shortFaction = (f: string | null | undefined) => (f ?? "").split("_")[0] || null;
@@ -69,7 +71,85 @@ function markerText(m: ReplayMarker, side: string): string {
   }
 }
 
-// --- icons ------------------------------------------------------------------
+// --- the moments' icons -------------------------------------------------------
+// The same art the map draws with, served next to the page: Squad's own
+// objective flag and casualty skull, and for a vehicle ITS silhouette — a
+// tank reads as a tank, a truck as a truck — with the explosion over it.
+// White PNGs, painted in a team colour through a CSS mask.
+
+const OBJECTIVE = "./icons/scoreboard/objective.png";
+const DEATHS = "./icons/scoreboard/deaths.png";
+const EXPLODED = "./icons/misc/exploded.png";
+const VEHICLE_FALLBACK = "./icons/scoreboard/vehicle.png";
+
+// Absolute, because a relative url() in an inline style is resolved against
+// the document by some browsers and against the stylesheet by others — and the
+// stylesheet lives one directory down, in assets/.
+const abs = (u: string) => new URL(u, document.baseURI).href;
+
+function momentIcon(m: ReplayMarker): { layers: string[]; color: string } {
+  switch (m.kind) {
+    case "cap":
+      // The flag in the colour of whoever holds it NOW: the side that took it,
+      // or neutral grey when it fell to nobody.
+      return { layers: [OBJECTIVE], color: teamColor(m.capture === "taken" ? m.team : null) };
+    case "vehicle": {
+      const v = { classShort: m.vehicle?.classShort ?? null,
+                  kind: m.vehicle?.kind ?? undefined } as Vehicle;
+      const base = vehicleIconUrl(v) ?? VEHICLE_FALLBACK;
+      // Turreted armour is drawn in two pieces on the map; put the turret
+      // back on, or a tank is an empty hull.
+      const turret = vehicleTurretIconUrl(v);
+      return { layers: turret ? [base, turret] : [base], color: teamColor(m.team) };
+    }
+    case "tickets":
+      return { layers: [DEATHS], color: teamColor(m.team) };
+  }
+}
+
+/**
+ * Lane size: flags all alike, vehicles by what they cost, collapses by depth.
+ * A vehicle's box is its LENGTH — it is drawn lying on its side, facing the
+ * way time runs, because the map's icons are top-down and upright: at lane
+ * height every one of them, tank or truck, shrank to the same rounded pill,
+ * while on its side a tank keeps its barrel and a truck its cab.
+ */
+function laneIconSize(m: ReplayMarker, weight: number): number {
+  if (m.kind === "cap") return 16;
+  if (m.kind === "vehicle") return Math.round(20 + 6 * weight);
+  return Math.round(14 + 3 * weight);
+}
+
+function MomentIcon({ m, size }: { m: ReplayMarker; size: number }) {
+  const { layers, color } = momentIcon(m);
+  if (m.kind === "vehicle") {
+    // Drawn the way the map draws a vehicle: the icon as it is, white with its
+    // own detail, on a chip in the team's colour. Painting the silhouette
+    // through a mask kept only its outline — hatch, cab and turret are grey
+    // lines INSIDE the white, and a mask reads nothing but alpha — so every
+    // vehicle came out the same rounded blob.
+    return (
+      <span className="tb-veh" style={{ "--c": color } as React.CSSProperties}>
+        <span className="tb-veh-chip"
+              style={{ width: size + 6, height: Math.round(size * 0.62) + 4 }}>
+          <span className="tb-veh-in" style={{ width: size, height: size }}>
+            {layers.map((u) => <img key={u} src={abs(u)} alt="" draggable={false} />)}
+          </span>
+        </span>
+        <span className="tb-boom" style={{ backgroundImage: `url("${abs(EXPLODED)}")` }} />
+      </span>
+    );
+  }
+  const mask = layers.map((u) => `url("${abs(u)}")`).join(", ");
+  return (
+    <span className={`tb-ico k-${m.kind}`} style={{ width: size, height: size }}>
+      <span className="tb-ico-shape"
+            style={{ WebkitMaskImage: mask, maskImage: mask, background: color }} />
+    </span>
+  );
+}
+
+// --- control icons ------------------------------------------------------------
 // Inline SVG, drawn on a 24-unit grid in `currentColor`, so every control
 // follows the theme and none depends on a font having the right glyph.
 
@@ -274,7 +354,7 @@ export function TimelineBar() {
   const lanes = LANES.map((l) => ({
     ...l,
     spots: lanePx > 0
-      ? clusterMarkers(markers.filter((m) => l.kinds.includes(m.kind)), toPx, MARK_GAP_PX)
+      ? clusterMarkers(markers.filter((m) => l.kinds.includes(m.kind)), toPx, l.gapPx)
       : [] as MarkerCluster[],
   }));
   // Looked up every render: a marker arriving mid-download can change a spot's
@@ -329,8 +409,7 @@ export function TimelineBar() {
                                        + (m.capture === "lost" ? " lost" : "")
                                        + (menu === c.key ? " open" : "")}
                             style={{ left: `${c.px}px`,
-                                     "--c": teamColor(m.team),
-                                     "--w": Math.max(...c.members.map((x) => x.weight)),
+                                     "--c": momentIcon(m).color,
                                    } as React.CSSProperties}
                             aria-label={label}
                             aria-haspopup={n > 1 ? "menu" : undefined}
@@ -342,7 +421,8 @@ export function TimelineBar() {
                             onClick={() => n > 1
                               ? setMenu((k) => (k === c.key ? null : c.key))
                               : seekBefore(m)}>
-                      <i />
+                      <MomentIcon m={m}
+                                  size={laneIconSize(m, Math.max(...c.members.map((x) => x.weight)))} />
                       {n > 1 && <b>{n}</b>}
                     </button>
                   );
@@ -408,8 +488,7 @@ export function TimelineBar() {
           {card.members.map((x) => {
             const row = (
               <>
-                <i className={`tb-glyph k-${x.kind}${x.capture === "lost" ? " lost" : ""}`}
-                   style={{ "--c": teamColor(x.team) } as React.CSSProperties} />
+                <MomentIcon m={x} size={18} />
                 <span className="tb-card-time">{fmtMMSS(x.tMs - startMs)}</span>
                 <span className="tb-card-text">{markerText(x, sideName(x.team))}</span>
               </>
