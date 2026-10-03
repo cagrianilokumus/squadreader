@@ -6,6 +6,7 @@ import { create } from "zustand";
 import { DEFAULT_VIEW } from "./types";
 import { patchSnapshot, resetCarryOver } from "./carryOver";
 import { replayLoad } from "./replayLoad";
+import type { ReplayMarker } from "./replayMarkers";
 import type {
   ConnStatus, KillFeedEntry, Mode, RecordingMeta, Snapshot, TeamState, ViewState,
 } from "./types";
@@ -144,6 +145,17 @@ interface ReplaySlice {
   stalled: boolean;
   /** The stream died after at least one frame: this is all there will be. */
   truncated: boolean;
+  /**
+   * Important moments for the timeline (flags, vehicles, ticket collapses),
+   * found as the frames arrive. Replaced, never mutated, when one is added —
+   * there are a few dozen per match, and a template object holding an array
+   * that somebody pushes into is how one replay's markers end up in the next.
+   *
+   * Kept across a seek that restarts the download: the moments are facts about
+   * the MATCH, and the part of it already watched does not stop having them
+   * because the window moved.
+   */
+  markers: ReplayMarker[];
   currentIdx: number;
   playing: boolean;
   speed: number;
@@ -168,6 +180,7 @@ const PRISTINE_REPLAY = {
   totalMs: 0,
   stalled: false,
   truncated: false,
+  markers: [] as ReplayMarker[],
   currentIdx: 0,
   playing: false,
   speed: 1,
@@ -290,6 +303,8 @@ interface Store {
    * there instead, and what was already downloaded ahead of it is dropped.
    */
   restartReplayAt(ms: number): void;
+  /** Append newly found timeline markers (already de-duplicated by the caller). */
+  addReplayMarkers(markers: ReplayMarker[]): void;
   /** The stream closed: no more frames are coming. */
   finishReplayLoad(opts?: { truncated?: boolean }): void;
   setRecordings(r: RecordingMeta[] | null): void;
@@ -472,6 +487,7 @@ export const useViewerStore = create<Store>((set) => ({
         // and re-fetching them would make the axis flicker on every seek.
         totalMs: s.replay.totalMs,
         matchStartMs: s.replay.matchStartMs,
+        markers: s.replay.markers,
         windowFromMs: ms,
         loading: true,
         loadNonce: s.replay.loadNonce + 1,
@@ -546,6 +562,10 @@ export const useViewerStore = create<Store>((set) => ({
     // Replace the feed wholesale (replay: the playhead-filtered slice of the
     // pre-computed timeline). Newest-first + capping are the caller's job.
     set({ killFeed: entries });
+  },
+  addReplayMarkers(markers) {
+    if (!markers.length) return;
+    set((s) => ({ replay: { ...s.replay, markers: [...s.replay.markers, ...markers] } }));
   },
   setReplayKillTimeline(tl) {
     set({ replayKillTimeline: tl });

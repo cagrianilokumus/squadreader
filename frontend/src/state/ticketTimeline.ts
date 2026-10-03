@@ -77,6 +77,28 @@ function vehMap(snap: Snapshot): Map<string, Vehicle> {
   return m;
 }
 
+/**
+ * Vehicles destroyed between two consecutive frames.
+ *
+ * Destruction = health crossing >0 -> <=0. That is the tick the game deducts
+ * the vehicle's tickets; the wreck then lingers in the list for a few seconds
+ * before it despawns, so a disappearance diff fires too late and the cost
+ * would land on bleed instead. (Confirmed against real replays.)
+ *
+ * Shared with the replay timeline's markers, so a vehicle marked there and a
+ * vehicle priced on the ticket chart are always the same event.
+ */
+export function destroyedVehicles(prev: Snapshot, cur: Snapshot): Vehicle[] {
+  const pv = vehMap(prev);
+  const out: Vehicle[] = [];
+  for (const v of cur.vehicles ?? []) {
+    const p = v.id ? pv.get(v.id) : undefined;
+    if (!p) continue;
+    if (p.health != null && p.health > 0 && v.health != null && v.health <= 0) out.push(v);
+  }
+  return out;
+}
+
 const asTeam = (t: number | null | undefined): 1 | 2 | null =>
   t === 1 ? 1 : t === 2 ? 2 : null;
 
@@ -130,15 +152,7 @@ export function computeTicketAnalysis(frames: Snapshot[]): TicketAnalysis {
     }
 
     // --- structural candidates: destroyed vehicles ---
-    // Destruction = health crossing >0 -> <=0. That is the tick the game deducts
-    // the vehicle's tickets; the wreck then lingers in the list for a few seconds
-    // before it despawns, so a disappearance diff fires too late and the cost
-    // would land on bleed instead. (Confirmed against real replays.)
-    const pv = vehMap(prev);
-    for (const v of cur.vehicles ?? []) {
-      const p = v.id ? pv.get(v.id) : undefined;
-      if (!p) continue;
-      if (!(p.health != null && p.health > 0 && v.health != null && v.health <= 0)) continue;
+    for (const v of destroyedVehicles(prev, cur)) {
       const team = asTeam(v.team);
       if (!team) continue;
       const name = vehicleDisplayName(v.classShort);

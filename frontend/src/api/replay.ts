@@ -26,6 +26,9 @@ import {
   replayLoad, REPLAY_PREBUFFER_MS, REPLAY_PREBUFFER_MIN_FRAMES,
 } from "../state/replayLoad";
 import { createDiffState, diffSnapshot } from "../killfeed/diff";
+import {
+  createMarkerState, extendMarkers, findDuplicate, type ReplayMarker,
+} from "../state/replayMarkers";
 import type { KillFeedEntry, Snapshot } from "../state/types";
 
 /** First frame at or after `ms`, by binary search. */
@@ -51,6 +54,7 @@ export function useReplayLoader() {
   const appendReplayFrames = useViewerStore((s) => s.appendReplayFrames);
   const setReplayTiming = useViewerStore((s) => s.setReplayTiming);
   const finishReplayLoad = useViewerStore((s) => s.finishReplayLoad);
+  const addReplayMarkers = useViewerStore((s) => s.addReplayMarkers);
 
   useEffect(() => {
     // Drop frames when leaving replay mode — keeps the heap free.
@@ -94,6 +98,16 @@ export function useReplayLoader() {
     let diffedUpTo = 0;
     let installed = false;
 
+    // Timeline markers, found in the same chunks. They outlive this load (a seek
+    // that restarts the download keeps them), so a marker is new only if neither
+    // the store nor this flush already holds it — see `findDuplicate`.
+    const mstate = createMarkerState();
+    let fresh: ReplayMarker[] = [];
+    const sink = (m: ReplayMarker): ReplayMarker =>
+      findDuplicate(useViewerStore.getState().replay.markers, m)
+        ?? findDuplicate(fresh, m)
+        ?? (fresh.push(m), m);
+
     const extendKills = (frames: Snapshot[]) => {
       for (let i = diffedUpTo; i < frames.length; i++) {
         const res = diffSnapshot(dstate, frames[i]!);
@@ -113,6 +127,8 @@ export function useReplayLoader() {
       // Kills first, so a frame and the kills it carries become visible in the
       // same store update — never a frame whose kill row arrives a tick later.
       extendKills(frames);
+      extendMarkers(mstate, frames, sink);
+      if (fresh.length) { addReplayMarkers(fresh); fresh = []; }
       replayLoad.loaded = frames.length;
       replayLoad.bufferedMs = spans(frames);
 
@@ -187,5 +203,5 @@ export function useReplayLoader() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, id, loadNonce, setReplay, ingestLive, setStatus,
       setReplayKillTimeline, appendReplayFrames, setReplayTiming,
-      finishReplayLoad]);
+      finishReplayLoad, addReplayMarkers]);
 }

@@ -1493,6 +1493,130 @@ html, body, #root {
   border: 2px solid var(--accent);
   cursor: grab;
 }
+/* The track is a positioning box now: the range input fills it and the
+   important-moment markers sit in a strip above it. */
+#timeline-bar .tb-track {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+#timeline-bar .tb-track .tb-scrub { width: 100%; }
+/* Inset by the thumb's radius (7 px): the thumb's CENTRE travels from 7 px to
+   width-7 px, so this is the span a marker has to share with it to line up. */
+#timeline-bar .tb-marks {
+  position: absolute;
+  left: 7px; right: 7px;
+  bottom: calc(50% + 5px);
+  height: 14px;
+  pointer-events: none;
+}
+#timeline-bar .tb-mark {
+  position: absolute;
+  bottom: 0;
+  width: 12px; height: 14px;          /* the hit area, wider than the glyph */
+  transform: translateX(-50%);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 0; border: 0; background: none;
+  cursor: pointer;
+  pointer-events: auto;
+}
+#timeline-bar .tb-mark i {
+  display: block;
+  background: var(--c);
+  opacity: calc(0.55 + 0.45 * var(--w, 1));
+  transition: transform .1s, opacity .1s;
+  transform-origin: 50% 100%;
+}
+#timeline-bar .tb-mark:hover i,
+#timeline-bar .tb-mark:focus-visible i { transform: scale(1.6); opacity: 1; }
+#timeline-bar .tb-mark:hover,
+#timeline-bar .tb-mark:focus-visible { z-index: 1; outline: none; }
+/* The second lane hangs BELOW the track: losses (vehicles, ticket
+   collapses), so the flags above are never folded into them. */
+#timeline-bar .tb-marks.below { bottom: auto; top: calc(50% + 5px); }
+#timeline-bar .tb-marks.below .tb-mark { bottom: auto; top: 0; align-items: flex-start; }
+#timeline-bar .tb-marks.below .tb-mark i { transform-origin: 50% 0; }
+#timeline-bar .tb-marks.below .tb-mark.multi::after { top: auto; bottom: -3px; }
+#timeline-bar .tb-mark.open i { transform: scale(1.6); opacity: 1; }
+
+/* The list a multi-moment spot opens. */
+#timeline-bar .tb-pop {
+  position: absolute;
+  bottom: calc(50% + 24px);
+  transform: translateX(-50%);
+  min-width: 240px; max-width: 340px;
+  max-height: 240px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 4px;
+  background: var(--glass-2);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-brd);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  z-index: 20;
+}
+#timeline-bar .tb-pop button {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%;
+  padding: 5px 8px;
+  border: 0; border-radius: 4px;
+  background: none;
+  color: var(--ink);
+  font-size: 12px; text-align: left;
+  cursor: pointer;
+}
+#timeline-bar .tb-pop button:hover,
+#timeline-bar .tb-pop button:focus-visible { background: var(--accent-weak); outline: none; }
+#timeline-bar .tb-pop-time {
+  min-width: 34px;
+  color: var(--ink-mute);
+  font-variant-numeric: tabular-nums;
+}
+#timeline-bar .tb-pop-glyph { flex: none; display: block; background: var(--c); }
+#timeline-bar .tb-pop-glyph.tb-mark-cap {
+  width: 8px; height: 12px;
+  clip-path: polygon(0 0, 100% 25%, 20% 50%, 20% 100%, 0 100%);
+}
+#timeline-bar .tb-pop-glyph.tb-mark-vehicle {
+  width: 10px; height: 9px;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+#timeline-bar .tb-pop-glyph.tb-mark-tickets {
+  width: 10px; height: 9px;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+/* More than one moment in this spot: a dot over the glyph says so; the
+   tooltip lists them all. */
+#timeline-bar .tb-mark.multi::after {
+  content: "";
+  position: absolute;
+  top: -3px; left: 50%;
+  width: 3px; height: 3px;
+  margin-left: -1.5px;
+  border-radius: 50%;
+  background: var(--ink-mute);
+}
+/* A pennant on a pole: a flag changed hands. */
+#timeline-bar .tb-mark-cap i {
+  width: 8px; height: 12px;
+  clip-path: polygon(0 0, 100% 25%, 20% 50%, 20% 100%, 0 100%);
+}
+/* Went neutral: drawn in the colour of the side that LOST it, but quieter
+   than a capture, which is the bigger event. */
+#timeline-bar .tb-mark-cap.lost i { opacity: 0.45; }
+/* A vehicle lost: the same ▲ the ticket chart uses. Bigger for dearer ones. */
+#timeline-bar .tb-mark-vehicle i {
+  width: calc(6px + 4px * var(--w, 1)); height: calc(5px + 4px * var(--w, 1));
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+/* Tickets collapsing: pointing down, in the colour of the side bleeding. */
+#timeline-bar .tb-mark-tickets i {
+  width: calc(7px + 4px * var(--w, 1)); height: calc(5px + 4px * var(--w, 1));
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
 #timeline-bar .tb-clock {
   font-variant-numeric: tabular-nums;
   color: var(--ink-mute);
