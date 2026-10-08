@@ -95,6 +95,17 @@ const LEADER_TABS = new Set([
 ]);
 const PERIODLESS = new Set(["elo"]);
 
+/** The player a /stats link was opened for: `?player=<eos>`, or the older
+ *  `#/players/<eos>` the server page linked with — which nothing ever read, so
+ *  every click landed on the leaderboards instead of the player. */
+function linkedPlayer(): string {
+  const p = new URLSearchParams(window.location.search).get("player");
+  if (p) return p;
+  const m = /^#\/players\/([^/?#]+)/.exec(window.location.hash);
+  if (!m) return "";
+  try { return decodeURIComponent(m[1]); } catch { return ""; }
+}
+
 const PERIODS: { key: StatsPeriod; label: string }[] = [
   { key: "daily", label: "Today" },
   { key: "weekly", label: "This week" },
@@ -214,6 +225,8 @@ export function PlayerStats({ inline = false }: { inline?: boolean } = {}) {
     if (!inline) return;
     loadTab(tabRef.current, periodRef.current, "", serverRef.current);
     fetchServers().then(setServers).catch(() => setServers([]));
+    const eos = linkedPlayer();
+    if (eos) openProfile(eos, serverRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inline]);
 
