@@ -2,15 +2,30 @@
 // number-label options (squad-leader numbers, all player/vehicle numbers) and
 // the map-layer show/hide toggles — the single home for what the map draws.
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import {
   useViewerStore, LAYER_ORDER, NUMBER_ORDER, LAYER_LABELS, type LayerKey,
 } from "../state/viewerStore";
 
-export function SettingsMenu() {
-  const [open, setOpen] = useState(false);
-  const layers = useViewerStore((s) => s.layers);
+// Module scope on purpose. Declared inside SettingsMenu it was a NEW component
+// type every render, so React remounted every row each time — and TopBar
+// re-renders on every frame. At 8x playback the label under the cursor was
+// replaced between mousedown and mouseup, so the click never landed.
+function Row({ k }: { k: LayerKey }) {
+  const on = useViewerStore((s) => !!s.layers[k]);
   const toggleLayer = useViewerStore((s) => s.toggleLayer);
+  return (
+    <label className="settings-row">
+      <input type="checkbox" checked={on} onChange={() => toggleLayer(k)} />
+      <span>{LAYER_LABELS[k]}</span>
+    </label>
+  );
+}
+
+// Memoised so TopBar's per-frame re-render (it reads curSnap) stops here: the
+// menu takes no props, so nothing about it changes when the frame does.
+export const SettingsMenu = memo(function SettingsMenu() {
+  const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
   // Dismiss on outside-click or Escape while open.
@@ -29,14 +44,6 @@ export function SettingsMenu() {
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
-
-  const Row = ({ k }: { k: LayerKey }) => (
-    <label className="settings-row">
-      <input type="checkbox" checked={!!layers[k]}
-             onChange={() => toggleLayer(k)} />
-      <span>{LAYER_LABELS[k]}</span>
-    </label>
-  );
 
   return (
     <div className="settings-wrap" ref={rootRef}>
@@ -64,4 +71,4 @@ export function SettingsMenu() {
       )}
     </div>
   );
-}
+});
