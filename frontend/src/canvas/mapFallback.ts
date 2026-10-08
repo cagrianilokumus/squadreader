@@ -49,6 +49,18 @@ export function fallbackMap(mapName: string | null | undefined): FallbackMap | n
     ?? null;
 
   if (!found) {
+    // Runs of adjacent words, longest first: a server tag in front of a
+    // two-word map ("RS Black Coast", "RS Al Basrah") hides it from both
+    // whole-name lookups above, and no single word of it is a map id.
+    const all = cleaned.split(/\s+/).filter(Boolean);
+    for (let len = all.length - 1; len >= 2 && !found; len--) {
+      for (let i = 0; i + len <= all.length && !found; i++) {
+        found = BY_NORM.get(norm(all.slice(i, i + len).join(""))) ?? null;
+      }
+    }
+  }
+
+  if (!found) {
     // Longest word first: "FCL AlBasrah" must find AlBasrah, not FCL, and a
     // two-letter fragment must never match anything at all.
     const words = cleaned.split(/\s+/).filter((w) => w.length >= 3)

@@ -22,6 +22,12 @@ function ok(cond: any, msg: string) {
     ["BALT 26 AlBasrah AAS v1", "AlBasrah"],
     ["SAT Tallil Seed v1", "Tallil"],
     ["Mutaha S3O v1", "Mutaha"],
+    // A server tag in front of a two-word map: the stats heatmap reported
+    // these as having no bounds at all.
+    ["RS Black Coast RAAS v2", "BlackCoast"],
+    ["RS Al Basrah RAAS v1", "AlBasrah"],
+    ["RS Narva RAAS v1", "Narva"],
+    ["Al Basrah RAAS v3", "AlBasrah"],
   ];
   for (const [name, want] of cases) {
     const got = fallbackMap(name);

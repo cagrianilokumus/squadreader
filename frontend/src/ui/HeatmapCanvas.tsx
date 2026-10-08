@@ -26,6 +26,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { mapTexture } from "../canvas/icons";
 import { coord } from "../canvas/worldToScreen";
 import { teamColor } from "../canvas/draw";
+import { fallbackMap } from "../canvas/mapFallback";
 import type {
   HeatmapCell, HeatmapPoint, LayerBounds,
 } from "../state/types";
@@ -71,12 +72,20 @@ export type HeatmapData =
   | { kind: "layer"; cells: HeatmapCell[]; cellCm: number; maxCount: number }
   | { kind: "match"; points: HeatmapPoint[] };
 
-export function HeatmapCanvas({ bounds, data }: {
+export function HeatmapCanvas({ bounds: given, name, data }: {
   bounds: LayerBounds | null;
+  /** Layer (or map) name, for when the server has no bounds to send. */
+  name?: string | null;
   data: HeatmapData;
 }) {
   const cvsRef = useRef<HTMLCanvasElement | null>(null);
   const [hover, setHover] = useState<string | null>(null);
+  // The server's bounds come from a per-layer table keyed by the exact display
+  // name, so a tagged layer ("RS Narva RAAS v1") — or a server started without
+  // the table — sends none. Fall back to the whole-map extent the replay viewer
+  // already draws such matches with: image and bounds come from the same entry,
+  // so every death still lands where it happened.
+  const bounds = useMemo(() => given ?? fallbackMap(name), [given, name]);
   const extent = useMemo(() => extentOf(bounds), [bounds]);
 
   const draw = useCallback(() => {
@@ -173,7 +182,7 @@ export function HeatmapCanvas({ bounds, data }: {
   if (!extent) {
     return (
       <div className="ps-empty">
-        This layer's map bounds are missing from the static data, so the heatmap can't be drawn.
+        This map isn't one we have bounds for, so the heatmap can't be drawn.
       </div>
     );
   }

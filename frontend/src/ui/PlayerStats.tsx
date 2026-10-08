@@ -588,7 +588,7 @@ function MatchDetailView({ m, onPick }: {
 
       {showHeat ? (
         heat
-          ? <HeatmapCanvas bounds={heat.bounds}
+          ? <HeatmapCanvas bounds={heat.bounds} name={heat.layerName ?? heat.mapName}
                            data={{ kind: "match", points: heat.points }} />
           : <div className="ps-msg"><span className="ps-spin" />Loading…</div>
       ) : (
@@ -690,7 +690,7 @@ function HeatmapTab({ layer, onPickLayer, heat, server }: {
         </select>
       </div>
       {heat
-        ? <HeatmapCanvas bounds={heat.bounds}
+        ? <HeatmapCanvas bounds={heat.bounds} name={heat.layerName}
                          data={{ kind: "layer", cells: heat.cells,
                                  cellCm: heat.cellCm, maxCount: heat.maxCount }} />
         : <div className="ps-msg">No death records on this layer for this period.</div>}
