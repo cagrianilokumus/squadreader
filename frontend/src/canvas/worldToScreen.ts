@@ -53,6 +53,11 @@ export function coord(p: LayerBounds["topLeft"] | null | undefined):
   return null;
 }
 
+// Positions farther out than this are garbage reads by the recorder, not
+// places on a map. Same gate as `_MAX_COORD_CM` / `_sane_pos` in
+// sqreader/squad/possample.py.
+const MAX_COORD = 5_000_000; // cm (50 km)
+
 // Compute a base view rectangle that fits all entities (or the layer
 // bounds if available) into the canvas without aspect-ratio distortion.
 // Always pads the SHORTER side so the projection stays square.
@@ -75,29 +80,24 @@ export function autoFit(
     // Entity-bounding-box fallback.
     minX = Infinity; minY = Infinity;
     maxX = -Infinity; maxY = -Infinity;
+    // Written so NaN fails the test too: one projectile at x ≈ 5e151 once
+    // stretched the view so far that drawGrid never finished.
+    const add = (p: { x: number; y: number } | null | undefined) => {
+      if (!p || !(Math.abs(p.x) <= MAX_COORD && Math.abs(p.y) <= MAX_COORD)) return;
+      if (p.x < minX) minX = p.x;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.y > maxY) maxY = p.y;
+    };
     const sources = [
       snap.captureZones, snap.vehicles, snap.deployables,
       snap.vehicleSpawners, snap.rallyPoints, snap.markers, snap.projectiles,
     ];
     for (const arr of sources) {
       if (!arr) continue;
-      for (const e of arr) {
-        const p = e.position;
-        if (!p) continue;
-        if (p.x < minX) minX = p.x;
-        if (p.x > maxX) maxX = p.x;
-        if (p.y < minY) minY = p.y;
-        if (p.y > maxY) maxY = p.y;
-      }
+      for (const e of arr) add(e.position);
     }
-    for (const pl of snap.players ?? []) {
-      const p = pl.soldier?.position;
-      if (!p) continue;
-      if (p.x < minX) minX = p.x;
-      if (p.x > maxX) maxX = p.x;
-      if (p.y < minY) minY = p.y;
-      if (p.y > maxY) maxY = p.y;
-    }
+    for (const pl of snap.players ?? []) add(pl.soldier?.position);
     if (!isFinite(minX)) {
       minX = -100000; maxX = 100000; minY = -100000; maxY = 100000;
     }

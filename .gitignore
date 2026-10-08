@@ -80,3 +80,7 @@ build/
 # filenames. The result installs as a blank page. Re-include it explicitly.
 !frontend/dist/
 !frontend/dist/**
+
+docker-compose.override.yml
+
+sqreader-data/
