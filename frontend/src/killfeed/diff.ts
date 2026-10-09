@@ -45,10 +45,14 @@ interface BufferedAttack {
 }
 
 export interface DiffState {
-  // eosId (fallback name) -> { kills, deaths } from the previous tick.
+  // eosId (fallback name) -> { kills, deaths } from the last tick that player
+  // was seen on — kept across ticks they are missing from, so a row that
+  // drops out for a tick does not come back as a fresh baseline.
   // Keying by the stable id — not the display name — stops two players
   // who share a name from corrupting each other's kill/death deltas.
   prevStats: Map<string, { kills: number; deaths: number }>;
+  // name -> eosId last seen with it, for the rows that arrive without one
+  eosByName: Map<string, string>;
   // sticky last-seen non-utility weapon per killer name (tier-5 fallback)
   lastKnownWeapon: Map<string, string>;
   // dedupe key (attacker|victim|ts) for attack events already buffered
@@ -68,6 +72,7 @@ export interface DiffState {
 export function createDiffState(): DiffState {
   return {
     prevStats: new Map(),
+    eosByName: new Map(),
     lastKnownWeapon: new Map(),
     attackSeen: new Set(),
     attackBuffer: [],
@@ -93,6 +98,19 @@ export function isUtilityClass(cls: string | null | undefined): boolean {
 
 export function isSoldierClass(cls: string | null | undefined): boolean {
   return !!cls && /^BP_Soldiers?_/i.test(cls);
+}
+
+/** Of two rows for the same player, the one whose counters are further along
+ *  — a counter only climbs during a match, so the lower one is the copy that
+ *  is behind. On a tie, the row that says more about the player. */
+function outranks(a: Player, b: Player): boolean {
+  const ad = Number(a.stats?.deaths ?? 0), bd = Number(b.stats?.deaths ?? 0);
+  if (ad !== bd) return ad > bd;
+  const ak = Number(a.stats?.kills ?? 0), bk = Number(b.stats?.kills ?? 0);
+  if (ak !== bk) return ak > bk;
+  if (!!a.eosId !== !!b.eosId) return !!a.eosId;
+  const ar = !!a.roleId && a.roleId !== "None", br = !!b.roleId && b.roleId !== "None";
+  return ar && !br;
 }
 
 // ---- damageType → display label ------------------------------------------
@@ -269,14 +287,33 @@ export function diffSnapshot(
   // increment per death, keyed by the stable id so two players sharing a
   // name can't corrupt each other's deltas. Killed damageEvents then
   // attribute the exact attacker below; we never guess a pairing.
-  const idOf = (p: Player) => (p.eosId || p.name) as string;
-  const cur = new Map<string, { kills: number; deaths: number }>();
-  const deaths: Player[] = [];
+  //
+  // A player stuck reconnecting has TWO player states, and neither carries an
+  // eosId: the old one holding the match's deaths, and the new one still
+  // loading (team 0, deaths 0). Keyed by name, the two met under one key and
+  // the counter read 0 -> N on every tick — one "? > Name" row per tick, for
+  // as long as the player stayed stuck (measured: 17 in a row for one player).
+  // So a row without an eosId borrows the one last seen under its name, rows
+  // sharing a key collapse to the one with the higher counters, and a row
+  // that has not joined a team yet (team 0 — it cannot have died in this
+  // match) neither emits nor moves the baseline.
   for (const p of players) {
-    if (!p.name) continue;
+    if (p.name && p.eosId) state.eosByName.set(p.name, p.eosId);
+  }
+  const idOf = (p: Player) =>
+    (p.eosId || state.eosByName.get(p.name as string) || p.name) as string;
+  const byId = new Map<string, Player>();
+  for (const p of players) {
+    if (!p.name || p.teamId === 0) continue;
+    const id = idOf(p);
+    const have = byId.get(id);
+    if (!have || outranks(p, have)) byId.set(id, p);
+  }
+  const cur = new Map(state.prevStats);
+  const deaths: Player[] = [];
+  for (const [id, p] of byId) {
     const k = Number(p.stats?.kills ?? 0);
     const d = Number(p.stats?.deaths ?? 0);
-    const id = idOf(p);
     cur.set(id, { kills: k, deaths: d });
     const prev = state.prevStats.get(id);
     if (!prev) continue;

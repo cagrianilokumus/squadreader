@@ -248,5 +248,65 @@ function evt(o: any): any {
   eq(r.newEntries[0].killer, "A", "attacker survives the game-time TTL at 4 Hz");
 }
 
+// 16. A player stuck reconnecting: the old player state (deaths 1, team 1) and
+//     the new one still loading (deaths 0, team 0), neither with an eosId.
+//     Recorded on skira 6cf1f93f, where this printed "? > MaG" 17 ticks running.
+{
+  const s = createDiffState();
+  const others = [P("A","a",1,0,0), P("B","b",2,0,0)];
+  diffSnapshot(s, snap([...others, P("MaG","m",1,2,1)]));             // seed, eos known
+  let rows = 0;
+  for (let i = 0; i < 17; i++) {
+    const r = diffSnapshot(s, snap([...others, P("MaG","",1,2,1), P("MaG","",0,0,0)]));
+    rows += r.newEntries.length;
+  }
+  eq(rows, 0, "a stuck reconnect is not a death per tick");
+  // The same pair seen with no eosId ever recorded for the name.
+  const t = createDiffState();
+  diffSnapshot(t, snap([...others, P("MaG","",1,2,1), P("MaG","",0,0,0)]));
+  let rows2 = 0;
+  for (let i = 0; i < 5; i++)
+    rows2 += diffSnapshot(t, snap([...others, P("MaG","",0,0,0), P("MaG","",1,2,1)])).newEntries.length;
+  eq(rows2, 0, "nor when the name never had an eosId, in either row order");
+}
+
+// 17. The loading copy alone for a while, then the old one again: the baseline
+//     must not drop to the loading copy's zero in between.
+{
+  const s = createDiffState();
+  diffSnapshot(s, snap([P("A","a",1,0,0), P("X","",1,0,3)]));
+  diffSnapshot(s, snap([P("A","a",1,0,0), P("X","",0,0,0)]));
+  const r = diffSnapshot(s, snap([P("A","a",1,0,0), P("X","",1,0,3)]));
+  eq(r.newEntries.length, 0, "the old copy coming back is not a death");
+}
+
+// 18. The eosId drops out on the tick the player dies (harp 1f628ad2, FIRFIR):
+//     the death must still be seen then, attributed — not later, as a "?".
+{
+  const s = createDiffState();
+  diffSnapshot(s, snap([P("A","a",2,0,0), P("F","f",1,0,3)]));
+  const r = diffSnapshot(s, snap([P("A","a",2,1,0), P("F","",1,0,4)],
+    [evt({ killed:true, attacker:"A", victim:"F", victimTeam:1 })]));
+  eq(r.newEntries.length, 1, "death seen on the tick it happened");
+  eq(r.newEntries[0]?.killer, "A", "and attributed to its killer");
+  let later = 0;
+  for (let i = 0; i < 14; i++)
+    later += diffSnapshot(s, snap([P("A","a",2,1,0), P("F","",1,0,4), P("F","",0,0,0)])).newEntries.length;
+  later += diffSnapshot(s, snap([P("A","a",2,1,0), P("F","f",1,0,4)])).newEntries.length;
+  eq(later, 0, "nothing more while reconnecting, nor when the eosId returns");
+}
+
+// 19. Not over-broad: a reconnected player whose counters restarted still has
+//     their next real death counted.
+{
+  const s = createDiffState();
+  diffSnapshot(s, snap([P("A","a",2,0,0), P("R","r",1,0,4)]));
+  diffSnapshot(s, snap([P("A","a",2,0,0), P("R","r",1,0,0)]));
+  const r = diffSnapshot(s, snap([P("A","a",2,1,0), P("R","r",1,0,1)],
+    [evt({ killed:true, attacker:"A", victim:"R", victimEosId:"r", victimTeam:1 })]));
+  eq(r.newEntries.length, 1, "first death after a counter restart is counted");
+  eq(r.newEntries[0]?.killer, "A", "and attributed");
+}
+
 console.log(`\nkillfeed diff tests: ${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);
