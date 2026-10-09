@@ -1,11 +1,65 @@
 // Display-settings popover (gear button in the top-right controls). Houses the
-// number-label options (squad-leader numbers, all player/vehicle numbers) and
-// the map-layer show/hide toggles — the single home for what the map draws.
+// team view (both teams, or one team's own map), the number-label options
+// (squad-leader numbers, all player/vehicle numbers) and the map-layer
+// show/hide toggles — the single home for what the map draws.
 
 import { memo, useEffect, useRef, useState } from "react";
 import {
   useViewerStore, LAYER_ORDER, NUMBER_ORDER, LAYER_LABELS, type LayerKey,
 } from "../state/viewerStore";
+import { teamColor } from "../canvas/draw";
+import type { TeamView } from "../canvas/teamView";
+
+// "USMC_LO_Motorized" -> "USMC". Null when the frame has not named the faction.
+function useFaction(team: 1 | 2): string | null {
+  return useViewerStore((s) => {
+    const id = s.curSnap?.teams?.find((t) => t.id === team)?.factionId;
+    return id ? id.split("_")[0] || id : null;
+  });
+}
+
+function TeamLabel({ team }: { team: 1 | 2 }) {
+  const faction = useFaction(team);
+  return (
+    <>
+      <span className="tv-dot" style={{ background: teamColor(team) }} />
+      {faction ?? `Team ${team}`}
+    </>
+  );
+}
+
+// Both teams, or one team's own players, vehicles, FOBs, markers and rallies —
+// what that team saw on its map. Objectives stay, they belong to both.
+function TeamViewPicker() {
+  const tv = useViewerStore((s) => s.teamView);
+  const setTeamView = useViewerStore((s) => s.setTeamView);
+  const opt = (t: TeamView) => ({
+    role: "radio" as const, "aria-checked": tv === t,
+    className: "tv-opt" + (tv === t ? " on" : ""),
+    onClick: () => setTeamView(t),
+  });
+  return (
+    <div className="tv-seg" role="radiogroup" aria-label="Team view">
+      <button {...opt(0)}>Both</button>
+      <button {...opt(1)} title="Only team 1's own map"><TeamLabel team={1} /></button>
+      <button {...opt(2)} title="Only team 2's own map"><TeamLabel team={2} /></button>
+    </div>
+  );
+}
+
+// While one team is shown, say so outside the menu too — otherwise half the
+// match is missing from the map with nothing on screen to explain it.
+function TeamViewChip() {
+  const tv = useViewerStore((s) => s.teamView);
+  const setTeamView = useViewerStore((s) => s.setTeamView);
+  if (tv === 0) return null;
+  return (
+    <button className="tv-chip" onClick={() => setTeamView(0)}
+            title="Showing one team's map only — click to show both teams">
+      <TeamLabel team={tv} /> only <span aria-hidden="true">×</span>
+    </button>
+  );
+}
 
 // Module scope on purpose. Declared inside SettingsMenu it was a NEW component
 // type every render, so React remounted every row each time — and TopBar
@@ -47,6 +101,7 @@ export const SettingsMenu = memo(function SettingsMenu() {
 
   return (
     <div className="settings-wrap" ref={rootRef}>
+      <TeamViewChip />
       <button className={"settings-btn" + (open ? " on" : "")}
               onClick={() => setOpen((o) => !o)}
               title="display settings" aria-label="display settings"
@@ -63,6 +118,8 @@ export const SettingsMenu = memo(function SettingsMenu() {
       </button>
       {open && (
         <div className="settings-menu" role="menu">
+          <div className="settings-group">Team view</div>
+          <TeamViewPicker />
           <div className="settings-group">Numbers</div>
           {NUMBER_ORDER.map((k) => <Row key={k} k={k} />)}
           <div className="settings-group">Map layers</div>

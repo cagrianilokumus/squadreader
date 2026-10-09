@@ -8,6 +8,7 @@ import { renderScene, type FollowHighlight } from "./draw";
 import { lerpSnap } from "./interpolation";
 import { autoFit, refitAspect, screenToWorld, viewWindow } from "./worldToScreen";
 import { hitTest, type Hit } from "./hitTest";
+import { teamViewSnapshot } from "./teamView";
 import type { Ruler } from "./ruler";
 
 // How close a new drag has to start, in world units at 1x zoom, to be
@@ -222,9 +223,13 @@ export function MapCanvas({ onHover, onLeave, onClick }: Props) {
           if (fp && fp.squadId != null)
             followHl = { key: s.followKey, teamId: fp.teamId, squadId: fp.squadId };
         }
-        renderScene(ctx, shown, rview, cs, s.layers, followHl,
+        // One team's map, when asked for. Applied after the follow camera
+        // (which keeps tracking whoever it follows) and before drawing AND
+        // the hit-test frame, so a hidden entity cannot be hovered or clicked.
+        const drawn = teamViewSnapshot(shown, s.teamView);
+        renderScene(ctx, drawn, rview, cs, s.layers, followHl,
                     rulerRef.current);
-        displayRef.current = { snap: shown, view: rview };
+        displayRef.current = { snap: drawn, view: rview };
       } else {
         ctx.clearRect(0, 0, cs.width, cs.height);
         displayRef.current = { snap: null, view: s.view };

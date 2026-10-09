@@ -209,6 +209,27 @@ html, body, #root {
   transform: translateY(-1px) rotate(45deg);
 }
 
+/* Team view — Both / team 1 / team 2, as one segmented row. The dot is the
+   team's map colour, so the choice reads the same way the map does. */
+.settings-menu .tv-seg {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px;
+  padding: 2px 4px 4px;
+}
+#controls .tv-opt {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 5px 6px; min-width: 0; white-space: nowrap; overflow: hidden;
+}
+.tv-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex: none;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.75);
+}
+/* Shown beside the gear while one team is selected; clicking it shows both. */
+#controls .tv-chip {
+  display: flex; align-items: center; gap: 5px; margin-right: 6px;
+  color: var(--accent); background: var(--accent-weak);
+  border-color: var(--accent);
+}
+
 /* ----- PlayerSearch (top-left) ----- */
 /* Top-right, under the controls row — the left column is now the detail
    panels' home, so the search moves opposite them to stay fully visible. */

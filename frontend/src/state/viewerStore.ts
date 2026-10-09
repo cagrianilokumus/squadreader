@@ -7,6 +7,7 @@ import { DEFAULT_VIEW } from "./types";
 import { patchSnapshot, resetCarryOver } from "./carryOver";
 import { replayLoad } from "./replayLoad";
 import type { ReplayMarker } from "./replayMarkers";
+import type { TeamView } from "../canvas/teamView";
 import type {
   ConnStatus, KillFeedEntry, Mode, RecordingMeta, Snapshot, TeamState, ViewState,
 } from "./types";
@@ -280,6 +281,10 @@ interface Store {
 
   // Map layer visibility — which entity families the canvas draws.
   layers: Record<LayerKey, boolean>;
+  // Whose map the canvas draws: both teams, or one team's own entities only.
+  // Deliberately NOT persisted: a filter left on from last time would open the
+  // next match with half the players silently missing.
+  teamView: TeamView;
 
   // mutators
   setMode(m: Mode): void;
@@ -332,6 +337,7 @@ interface Store {
   toggleTimeline(): void;
   setTimelineVisible(v: boolean): void;
   toggleLayer(key: LayerKey): void;
+  setTeamView(t: TeamView): void;
   resetView(): void;
 }
 
@@ -366,6 +372,7 @@ export const useViewerStore = create<Store>((set) => ({
   timelineVisible: false,
   scoreboardClosedSquads: { 1: [], 2: [] },
   layers: loadLayers(),
+  teamView: 0,
 
   setMode(m) {
     // Everything that remembers state ACROSS ticks has to be dropped here, or the
@@ -613,6 +620,9 @@ export const useViewerStore = create<Store>((set) => ({
         scoreboardClosedSquads: { ...s.scoreboardClosedSquads, [team]: next },
       };
     });
+  },
+  setTeamView(t) {
+    set({ teamView: t });
   },
   toggleLayer(key) {
     set((s) => {
