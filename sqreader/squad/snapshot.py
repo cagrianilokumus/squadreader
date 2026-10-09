@@ -3364,6 +3364,58 @@ _CAT_SPAWNER = 5
 _CAT_RALLY = 6
 
 
+def _player_rank(p: dict[str, Any]) -> tuple:
+    """How useful a player row is, for picking one of several copies."""
+    sld = p.get("soldier") or {}
+    st = p.get("stats") or {}
+    return (
+        int(bool(sld and sld.get("classShort") and not sld.get("stale"))),
+        # Team 0 is a connection still loading in: it has not joined the match.
+        int(p.get("teamId") not in (0, None)),
+        int(bool(p.get("roleId") and p.get("roleId") != "None")),
+        float(p.get("score") or 0.0),
+        # Counters only climb during a match: the copy that is behind is stale.
+        int(st.get("deaths") or 0) + int(st.get("kills") or 0),
+    )
+
+
+def dedupe_players(players: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """One row per player.
+
+    When a client disconnects and reconnects, both the old (about to be GC'd)
+    and the new SQPlayerState exist for a while. Rows are grouped by EOS user
+    id and the most useful copy is kept (`_player_rank`); on a tie the later
+    one (higher internal index, last in iteration) wins.
+
+    A player stuck reconnecting has two copies and NEITHER carries an EOS id:
+    the old one holding the match's deaths and the new one still loading (team
+    0, deaths 0). Those used to pass through untouched, and every consumer that
+    keys a player by name saw one person flip between two sets of counters —
+    the kill feed printed a death on every tick. So rows without an id are
+    grouped by name too, and dropped outright when a row WITH an id already
+    has that name.
+    """
+    by_eos: dict[str, dict[str, Any]] = {}
+    for p in players:
+        key = p.get("eosId")
+        if key and (key not in by_eos or _player_rank(p) >= _player_rank(by_eos[key])):
+            by_eos[key] = p
+    named = {p.get("name") for p in by_eos.values() if p.get("name")}
+    by_name: dict[str, dict[str, Any]] = {}
+    unnamed: list[dict[str, Any]] = []
+    for p in players:
+        if p.get("eosId"):
+            continue
+        name = p.get("name")
+        if not name:
+            unnamed.append(p)
+        elif name in named:
+            continue
+        elif name not in by_name or _player_rank(p) >= _player_rank(by_name[name]):
+            by_name[name] = p
+    return list(by_eos.values()) + list(by_name.values()) + unnamed
+
+
 def build_snapshot(pm: ProcessMemory, arr: GUObjectArray,
                    alloc: FNameEntryAllocator,
                    *, server_id: str = "squad",
@@ -3930,29 +3982,7 @@ def build_snapshot(pm: ProcessMemory, arr: GUObjectArray,
             sld.pop("_controllerAddr", None)
             sld.pop("_lastHitByAddr", None)
 
-    # ---- dedupe SQPlayerStates by OnlineUserId ---------------------------
-    # When a client disconnects and reconnects, both the old (about to be
-    # GC'd) and new SQPlayerState briefly exist. Group by EOS user id and
-    # keep the "most useful" entry — preferring one with a connected
-    # soldier and non-zero score. If two are tied, the later one
-    # (higher internal index, last-in-iteration) wins.
-    seen: dict[str, dict[str, Any]] = {}
-    no_id: list[dict[str, Any]] = []
-    def _score(pp: dict[str, Any]) -> tuple:
-        sld = pp.get("soldier") or {}
-        return (
-            int(bool(sld and sld.get("classShort") and not sld.get("stale"))),
-            int(bool(pp.get("roleId") and pp.get("roleId") != "None")),
-            float(pp.get("score") or 0.0),
-        )
-    for p in players:
-        key = p.get("eosId")
-        if not key:
-            no_id.append(p)
-            continue
-        if key not in seen or _score(p) >= _score(seen[key]):
-            seen[key] = p
-    players = list(seen.values()) + no_id
+    players = dedupe_players(players)
     game_state = (read_game_state(pm, alloc, paths, game_state_addr)
                   if game_state_addr else None)
     lane = (read_lane_graph(pm, alloc, lane_initializer_addr,
