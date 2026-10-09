@@ -70,6 +70,12 @@ function VehicleChip({ cls }: { cls: string | null }) {
   return <span className="kf-veh" title={name}>{name}</span>;
 }
 
+const NO_KILLER: Record<"bledout" | "died", { phrase: string; title: string }> = {
+  bledout: { phrase: "has bled out",
+             title: "Bled out or gave up while wounded — no killer recorded" },
+  died: { phrase: "died", title: "Died — nothing recorded who or what killed them" },
+};
+
 interface RowProps { e: KillFeedEntry; select: (name: string | null) => void; }
 function Row({ e, select }: RowProps) {
   const time = fmtGameTime(e.gameTimeSec);
@@ -78,8 +84,12 @@ function Row({ e, select }: RowProps) {
     e.tk ? "kf-tk" : "",
     e.suicide ? "kf-suicide" : "",
   ].filter(Boolean).join(" ");
-  const worldCause = !e.killer && !e.suicide
-    ? deathCauseFromDamageType(e.damageType) : null;
+  // A death nobody is credited with is a sentence about the victim, not a
+  // "?" in the killer's place: "?" claimed a killer nobody saw.
+  const noKiller = !e.killer && !e.suicide && !e.weaponClass;
+  const worldCause = !noKiller ? null
+    : e.cause ? NO_KILLER[e.cause]
+    : deathCauseFromDamageType(e.damageType);
 
   // World-cause: single sentence row ("X fell to death")
   if (worldCause) {
@@ -90,7 +100,7 @@ function Row({ e, select }: RowProps) {
                   onClick={() => select(e.victim)} />
         <VehicleChip cls={e.victimVehicleClass} />
         <span className="kf-world-phrase" title={worldCause.title}>
-          {deathCausePhrase(e.damageType)}
+          {e.cause ? NO_KILLER[e.cause].phrase : deathCausePhrase(e.damageType)}
         </span>
       </div>
     );

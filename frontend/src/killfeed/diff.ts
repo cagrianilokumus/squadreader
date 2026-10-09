@@ -36,6 +36,27 @@ import type {
 // world-cause deaths (fall/drown, no attacker) matched a stale incap instead.
 const ATTACK_ATTR_TTL_SEC = 120;
 
+// How long a death that nothing yet explains waits for the event naming its
+// killer. The server-log kill line is tailed and drained a beat after the
+// death counter moves: in a recorded altai match three deaths printed "?"
+// while their killer — pau, and an IED that took two at once — arrived 0.2 s
+// later, in the very next frame. Wall time, not ticks, so it holds from
+// 0.5 Hz to 4 Hz. Only a death with NO event at all waits: an event that
+// says "no killer" is already the answer.
+const LATE_EVENT_WAIT_MS = 4000;
+
+// How far back the events naming a victim are kept, to say what a death with
+// no killer was once its wait is over.
+const RECENT_EVENT_MS = 15000;
+
+interface PendingDeath {
+  p: Player;
+  atMs: number;
+  gameTime: number | null;
+  wallMs: number;
+  victimVehicleClass: string | null;
+}
+
 // A wounded/killed damageEvent held so the death-counter increment it
 // leads to can be attributed to the exact attacker, not a guessed pairing.
 interface BufferedAttack {
@@ -67,6 +88,10 @@ export interface DiffState {
   // kills the backend counted that no event ever attributed — surfaced
   // for diagnostics, never turned into a fabricated row
   unattributedKills: number;
+  // deaths waiting a moment for a late event (see LATE_EVENT_WAIT_MS)
+  pending: PendingDeath[];
+  // every event that names a victim, briefly, whatever its attacker
+  recentEvents: { ev: DamageEvent; atMs: number | null }[];
 }
 
 export function createDiffState(): DiffState {
@@ -79,6 +104,8 @@ export function createDiffState(): DiffState {
     seq: 0,
     inited: false,
     unattributedKills: 0,
+    pending: [],
+    recentEvents: [],
   };
 }
 
@@ -98,6 +125,57 @@ export function isUtilityClass(cls: string | null | undefined): boolean {
 
 export function isSoldierClass(cls: string | null | undefined): boolean {
   return !!cls && /^BP_Soldiers?_/i.test(cls);
+}
+
+interface NoKillerDeath {
+  suicide: boolean;
+  cause: "bledout" | "died" | null;
+  damageType: string | null;
+  weaponClass: string | null;
+}
+
+/**
+ * What the events naming a victim say about a death nobody is credited with.
+ *
+ * Damage the victim's own soldier caused is how the game records bleeding out
+ * or giving up while wounded — the server log writes those deaths with no
+ * killer and the dying soldier's own class as the cause. That used to read as
+ * "Suicide". A self-inflicted round from a real weapon (a grenade) still is
+ * one. Otherwise a world cause (fall, drowning) or a weapon with an unknown
+ * hand is shown as such, and with nothing at all the row says only that the
+ * player died — "?" claimed a killer nobody saw.
+ */
+export function classifyNoKiller(victim: string, evs: DamageEvent[]): NoKillerDeath {
+  // Self-inflicted with no cause at all says little on its own: after a wound
+  // it is the bleed-out, without one it is as likely a redeploy at spawn (two
+  // such deaths in a match's first minutes had no wound before them).
+  const wounded = evs.some((ev) => ev.victim === victim && ev.wounded);
+  let self: "suicide" | "bledout" | "unknown" | null = null;
+  let damageType: string | null = null;
+  let weaponClass: string | null = null;
+  for (let i = evs.length - 1; i >= 0; i--) {
+    const ev = evs[i]!;
+    if (ev.victim !== victim) continue;
+    const causer = ev.causerWeapon || ev.causerClass || null;
+    if (self == null && (ev.selfInflicted === true || ev.attacker === victim)) {
+      if (causer && isSoldierClass(causer)) self = "bledout";
+      else if (causer && !isUtilityClass(causer)) self = "suicide";
+      else if (ev.attacker === victim) self = "suicide";
+      else self = wounded ? "bledout" : "unknown";
+    }
+    if (damageType == null && ev.damageType) damageType = ev.damageType;
+    if (weaponClass == null && !ev.attacker && !ev.selfInflicted && causer
+        && !isSoldierClass(causer) && !isUtilityClass(causer)) weaponClass = causer;
+  }
+  if (self === "suicide") return { suicide: true, cause: null, damageType, weaponClass: null };
+  if (self === "bledout") return { suicide: false, cause: "bledout", damageType: null, weaponClass: null };
+  // A world cause (a fall, drowning) says what happened whoever was blamed.
+  if (damageType && deathCauseFromDamageType(damageType))
+    return { suicide: false, cause: null, damageType, weaponClass: null };
+  // Something with a weapon did it, and nobody knows whose: keep the weapon.
+  if (self == null && (weaponClass || damageType))
+    return { suicide: false, cause: null, damageType, weaponClass };
+  return { suicide: false, cause: "died", damageType: null, weaponClass: null };
 }
 
 /** Of two rows for the same player, the one whose counters are further along
@@ -273,6 +351,7 @@ export function diffSnapshot(
   const players = snap.players ?? [];
   const events  = snap.damageEvents ?? [];
   const gameTime = snap.gameState?.elapsedSec ?? null;
+  const nowMs = snapClockMs(snap);
 
   // Refresh the sticky weapon cache from current snapshot equipment.
   for (const p of players) {
@@ -296,7 +375,9 @@ export function diffSnapshot(
   // So a row without an eosId borrows the one last seen under its name, rows
   // sharing a key collapse to the one with the higher counters, and a row
   // that has not joined a team yet (team 0 — it cannot have died in this
-  // match) neither emits nor moves the baseline.
+  // match) neither emits nor moves the baseline. Nor does a row whose team is
+  // no team at all: a torn read at match end once printed "? > Suedaaa <3"
+  // from team 1216741536 with 108 deaths.
   for (const p of players) {
     if (p.name && p.eosId) state.eosByName.set(p.name, p.eosId);
   }
@@ -304,7 +385,7 @@ export function diffSnapshot(
     (p.eosId || state.eosByName.get(p.name as string) || p.name) as string;
   const byId = new Map<string, Player>();
   for (const p of players) {
-    if (!p.name || p.teamId === 0) continue;
+    if (!p.name || (p.teamId != null && p.teamId !== 1 && p.teamId !== 2)) continue;
     const id = idOf(p);
     const have = byId.get(id);
     if (!have || outranks(p, have)) byId.set(id, p);
@@ -342,9 +423,6 @@ export function diffSnapshot(
     (n, p) => n + (p.soldier && (p.soldier.health ?? 0) > 0 ? 1 : 0), 0);
   const rosterCollapsed = players.length >= 20 && aliveCount <= 1;
   const massUnattributed = events.length === 0 && deaths.length >= 5;
-  if (notPlaying || rosterCollapsed || massUnattributed) {
-    return { newEntries: [] };
-  }
 
   const out: KillFeedEntry[] = [];
   const wallMs = Date.now();
@@ -352,6 +430,135 @@ export function diffSnapshot(
   const playerByName = new Map(players.filter((p) => p.name).map((p) => [p.name as string, p]));
   const teamByName = (n: string | null): number | null =>
     (n ? playerByName.get(n)?.teamId ?? null : null);
+
+  // Everything said about a victim, killer or not, for the deaths that end up
+  // with nobody to credit (see classifyNoKiller).
+  for (const ev of events) {
+    if (ev.victim && (ev.killed || ev.wounded || ev.damageType || ev.selfInflicted))
+      state.recentEvents.push({ ev, atMs: nowMs });
+  }
+  if (nowMs != null) {
+    state.recentEvents = state.recentEvents.filter(
+      (r) => r.atMs == null || nowMs - r.atMs <= RECENT_EVENT_MS);
+  }
+  if (state.recentEvents.length > 600) state.recentEvents = state.recentEvents.slice(-600);
+  const recentFor = (victim: string): DamageEvent[] =>
+    state.recentEvents.filter((r) => r.ev.victim === victim).map((r) => r.ev);
+
+  interface DeathMeta { gameTime: number | null; wallMs: number; victimVehicleClass: string | null }
+  const metaNow = (vname: string): DeathMeta => ({
+    gameTime, wallMs, victimVehicleClass: findPlayerVehicle(snap, vname)?.classShort ?? null,
+  });
+
+  const takeBuffered = (p: Player): BufferedAttack | undefined => {
+    const vname = p.name as string;
+    const veos = p.eosId ?? null;
+    for (let i = state.attackBuffer.length - 1; i >= 0; i--) {
+      const b = state.attackBuffer[i]!;
+      if (b.used || b.ev.victim !== vname) continue;
+      if (veos != null && b.ev.victimEosId != null && b.ev.victimEosId !== veos) continue;
+      b.used = true;
+      return b;
+    }
+    return undefined;
+  };
+
+  const emitCredited = (p: Player, buf: BufferedAttack, m: DeathMeta) => {
+    const vname = p.name as string;
+    const ev = buf.ev;
+    const attacker = ev.attacker && ev.attacker !== vname ? ev.attacker : null;
+    const suicide = ev.selfInflicted === true || ev.attacker === vname;
+    const killerPlayer = attacker ? playerByName.get(attacker) ?? null : null;
+    const killerVehicle = attacker ? findPlayerVehicle(snap, attacker) : null;
+    const w = resolveWeapon(attacker ?? "", vname, [ev], killerPlayer,
+                            killerVehicle, state.lastKnownWeapon);
+    const kTeam = attacker ? teamByName(attacker) : null;
+    const vTeam = p.teamId ?? ev.victimTeam;
+    out.push({
+      id: nextId(),
+      wallClockMs: m.wallMs,
+      gameTimeSec: m.gameTime,
+      killer: suicide ? null : attacker,
+      killerTeam: kTeam,
+      killerRoleId: attacker ? playerByName.get(attacker)?.roleId ?? null : null,
+      killerVehicleClass: killerVehicle?.classShort ?? null,
+      weaponClass: w.weaponClass,
+      weaponApprox: w.weaponApprox,
+      damageType: w.damageType ?? ev.damageType ?? null,
+      hitDistance: w.hitDistance,
+      headshot: w.headshot,
+      victim: vname,
+      victimTeam: vTeam,
+      victimRoleId: p.roleId ?? null,
+      victimVehicleClass: m.victimVehicleClass,
+      tk: !suicide && kTeam !== null && kTeam === vTeam,
+      suicide,
+      wounded: false,
+    });
+  };
+
+  // No event credits anyone with this death: say what the events naming the
+  // victim do say, and never invent a killer.
+  const emitUncredited = (p: Player, m: DeathMeta) => {
+    const vname = p.name as string;
+    const c = classifyNoKiller(vname, recentFor(vname));
+    out.push({
+      id: nextId(),
+      wallClockMs: m.wallMs,
+      gameTimeSec: m.gameTime,
+      killer: null,
+      killerTeam: null,
+      killerRoleId: null,
+      killerVehicleClass: null,
+      weaponClass: c.weaponClass,
+      damageType: c.damageType,
+      hitDistance: null,
+      headshot: false,
+      victim: vname,
+      victimTeam: p.teamId,
+      victimRoleId: p.roleId ?? null,
+      victimVehicleClass: m.victimVehicleClass,
+      tk: false,
+      suicide: c.suicide,
+      wounded: false,
+      cause: c.cause,
+    });
+  };
+
+  // Deaths that were waiting for a late event: credit them if it came, settle
+  // them once the wait is over — at once when there is no clock to wait on,
+  // or when the match has stopped being played.
+  const settlePending = (force: boolean) => {
+    const still: PendingDeath[] = [];
+    for (const d of state.pending) {
+      const buf = takeBuffered(d.p);
+      if (buf) { emitCredited(d.p, buf, d); continue; }
+      if (force || nowMs == null || nowMs - d.atMs >= LATE_EVENT_WAIT_MS) {
+        emitUncredited(d.p, d);
+        continue;
+      }
+      still.push(d);
+    }
+    state.pending = still;
+  };
+
+  // Round/map transitions read as a broken combat state for a few ticks: the
+  // game still reports InProgress but every soldier pawn is being torn down
+  // (the backend logs this as "SANITY: InProgress low-alive (0/N) -> cache
+  // reset"). Players still alive at round-end get a death-counter bump with NO
+  // damage event to attribute it — which used to spray the feed with a burst
+  // of unattributed "?" rows on every map change. Detect the transition and
+  // skip emitting for this tick; the baseline was already advanced above.
+  //   - notPlaying: match explicitly not InProgress (post-match / warmup).
+  //   - rosterCollapsed: a full server with ~everyone despawned (the SANITY
+  //     low-alive read) — never happens during real combat.
+  //   - massUnattributed: many simultaneous deaths with zero damage events;
+  //     real multi-kills come from explosives that DO carry events.
+  // Deaths already waiting from before are real ones: settle them now.
+  if (notPlaying || rosterCollapsed || massUnattributed) {
+    settlePending(true);
+    return { newEntries: out };
+  }
 
   // --- Wounded (incap) rows: intentionally NOT emitted -----------------
   // The feed shows one row per KILL, not per incap. Emitting a wounded row
@@ -381,89 +588,21 @@ export function diffSnapshot(
     state.attackBuffer.push({ ev, bufAt: gameTime, used: false });
   }
 
+  settlePending(false);
+
   // --- Attribute each death -------------------------------------------
   // Match a death to the MOST RECENT buffered attack on that victim (by
-  // stable id, else name): found -> exact "A killed B"; not found -> an
-  // honest "B died" with the world cause if an event names them. Never a
-  // guessed killer.
+  // stable id, else name): found -> exact "A killed B". Not found, but an
+  // event this tick names the victim -> it already says what happened (no
+  // killer, a fall, their own wounds). Not found and nothing yet -> wait a
+  // moment for the late event (LATE_EVENT_WAIT_MS). Never a guessed killer.
   for (const p of deaths) {
     const vname = p.name as string;
-    const veos = p.eosId ?? null;
-    let buf: BufferedAttack | undefined;
-    for (let i = state.attackBuffer.length - 1; i >= 0; i--) {
-      const b = state.attackBuffer[i]!;
-      if (b.used || b.ev.victim !== vname) continue;
-      if (veos != null && b.ev.victimEosId != null && b.ev.victimEosId !== veos) continue;
-      buf = b;
-      break;
-    }
-
-    if (buf) {
-      buf.used = true;
-      const ev = buf.ev;
-      const attacker = ev.attacker && ev.attacker !== vname ? ev.attacker : null;
-      const suicide = ev.selfInflicted === true || ev.attacker === vname;
-      const killerPlayer = attacker ? playerByName.get(attacker) ?? null : null;
-      const killerVehicle = attacker ? findPlayerVehicle(snap, attacker) : null;
-      const w = resolveWeapon(attacker ?? "", vname, [ev], killerPlayer,
-                              killerVehicle, state.lastKnownWeapon);
-      const kTeam = attacker ? teamByName(attacker) : null;
-      const vTeam = p.teamId ?? ev.victimTeam;
-      out.push({
-        id: nextId(),
-        wallClockMs: wallMs,
-        gameTimeSec: gameTime,
-        killer: suicide ? null : attacker,
-        killerTeam: kTeam,
-        killerRoleId: attacker ? playerByName.get(attacker)?.roleId ?? null : null,
-        killerVehicleClass: killerVehicle?.classShort ?? null,
-        weaponClass: w.weaponClass,
-        weaponApprox: w.weaponApprox,
-        damageType: w.damageType ?? ev.damageType ?? null,
-        hitDistance: w.hitDistance,
-        headshot: w.headshot,
-        victim: vname,
-        victimTeam: vTeam,
-        victimRoleId: p.roleId ?? null,
-        victimVehicleClass: findPlayerVehicle(snap, vname)?.classShort ?? null,
-        tk: !suicide && kTeam !== null && kTeam === vTeam,
-        suicide,
-        wounded: false,
-      });
-      continue;
-    }
-
-    // No killed event for this death: world cause (fall/drown), a
-    // bleed-out, or a kill the backend didn't capture. Show it with no
-    // attacker rather than inventing one; pull the cause from any event.
-    let damageType: string | null = null;
-    let isSuicide = false;
-    for (let i = events.length - 1; i >= 0; i--) {
-      const ev = events[i]!;
-      if (ev.victim !== vname) continue;
-      if (ev.attacker === vname || ev.selfInflicted) isSuicide = true;
-      if (ev.damageType) { damageType = ev.damageType; break; }
-    }
-    out.push({
-      id: nextId(),
-      wallClockMs: wallMs,
-      gameTimeSec: gameTime,
-      killer: null,
-      killerTeam: null,
-      killerRoleId: null,
-      killerVehicleClass: null,
-      weaponClass: null,
-      damageType,
-      hitDistance: null,
-      headshot: false,
-      victim: vname,
-      victimTeam: p.teamId,
-      victimRoleId: p.roleId ?? null,
-      victimVehicleClass: findPlayerVehicle(snap, vname)?.classShort ?? null,
-      tk: false,
-      suicide: isSuicide,
-      wounded: false,
-    });
+    const buf = takeBuffered(p);
+    if (buf) { emitCredited(p, buf, metaNow(vname)); continue; }
+    const named = events.some((ev) => ev.victim === vname);
+    if (named || nowMs == null) { emitUncredited(p, metaNow(vname)); continue; }
+    state.pending.push({ p, atMs: nowMs, ...metaNow(vname) });
   }
 
   // Age the attack buffer; drop consumed entries. Expire the rest by GAME TIME
@@ -484,6 +623,27 @@ export function diffSnapshot(
   if (state.attackSeen.size > 600) state.attackSeen = trimSet(state.attackSeen, 300);
 
   return { newEntries: out };
+}
+
+/** Settle every death still waiting for a late event — the stream ended and
+ *  nothing more will arrive. Rows come out as they would have after the wait. */
+export function flushPendingDeaths(state: DiffState, snap: Snapshot): KillFeedEntry[] {
+  if (!state.pending.length) return [];
+  const ended: Snapshot = {
+    ...snap,
+    damageEvents: [],
+    gameState: snap.gameState
+      ? { ...snap.gameState, matchState: "WaitingPostMatch" } : null,
+  };
+  return diffSnapshot(state, ended).newEntries;
+}
+
+/** A frame's wall clock in ms: its timestamp, else its game time, else none. */
+function snapClockMs(snap: Snapshot): number | null {
+  const t = Date.parse(snap.timestamp ?? "");
+  if (Number.isFinite(t)) return t;
+  const g = snap.gameState?.elapsedSec;
+  return g != null && Number.isFinite(g) ? g * 1000 : null;
 }
 
 // Keep only the most recently-added `keepLast` members of an insertion-

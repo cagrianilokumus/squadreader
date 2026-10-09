@@ -25,7 +25,7 @@ import { useViewerStore } from "../state/viewerStore";
 import {
   replayLoad, REPLAY_PREBUFFER_MS, REPLAY_PREBUFFER_MIN_FRAMES,
 } from "../state/replayLoad";
-import { createDiffState, diffSnapshot } from "../killfeed/diff";
+import { createDiffState, diffSnapshot, flushPendingDeaths } from "../killfeed/diff";
 import {
   createMarkerState, extendMarkers, findDuplicate, type ReplayMarker,
 } from "../state/replayMarkers";
@@ -108,12 +108,19 @@ export function useReplayLoader() {
         ?? findDuplicate(fresh, m)
         ?? (fresh.push(m), m);
 
-    const extendKills = (frames: Snapshot[]) => {
+    const extendKills = (frames: Snapshot[], final: boolean) => {
       for (let i = diffedUpTo; i < frames.length; i++) {
         const res = diffSnapshot(dstate, frames[i]!);
         for (const e of res.newEntries) timeline.push({ ...e, frameIdx: i });
       }
       diffedUpTo = frames.length;
+      // A death in the last seconds may still be waiting for a late event that
+      // will now never come; settle it on the last frame.
+      if (final && frames.length) {
+        const last = frames.length - 1;
+        for (const e of flushPendingDeaths(dstate, frames[last]!))
+          timeline.push({ ...e, frameIdx: last });
+      }
     };
 
     const spans = (frames: Snapshot[]) => {
@@ -126,7 +133,7 @@ export function useReplayLoader() {
       if (cancelled || !frames.length) return;
       // Kills first, so a frame and the kills it carries become visible in the
       // same store update — never a frame whose kill row arrives a tick later.
-      extendKills(frames);
+      extendKills(frames, final);
       extendMarkers(mstate, frames, sink);
       if (fresh.length) { addReplayMarkers(fresh); fresh = []; }
       replayLoad.loaded = frames.length;
