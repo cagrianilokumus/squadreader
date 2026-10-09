@@ -23,17 +23,25 @@ export function teamColor(t: number | null | undefined): string {
 }
 
 // Best display name for a cap zone: SquadCalc's readable name only ("Niva
-// Lower", "Train Station") — no live lane-letter prefix. Without a static match
-// we fall back to the live name, stripping any UE class suffix AND the lane
-// prefix ("E1-TrainStation" → "TrainStation") so no "E1/E2" leader is shown.
+// Lower", "Train Station") — no live lane-letter prefix. Without a static match,
+// the game's own FlagName; failing that the live name, stripping any UE class
+// suffix AND the lane prefix ("E1-TrainStation" → "TrainStation") so no "E1/E2"
+// leader is shown. An actor the level designer never renamed is just its class
+// ("BP_CaptureZoneCluster_C_13"), which says nothing to a player — no label.
 export function capLabel(
-  cz: { name?: string | null; staticName?: string | null },
+  cz: { name?: string | null; staticName?: string | null; flagName?: string | null },
 ): string {
-  const stat = cz.staticName;
+  const stat = cz.staticName || cz.flagName;
   if (stat) return stat;
-  return (cz.name ?? "")
+  const live = (cz.name ?? "")
     .replace(/-BP_[A-Za-z0-9_]+$/, "")
     .replace(/^[A-Za-z0-9]+-/, "");
+  return isRawActorName(live) ? "" : live;
+}
+
+/** An unrenamed UE actor: its class name plus an instance suffix. */
+export function isRawActorName(s: string): boolean {
+  return /^BP_[A-Za-z0-9]+(_C(_\d+)?)?$/.test(s);
 }
 
 interface CanvasSize { width: number; height: number; cssWidth: number; cssHeight: number; dpr: number; }
@@ -306,6 +314,7 @@ function drawLaneNodeCaps(ctx: CanvasRenderingContext2D, snap: Snapshot,
     let team: number | null = null;
     const m = /Team\s*([12])\s*Main/i.exec(name);
     if (m) { team = Number(m[1]); label = `T${team} Main Base`; }
+    else if (isRawActorName(label)) { label = ""; }
     else { label = label.replace(/-/g, " ").trim(); }
     nodes.set(key, { label, pos, team });
   };

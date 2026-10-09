@@ -2190,10 +2190,27 @@ def read_marker(pm: ProcessMemory, alloc: FNameEntryAllocator,
 # define the offsets dict via dump_struct_layout SQSquadStateDataMapMarker.
 
 
+# Capture-zone actor classes, each with the property that points at its
+# SQCaptureZoneComponent. Invasion places its objectives as a BP of their own
+# whose component is an SQCaptureZoneInvasionComponent — a subclass, so every
+# field read_capture_zone takes from it sits at the same offset. Matching only
+# BP_CaptureZone_C left captureZones empty on every Invasion layer, and the map
+# fell back to the lane graph's bare cluster names (verified live on Yehorivka
+# Invasion v2: five BP_CaptureZoneInvasion_C actors, component at +0x2c8).
+CAPZONE_ACTOR_CLASSES: dict[str, str] = {
+    "BP_CaptureZone_C": "SQCaptureZone",
+    "BP_CaptureZoneInvasion_C": "SQCaptureZoneInvasion",
+}
+
+
 def read_capture_zone(pm: ProcessMemory, alloc: FNameEntryAllocator,
                       paths: SnapshotPaths, cz_addr: int,
-                      uobject_name: str | None) -> dict[str, Any]:
-    """Read one BP_CaptureZone_C actor + its attached SQCaptureZoneComponent."""
+                      uobject_name: str | None,
+                      comp_key: str = "SQCaptureZone") -> dict[str, Any]:
+    """Read one capture-zone actor + its attached SQCaptureZoneComponent.
+
+    `comp_key` names the actor property holding the component pointer, as
+    listed in CAPZONE_ACTOR_CLASSES for the actor's class."""
     ao = paths.capzone_actor_offsets
     co = paths.capzone_comp_offsets
     out: dict[str, Any] = {
@@ -2209,7 +2226,7 @@ def read_capture_zone(pm: ProcessMemory, alloc: FNameEntryAllocator,
             out["position"] = {"x": v.x, "y": v.y, "z": v.z}
 
     # Follow the actor's SQCaptureZone pointer into its component
-    comp = _safe(lambda: pm.read_u64(cz_addr + ao["SQCaptureZone"])) if "SQCaptureZone" in ao else 0
+    comp = _safe(lambda: pm.read_u64(cz_addr + ao[comp_key])) if comp_key in ao else 0
     if not comp:
         out["component"] = None
         return out
@@ -3474,12 +3491,14 @@ def build_snapshot(pm: ProcessMemory, arr: GUObjectArray,
     game_state_addr: int | None = None
     lane_initializer_addr: int | None = None
     lane_visualizer_addr: int | None = None
-    capture_zones_raw: list[int] = []
-    # The live class address of BP_CaptureZone_C, captured during the walk
-    # (its startup-resolved address may be stale after a map reload). Used
-    # to lazily (re)derive the SQCaptureZone actor offset if the frozen
-    # paths didn't have it.
-    cz_class_addr = 0
+    # (actor, component-pointer property) per capture zone, see
+    # CAPZONE_ACTOR_CLASSES.
+    capture_zones_raw: list[tuple[int, str]] = []
+    # The live class address of each capture-zone actor class, captured during
+    # the walk (a startup-resolved address may be stale after a map reload).
+    # Used to lazily (re)derive the component-pointer offset when the frozen
+    # paths don't have it — Invasion's is never resolved at startup.
+    cz_class_addrs: dict[str, int] = {}
     squad_states_raw: list[int] = []
     sq_squad_state_class = paths.sq_squad_state_class
     vehicles_raw: list[tuple[int, int]] = []
@@ -3631,7 +3650,7 @@ def build_snapshot(pm: ProcessMemory, arr: GUObjectArray,
             # for the whole reset window. Skip the cache so next tick re-reads.
             if cn and cn != "None":
                 class_cache[class_addr] = cn
-        if cn == "BP_CaptureZone_C":
+        if cn in CAPZONE_ACTOR_CLASSES:
             nm = _uobject_name(pm, obj_addr, alloc) or ""
             if not nm.startswith("Default__"):
                 return (_wd.KIND_CAPZONE, obj_addr, class_addr)
@@ -3850,9 +3869,13 @@ def build_snapshot(pm: ProcessMemory, arr: GUObjectArray,
         elif kind == _wd.KIND_PROJECTILE:
             projectiles_raw.append((obj_addr, extra))
         elif kind == _wd.KIND_CAPZONE:
-            capture_zones_raw.append(obj_addr)
-            if not cz_class_addr:
-                cz_class_addr = extra
+            # A cached classification can outlive this tick's name cache, so
+            # fall back to reading the class name.
+            cz_cn = class_cache.get(extra) or _uobject_name(pm, extra, alloc) or ""
+            comp_key = CAPZONE_ACTOR_CLASSES.get(cz_cn)
+            if comp_key is not None:
+                capture_zones_raw.append((obj_addr, comp_key))
+                cz_class_addrs.setdefault(comp_key, extra)
         elif kind == _wd.KIND_GAMESTATE:
             if game_state_addr is None:
                 game_state_addr = obj_addr
@@ -3994,19 +4017,21 @@ def build_snapshot(pm: ProcessMemory, arr: GUObjectArray,
     teams = (read_team_states(pm, alloc, paths, game_state_addr)
              if game_state_addr else [])
     squads = [read_squad_state(pm, alloc, paths, a) for a in squad_states_raw]
-    # If the SQCaptureZone actor offset wasn't resolved at startup (the BP
-    # class wasn't loaded for the map that was active then), derive it now
-    # from the live capture-zone class. BP field offsets are layout-stable
-    # across reloads, so this one-time derivation sticks.
-    if (capture_zones_raw and cz_class_addr
-            and "SQCaptureZone" not in paths.capzone_actor_offsets):
-        lay = get_class_layout(pm, cz_class_addr, alloc)
-        if "SQCaptureZone" in lay:
+    # If a capture-zone actor's component offset wasn't resolved at startup
+    # (the BP class wasn't loaded for the map that was active then), derive
+    # it now from the live class. BP field offsets are layout-stable across
+    # reloads, so this one-time derivation sticks.
+    for comp_key, cls_addr in cz_class_addrs.items():
+        if comp_key in paths.capzone_actor_offsets:
+            continue
+        lay = get_class_layout(pm, cls_addr, alloc)
+        if comp_key in lay:
             paths.capzone_actor_offsets = dict(paths.capzone_actor_offsets)
-            paths.capzone_actor_offsets["SQCaptureZone"] = lay["SQCaptureZone"].offset
+            paths.capzone_actor_offsets[comp_key] = lay[comp_key].offset
     capture_zones = [
-        read_capture_zone(pm, alloc, paths, a, _uobject_name(pm, a, alloc) or "")
-        for a in capture_zones_raw
+        read_capture_zone(pm, alloc, paths, a, _uobject_name(pm, a, alloc) or "",
+                          comp_key)
+        for a, comp_key in capture_zones_raw
     ]
     # Preserve the old ordering: by name so '01-…' through '05-…' come out
     # in their natural visual order on the live map.
