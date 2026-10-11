@@ -13,6 +13,12 @@
   "squad_log_glob": "/home/*/serverfiles/SquadGame/Saved/Logs/SquadGame.log",
   "server_id": "squad",
 
+  "_leaderboard_public_comment": [
+    "false = /api/leaderboard returns 404 and the viewer drops its leaderboard",
+    "tabs and Top Players panel. Everything else stays; stats are still recorded."
+  ],
+  "leaderboard_public": true,
+
   "_plugins_comment": [
     "Plugins are off unless a config path is given. --plugins-config wins;",
     "this key is the fallback for deployments whose start command is not",

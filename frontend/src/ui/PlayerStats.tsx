@@ -94,6 +94,8 @@ const LEADER_TABS = new Set([
   "vehicle_kills", "matches",
 ]);
 const PERIODLESS = new Set(["elo"]);
+// Where the dialog lands when the operator set leaderboard_public: false.
+const FIRST_NON_LEADER_TAB = TABS.find((t) => !LEADER_TABS.has(t.key))!.key;
 
 /** What the heatmap can count. Placements exist only on central, which reads
  *  them out of each stored replay; the agent's own stats API has deaths only. */
@@ -208,6 +210,8 @@ export function PlayerStats({ inline = false }: { inline?: boolean } = {}) {
   const [matches, setMatches] = useState<MatchSummaryRow[] | null>(null);
   const [matchDetail, setMatchDetail] = useState<MatchDetail | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  // The server 404s the leaderboard when its operator set leaderboard_public: false.
+  const [lbHidden, setLbHidden] = useState(false);
 
   // One loader for all the tab kinds: they share the loading flag and the
   // error slot, and only one of them is ever on screen.
@@ -229,7 +233,12 @@ export function PlayerStats({ inline = false }: { inline?: boolean } = {}) {
     } else if (t === "matchlist") {
       fetchMatches(p, 60, sv).then(setMatches).catch(fail).finally(done);
     } else {
-      fetchLeaderboard(t, 50, p, sv).then(setLeaders).catch(fail).finally(done);
+      fetchLeaderboard(t, 50, p, sv).then((r) => { setLeaders(r); done(); }, (e) => {
+        if (String(e?.message) !== "HTTP 404") { fail(e); done(); return; }
+        setLbHidden(true);
+        setTab(FIRST_NON_LEADER_TAB);
+        loadTab(FIRST_NON_LEADER_TAB, p, lyr, sv);
+      });
     }
   }, []);
 
@@ -380,7 +389,7 @@ export function PlayerStats({ inline = false }: { inline?: boolean } = {}) {
           <>
             <div className="ps-tabs">
               <div className="ps-tabstrip">
-                {TABS.map((t) => (
+                {TABS.filter((t) => !(lbHidden && LEADER_TABS.has(t.key))).map((t) => (
                   <button key={t.key}
                           className={t.key === tab ? "ps-tab active" : "ps-tab"}
                           onClick={() => pickTab(t.key)}>{t.label}</button>

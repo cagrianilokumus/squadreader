@@ -42,6 +42,10 @@ DEFAULTS: dict[str, Any] = {
     # the agent derives a stable id for those servers instead. Inert on licensed
     # servers, which always supply their own. See sqreader/synth_match.py.
     "synthetic_match_ids": True,
+    # False 404s /api/leaderboard and the viewer drops its leaderboard tabs and
+    # Top Players panel. Profiles, weapons, the match list and heatmaps stay
+    # public, and stats are still recorded either way.
+    "leaderboard_public": True,
     # --- optional central push (OFF by default; opt-in via `sqreader enroll`) ---
     # If set + the box is enrolled (see agent_creds/.env.agent), finished-match
     # stats + .sqrx replays are pushed to this central. NON-SECRET keys only —

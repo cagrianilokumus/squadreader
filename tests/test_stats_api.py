@@ -241,6 +241,25 @@ def test_stats_endpoints_404_when_stats_are_disabled(tmp_path):
         srv.shutdown()
 
 
+def test_leaderboard_404_when_not_public(tmp_path, monkeypatch):
+    from sqreader import config
+    monkeypatch.setattr(config, "_cache", {**config.DEFAULTS, "leaderboard_public": False})
+    srv, port = _server(tmp_path)
+    try:
+        for path in ("/api/leaderboard?stat=kills", "/api/leaderboard/"):
+            try:
+                _get(port, path)
+                raise AssertionError(f"{path} should 404 with leaderboard_public off")
+            except urllib.error.HTTPError as e:
+                assert e.code == 404
+        # Everything else stays public.
+        assert isinstance(_get(port, "/api/players?q=Ali"), list)
+        assert isinstance(_get(port, "/api/weapons"), list)
+        assert isinstance(_get(port, "/api/matches"), list)
+    finally:
+        srv.shutdown()
+
+
 def test_matches_list_endpoint(tmp_path):
     srv, port = _server(tmp_path)
     try:

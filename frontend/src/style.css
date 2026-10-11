@@ -2972,6 +2972,7 @@ html, body, #root {
 #home .hm-cta { display: flex; gap: 10px; flex-wrap: wrap; }
 
 #home .hm-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+#home .hm-cols.is-single { grid-template-columns: 1fr; }
 #home .hm-panel { padding: 0; overflow: hidden; }
 #home .hm-panel-h { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; border-bottom: 1px solid var(--border); }
 #home .hm-panel-h h2 { margin: 0; font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-mute); }

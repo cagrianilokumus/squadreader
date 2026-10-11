@@ -25,10 +25,15 @@ export function Home() {
 
   const [recs, setRecs] = useState<RecordingMeta[] | null>(null);
   const [top, setTop] = useState<LeaderRow[] | null>(null);
+  // The server 404s the leaderboard when its operator set leaderboard_public: false.
+  const [lbHidden, setLbHidden] = useState(false);
 
   useEffect(() => {
     listRecordings().then(setRecs).catch(() => setRecs([]));
-    fetchLeaderboard("kills", 6, "alltime").then(setTop).catch(() => setTop([]));
+    fetchLeaderboard("kills", 6, "alltime").then(setTop).catch((e) => {
+      setTop([]);
+      if (String(e?.message) === "HTTP 404") setLbHidden(true);
+    });
   }, []);
 
   const live = recs?.find((r) => r.inProgress) ?? null;
@@ -78,7 +83,7 @@ export function Home() {
           </div>
         </section>
 
-        <div className="hm-cols">
+        <div className={"hm-cols" + (lbHidden ? " is-single" : "")}>
           <section className="card hm-panel">
             <div className="hm-panel-h"><h2>Recent Matches</h2></div>
             <div className="hm-list">
@@ -98,7 +103,7 @@ export function Home() {
             </div>
           </section>
 
-          <section className="card hm-panel">
+          {!lbHidden && <section className="card hm-panel">
             <div className="hm-panel-h">
               <h2>Top Players</h2>
               <button className="btn btn-ghost hm-more" onClick={() => showModal("player-stats")}>All</button>
@@ -117,7 +122,7 @@ export function Home() {
                 </button>
               ))}
             </div>
-          </section>
+          </section>}
         </div>
 
         <footer className="hm-foot">sqreader · live Squad server map, stats and replay</footer>
