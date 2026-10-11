@@ -1687,6 +1687,9 @@ html, body, #root {
   cursor: pointer;
   transition: background .12s, opacity .12s;
 }
+/* Same caret as the kill feed's: down while open, flipped up once folded. */
+#timeline-bar .tb-fold svg { transform: rotate(180deg); transition: transform .15s; }
+#timeline-bar .tb-fold.open svg { transform: none; }
 #timeline-bar .tb-icon:hover { opacity: 1; background: color-mix(in srgb, var(--ink) 9%, transparent); }
 #timeline-bar .tb-icon:active { background: color-mix(in srgb, var(--ink) 15%, transparent); }
 #timeline-bar .tb-icon:focus-visible,
