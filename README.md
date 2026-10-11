@@ -154,6 +154,29 @@ container, `/home/<user>/serverfiles` for LinuxGSM).
 The replay UI is published to `127.0.0.1:8080` by default. Put it behind a
 reverse proxy rather than setting `SQREADER_BIND=0.0.0.0` on a public box.
 
+### Local overrides
+
+Compose merges `docker-compose.override.yml` into `docker-compose.yml`
+automatically, so per-host changes go there instead of into the tracked file.
+The file is gitignored and nothing in this repo creates it; what goes in it is
+up to you.
+
+For example (just one possible use), to keep recordings and the stats DB as
+plain files next to the checkout instead of in the `sqreader-data` named
+volume:
+
+```yaml
+# docker-compose.override.yml (example)
+services:
+  sqreader:
+    volumes:
+      - ./sqreader-data:/data
+```
+
+`sqreader-data/` is gitignored for that case. If you set `COMPOSE_FILE` in
+`.env` (see below), the override is no longer picked up on its own; add it to
+that list.
+
 ### Reverse proxy and TLS
 
 Optional, and off unless you ask for it. `docker-compose.proxy.yml` adds a
