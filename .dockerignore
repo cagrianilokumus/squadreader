@@ -8,10 +8,11 @@ packaging
 scripts
 tests
 
-# The prebuilt SPA is committed and is the only part of frontend/ the image
-# serves; the sources and node_modules are build-time only.
-frontend
-!frontend/dist
+# The image builds the SPA from frontend/ sources in its own stage (see
+# docker/Dockerfile), so the committed dist and any local node_modules are
+# never needed in the context.
+frontend/node_modules
+frontend/dist
 
 # --- Secrets -------------------------------------------------------------
 # The Dockerfile is `COPY . /app`, so anything left here is baked into every

@@ -7,6 +7,17 @@
 # self-update (which stages a binary and expects systemd's ExecStartPre to swap
 # it) is inert BY CONSTRUCTION rather than by a flag someone can flip in an
 # image that cannot rewrite itself.
+
+# The committed frontend/dist is not rebuilt with every UI change, so an image
+# that only copied it would serve whatever bundle was last committed. Build the
+# SPA from the sources instead; this stage's output replaces the committed one.
+FROM node:20-slim AS ui
+WORKDIR /frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY frontend/ ./
+RUN npm run build
+
 FROM python:3.11-slim-bookworm
 
 # procps supplies pidof, which is find_squad_server_pid's first and most
@@ -20,6 +31,7 @@ RUN apt-get update \
 
 WORKDIR /app
 COPY . /app
+COPY --from=ui /frontend/dist /app/frontend/dist
 
 # .[fast] pulls numpy, which vectorises the incremental GUObjectArray diff.
 # numpy and zstandard both ship manylinux wheels, so no compiler is needed.

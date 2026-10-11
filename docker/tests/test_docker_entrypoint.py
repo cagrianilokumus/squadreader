@@ -77,9 +77,10 @@ ENTRYPOINT = REPO / "docker" / "entrypoint.sh"
 # The base the entrypoint will actually run under, read from the Dockerfile so
 # the two cannot drift. Nothing is built: the script needs `sh` and `mkdir`,
 # and the base already supplies the same /bin/sh (dash) the real image has.
-IMAGE = next(line.split()[1] for line
-             in (REPO / "docker" / "Dockerfile").read_text(encoding="utf-8").splitlines()
-             if line.startswith("FROM "))
+# The LAST FROM: earlier stages only build the frontend.
+IMAGE = [line.split()[1] for line
+         in (REPO / "docker" / "Dockerfile").read_text(encoding="utf-8").splitlines()
+         if line.startswith("FROM ")][-1]
 
 # On every container this file starts, so the teardown can prove none survived.
 LABEL = "sqreader-entrypoint-test"
