@@ -26,6 +26,27 @@ follows [Semantic Versioning](https://semver.org/).
 - The home footer links to the GitHub repository (#13, r4b2).
 
 ### Fixed
+- A single team kill could erase a whole match from a player's rating. The two
+  penalties were absolute totals while every component they are subtracted from
+  is a rate per minute, so they grew with the length of the round - the median
+  penalty of a 35-minute player was twice a 25-minute one's for the same
+  standard of play - and one team kill at 0.25 outweighed the entire median
+  performance of 0.282. The score was then floored at zero, which looked like a
+  safety net and was an eraser: measured over a live archive it was collapsing
+  23.6% of all rated player-matches, 94,514 of them and not one with a raw score
+  of zero, into a single tie at exactly 0.0 that the percentile could not break,
+  and 67.5% of every round containing one team kill landed there, level with
+  players who never left main. One player won a forty-minute round, scored 1820
+  on the objective, and the rating moved him nothing: his penalty came to 0.5000
+  against a raw score of 0.4995, which dropped him from the 89th percentile of
+  that match to the 9th. The penalties are rates now and there is no floor -
+  only the order of these scores is ever read, and a ruinous round has to be
+  allowed to sort below a blank one. A team kill still costs what eight deaths
+  do, as it always did. Removing the floor exposed what it had been hiding:
+  both counters are read out of the game and both tear, one round on record
+  claiming 4738 team kills and another 461 deaths, so each is now capped at a
+  rate above the 99.9th percentile of real play. Run `stats-elo-recalc` after
+  updating; live ELO cannot revise matches it has already applied.
 - On a map change the reader could read memory that no longer held what it
   had held a moment before, and wrote it down: player rows with empty ids,
   names of stray characters and teams in the millions, markers of type "None"

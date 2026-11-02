@@ -101,8 +101,28 @@ _W_FOB_DESTROYED = 3.0    # destroying an enemy FOB
 _W_VEHICLE_DAMAGE = 0.001  # per point of cumulative vehicle damage
 _COMMANDER_BONUS = 0.15
 
-_DEATH_PENALTY = 0.04
-_TEAMKILL_PENALTY = 0.25
+# Penalties, per minute played like every component above, and capped.
+#
+# They used to be absolute totals, which grew with the length of the round
+# while the positive side stayed a rate: the median penalty of a 35-minute
+# player was twice a 25-minute one's, so playing on was punished for itself.
+# One team kill at 0.25 also outweighed the entire median match (raw 0.282),
+# and the floor at zero then collapsed 23.6% of all rated player-matches into
+# one tie at exactly 0.0 — none of them with a raw score of zero — where a
+# player who had contributed for forty minutes and taken two team kills ranked
+# level with one who never left main.
+#
+# A team kill still costs what eight deaths do, as it did before. At a typical
+# 0.08 deaths a minute that is about a fifth of a median performance for the
+# dying, which leaves staying alive worth having without deciding the match.
+_DEATH_PENALTY = 0.5         # per death per minute played
+_TEAMKILL_PENALTY = 4.0      # per team kill per minute: eight deaths' worth
+# Both counters are read straight from the game and both tear: one round on
+# record claims 4738 team kills, another 461 deaths (p99.9 is 0.22 and 0.68 a
+# minute). The old floor hid that by clamping the result to zero; these caps
+# are what keeps a torn read from sinking a rating instead.
+_DEATH_RATE_CAP = 0.75       # deaths a minute, 0.07% of rounds
+_TEAMKILL_RATE_CAP = 0.25    # team kills a minute, 0.04% of rounds
 
 # How the five components are mixed.
 _MIX_COMBAT = 0.30
@@ -125,7 +145,8 @@ def _n(row: dict, key: str) -> float:
 
 
 def performance_score(row: dict) -> float:
-    """How well one player played one match. Non-negative; 0.0 means "nothing".
+    """How well one player played one match. Can be negative, when deaths and
+    team kills outweigh the play; nothing reads the value, only its order.
 
     Only the ranking this induces within a single match is used — see the module
     docstring. Missing/NULL columns count as zero.
@@ -154,9 +175,13 @@ def performance_score(row: dict) -> float:
            + leadership * _MIX_LEADERSHIP
            + participation * _MIX_PARTICIPATION)
 
-    penalties = (_n(row, "deaths") * _DEATH_PENALTY
-                 + _n(row, "team_kills") * _TEAMKILL_PENALTY)
-    return max(raw - penalties, 0.0)
+    penalties = (min(_n(row, "deaths") / mins, _DEATH_RATE_CAP) * _DEATH_PENALTY
+                 + min(_n(row, "team_kills") / mins, _TEAMKILL_RATE_CAP)
+                 * _TEAMKILL_PENALTY)
+    # Deliberately not floored at zero. Only the ORDER of these scores within
+    # the match is used, and a floor threw that order away for everyone it
+    # touched: a bad round has to be allowed to sort below a blank one.
+    return raw - penalties
 
 
 # ---------------------------------------------------------------------------

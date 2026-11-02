@@ -56,10 +56,49 @@ def test_progress_is_a_fraction_of_the_current_band():
 # performance score
 # --------------------------------------------------------------------------
 
-def test_performance_score_is_never_negative():
-    # Nothing but deaths and teamkills — the penalties would take it below zero.
-    assert performance_score(
-        {"playtime_sec": 1800, "deaths": 50, "team_kills": 10}) == 0.0
+def test_a_ruinous_round_sorts_below_a_blank_one():
+    """The score used to be floored at zero, which put a player who had spent
+    the round killing his own team level with one who had done nothing at all —
+    and with every other floored player, in one tie no percentile could break."""
+    ruinous = performance_score(
+        {"playtime_sec": 1800, "deaths": 50, "team_kills": 10})
+    blank = performance_score({"playtime_sec": 1800})
+    assert ruinous < 0.0
+    assert ruinous < blank
+
+
+def test_a_penalty_is_a_rate_so_playing_longer_is_not_punished():
+    """Every positive component is per minute. While the penalties were
+    absolute totals, the same standard of play scored worse the longer it went
+    on: twice the penalty for a 35-minute player as for a 25-minute one. Both
+    rounds here are past the participation ceiling, so only the rates differ —
+    and they do not.
+    """
+    half_hour = performance_score(
+        {"playtime_sec": 1800, "kills": 10, "deaths": 10, "team_kills": 1})
+    full_hour = performance_score(
+        {"playtime_sec": 3600, "kills": 20, "deaths": 20, "team_kills": 2})
+    assert full_hour == pytest.approx(half_hour)
+
+
+def test_a_torn_counter_cannot_sink_a_rating():
+    """Both counters are read from the game and both tear — one round on record
+    claims 4738 team kills. The floor used to hide that by clamping to zero; the
+    rate caps are what bounds it now."""
+    absurd = performance_score(
+        {"playtime_sec": 1800, "kills": 10, "team_kills": 4738, "deaths": 461})
+    merely_terrible = performance_score(
+        {"playtime_sec": 1800, "kills": 10, "team_kills": 8, "deaths": 23})
+    assert absurd == pytest.approx(merely_terrible)
+
+
+def test_one_team_kill_costs_what_eight_deaths_do():
+    """The ratio the first version intended (0.25 against 0.04 was about six),
+    at a magnitude that no longer wipes out a whole match: one team kill in a
+    35-minute round costs about a fifth of a median performance."""
+    base = {"playtime_sec": 2100, "kills": 10}
+    assert (performance_score(dict(base, team_kills=1))
+            == pytest.approx(performance_score(dict(base, deaths=8))))
 
 
 def test_performance_score_missing_columns_are_zero_not_errors():
