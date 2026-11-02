@@ -118,6 +118,19 @@ token, because the download is signed with the agent's own credentials:
 curl -fsSL https://squadreader.com/install.sh | sudo bash
 ```
 
+A release that changes how a match is scored needs one more step. A rating is a
+running total and live ELO cannot revise a match it has already applied, so the
+new rule reaches the matches that arrive next while everything already in the
+database keeps the old one. Replay the archive once:
+
+```bash
+sqreader stats-elo-recalc --stats-db stats/player_stats.db
+```
+
+Expect ratings to move for players who have not played since — placement within
+a match is relative, so changing the score mix re-places everybody. The
+changelog says when a release needs this.
+
 ### What leaves your machine
 
 Only finished matches: the final stats and the `.sqrx` replay, once a round is
