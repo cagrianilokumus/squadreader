@@ -2,7 +2,8 @@
 the leaderboard: _valid_eos (drops ghost records under short/garbage keys) and
 _clean_name (drops mojibake names). See the live Gorodok/Fallujah stats cleanup."""
 
-from sqreader.stats import _clean_name, _clean_tag, _revive, _valid_eos, _vk
+from sqreader.stats import (_clean_name, _clean_tag, _revive, _tk, _valid_eos,
+                            _vk)
 
 
 # --- _valid_eos ------------------------------------------------------------
@@ -96,6 +97,28 @@ def test_vk_rejects_negative_and_nonnumeric():
     assert _vk(-1) is None
     assert _vk(None) is None
     assert _vk("x") is None
+
+
+# --- _tk (team_kills has a low real ceiling too) ----------------------------
+
+def test_tk_keeps_every_team_kill_count_that_really_happens():
+    # Measured over 97,902 rounds with at least one: the counts stop at 37.
+    for ok in (0, 1, 2, 3, 14, 26, 37, 60):
+        assert _tk(ok) == ok
+
+
+def test_tk_rejects_the_torn_read_band():
+    # What is actually on record above 37: nothing until 84, then 281, 464,
+    # 2304, 4738 - all under the shared _count(5000) ceiling, none of them a
+    # thing that happens in a round of Squad.
+    for bad in (84, 281, 464, 2304, 4738):
+        assert _tk(bad) is None
+
+
+def test_tk_rejects_negative_and_nonnumeric():
+    assert _tk(-1) is None
+    assert _tk(None) is None
+    assert _tk("x") is None
 
 
 # --- _clean_tag (keep stylized Latin/symbol tags; drop torn-read mojibake) --

@@ -26,6 +26,15 @@ follows [Semantic Versioning](https://semver.org/).
 - The home footer links to the GitHub repository (#13, r4b2).
 
 ### Fixed
+- A torn read of the team-kill counter latched into a match total for good.
+  The shared sanity ceiling for counter stats is 5000, which is nowhere near
+  what a round of Squad can produce: measured over 97,902 rounds with at least
+  one team kill, the counts run 1, 2, 3 ... 14, 18, 26, 33, 36, 37 and then
+  stop, and the next values on record are 84, 281, 464 (four times), 2304 and
+  4738 - the same adjacent-int32 junk band that already has `vehicle_kills` on
+  its own ceiling. Because counters are kept with MAX, one bad tick fixed the
+  figure for the rest of the match. `team_kills` now has its own ceiling in the
+  empty gap between a griefer and a garbage read.
 - A single team kill could erase a whole match from a player's rating. The two
   penalties were absolute totals while every component they are subtracted from
   is a rate per minute, so they grew with the length of the round - the median

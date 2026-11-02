@@ -387,6 +387,24 @@ def _vk(v: Any) -> Optional[int]:
     return n
 
 
+# team_kills has a real ceiling far below the shared _count(5000) too. Measured
+# over 97,902 rounds with at least one: the counts run 1, 2, 3 ... 14, 18, 26,
+# 33, 36, 37 and then stop dead, and the next values on record are 84, 281, 464
+# (four times), 2304 and 4738 — the same torn-read band as vehicle_kills, and
+# MAX-upsert latches whichever one it saw into the match total for good. 37 is a
+# griefer being thrown off the server; 84 in one round is not a thing that
+# happens. The ceiling sits in the empty gap between them.
+_TEAMKILL_MAX = 60
+
+
+def _tk(v: Any) -> Optional[int]:
+    """Team-kill count within a sane per-match ceiling, else None."""
+    n = _i(v)
+    if n is None or n < 0 or n > _TEAMKILL_MAX:
+        return None
+    return n
+
+
 def _score(v: Any) -> Optional[float]:
     """Float score within sane bounds, else None (junk read)."""
     x = _f(v)
@@ -870,7 +888,7 @@ class StatsStore:
                 "deaths": _count(st.get("deaths")) or 0,
                 "woundeds": _count(st.get("woundeds")) or 0,
                 "wounds": _count(st.get("wounds")) or 0,
-                "team_kills": _count(st.get("teamKills")) or 0,
+                "team_kills": _tk(st.get("teamKills")) or 0,
                 "heal_points": _score(st.get("healPoints")) or 0.0,
                 "revived_points": _revive(st.get("revivedPoints")) or 0.0,
                 "team_work_score": _score(st.get("teamWorkScore")) or 0.0,
