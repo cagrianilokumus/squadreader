@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -180,6 +181,59 @@ def _pid_by_game_port(proc: str, port: int) -> int | None:
     return None
 
 
+def _is_game_binary_windows(image: str | None, proc: str) -> bool:
+    r"""Windows counterpart of `_is_game_binary`: the game, not its launcher.
+
+    A packaged Squad server on Windows has TWO executables of the same name:
+    the bootstrap launcher at ``<root>\SquadGameServer.exe`` and the real
+    server it starts, ``<root>\SquadGame\Binaries\Win64\SquadGameServer.exe``.
+    Both show up as ``SquadGameServer.exe`` in the process list and both can
+    carry ``-Port=``, which is the LinuxGSM ``.sh`` trap all over again: only
+    the one under ``Binaries\`` maps the game module. An unreadable image path
+    means no, for the same reason as on Linux.
+    """
+    if not image:
+        return False
+    parts = image.replace("/", "\\").lower().split("\\")
+    if parts[-1] not in (proc.lower(), proc.lower() + ".exe"):
+        return False
+    return "binaries" in parts[:-1]
+
+
+def _pick_windows_pid(cands: list[tuple[int, str | None, list[str] | None]],
+                      proc: str, port: int | None) -> int:
+    """Choose the game among ``(pid, image path, argv)`` candidates.
+
+    Same policy as the Linux resolver below: ``squad_port`` decides outright
+    and missing it is an error; without it, prefer an instance started with a
+    ``Port=`` argument, else take the first. Kept free of any OS call so the
+    policy is testable anywhere.
+    """
+    games = [(pid, args) for pid, image, args in cands
+             if _is_game_binary_windows(image, proc)]
+    if port:
+        for pid, args in games:
+            if args and _has_game_port(args, int(port)):
+                return pid
+        raise SystemExit(f"no {proc} running with -Port={port} "
+                         f"(squad_port is set, so no other instance will do)")
+    if not games:
+        raise SystemExit(f"no {proc} process running")
+    for pid, args in games:
+        if args and any("Port=" in a for a in args):
+            return pid
+    return games[0][0]
+
+
+def _find_squad_server_pid_windows(proc: str, port: int | None) -> int:
+    """Resolve the game PID on Windows, where there is no /proc, pidof or pgrep."""
+    from . import winproc
+    names = (proc.lower(), proc.lower() + ".exe")
+    cands = [(e.pid, winproc.image_path(e.pid), winproc.command_line(e.pid))
+             for e in winproc.list_processes() if e.exe_name.lower() in names]
+    return _pick_windows_pid(cands, proc, port)
+
+
 def find_squad_server_pid() -> int:
     """Resolve the Squad dedicated-server PID.
 
@@ -202,10 +256,15 @@ def find_squad_server_pid() -> int:
     Note that 1 answers first and answers arbitrarily when several are running,
     so 2's multi-instance filter is only ever reached once `pidof` has failed.
     That is why ``squad_port`` exists rather than a smarter pattern.
+
+    On Windows the same policy runs against the Win32 process list instead
+    (see `_pick_windows_pid`); ``squad_binary_pattern`` is not used there.
     """
     proc = get("squad_process_name")
     pattern = get("squad_binary_pattern")
     port = get("squad_port")
+    if sys.platform == "win32":
+        return _find_squad_server_pid_windows(proc, port)
     if port:
         pid = _pid_by_game_port(proc, int(port))
         if pid is not None:

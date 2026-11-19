@@ -18,6 +18,12 @@ Why a persistent fd + pread (and not open/lseek/read/close per read):
 Read-only by design: this module never opens /proc/<pid>/mem with write
 permission and exposes no write method. Writing would corrupt live matches
 and clearly violate Squad's TOS.
+
+Windows: there is no procfs, so the same class is backed by sqreader.winproc
+(ReadProcessMemory on a handle opened with read access only, VirtualQueryEx
+for the maps). The handle takes the place of the fd and the regions are
+translated into the same MapRegion shape, so nothing above this module needs
+to know which platform it runs on.
 """
 from __future__ import annotations
 
@@ -33,7 +39,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator, Sequence
 
-from . import profiling
+from . import profiling, winproc
 
 _PROFILE = profiling.ENABLED
 _perf = time.perf_counter_ns
@@ -138,7 +144,16 @@ _MAPS_RE = re.compile(
 
 
 def parse_maps(pid: int) -> list[MapRegion]:
-    """Parse /proc/<pid>/maps. Raises FileNotFoundError if pid is gone."""
+    """Parse /proc/<pid>/maps. Raises FileNotFoundError if pid is gone.
+
+    On Windows the same list is built from VirtualQueryEx (see winproc).
+    """
+    if sys.platform == "win32":
+        handle = winproc.open_for_read(pid)
+        try:
+            return [MapRegion(*r) for r in winproc.query_regions(handle)]
+        finally:
+            winproc.close_handle(handle)
     out: list[MapRegion] = []
     with open(f"/proc/{pid}/maps", encoding="utf-8", errors="replace") as f:
         for line in f:
@@ -172,7 +187,10 @@ class ProcessMemory:
     def __init__(self, pid: int):
         self.pid = pid
         self._mem_path = f"/proc/{pid}/mem"
-        if not Path(f"/proc/{pid}").exists():
+        if sys.platform == "win32":
+            if not winproc.is_alive(pid):
+                raise FileNotFoundError(f"no such process: {pid}")
+        elif not Path(f"/proc/{pid}").exists():
             raise FileNotFoundError(f"no such process: {pid}")
         self._maps: list[MapRegion] | None = None
         self._fd: int | None = None  # lazily-opened persistent mem fd
@@ -183,10 +201,16 @@ class ProcessMemory:
     # -- fd lifecycle -----------------------------------------------------------
 
     def close(self) -> None:
-        """Close the persistent mem fd (reopened lazily on next read)."""
+        """Close the persistent mem fd (reopened lazily on next read).
+
+        On Windows ``_fd`` holds the process handle instead.
+        """
         if self._fd is not None:
             try:
-                os.close(self._fd)
+                if sys.platform == "win32":
+                    winproc.close_handle(self._fd)
+                else:
+                    os.close(self._fd)
             except OSError:
                 pass
             self._fd = None
@@ -207,6 +231,10 @@ class ProcessMemory:
         return self._maps
 
     def refresh_maps(self) -> None:
+        if sys.platform == "win32":
+            self._maps = [MapRegion(*r)
+                          for r in winproc.query_regions(self._win_handle())]
+            return
         self._maps = parse_maps(self.pid)
 
     def region_for(self, addr: int) -> MapRegion | None:
@@ -238,6 +266,8 @@ class ProcessMemory:
         """
         if size <= 0:
             return b""
+        if sys.platform == "win32":
+            return self._read_win(addr, size)
         for attempt in (0, 1):
             fd = self._fd
             if fd is None:
@@ -258,6 +288,34 @@ class ProcessMemory:
                 raise OSError(f"read(addr={addr:#x}, size={size}) returned 0 bytes")
             return data
         raise OSError(f"read(addr={addr:#x}, size={size}) failed after fd reopen")
+
+    def _win_handle(self) -> int:
+        """The persistent read-only process handle (opened lazily)."""
+        if self._fd is None:
+            self._fd = winproc.open_for_read(self.pid)
+        return self._fd
+
+    def _read_win(self, addr: int, size: int) -> bytes:
+        """Windows read(): same contract as the pread path above, including
+        the one reopen-and-retry when the handle has gone bad (EBADF)."""
+        for attempt in (0, 1):
+            handle = self._win_handle()
+            try:
+                if _PROFILE:
+                    _t = _perf()
+                    data = winproc.read(handle, addr, size)
+                    profiling.add_read(_t, len(data))
+                else:
+                    data = winproc.read(handle, addr, size)
+            except OSError as e:
+                if attempt == 0 and e.errno == errno.EBADF:
+                    self.close()
+                    continue
+                raise
+            if not data:
+                raise OSError(f"read(addr={addr:#x}, size={size}) returned 0 bytes")
+            return data
+        raise OSError(f"read(addr={addr:#x}, size={size}) failed after handle reopen")
 
     def try_read(self, addr: int, size: int) -> bytes | None:
         # Early-reject anything that obviously can't be a valid x86_64 user

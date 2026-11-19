@@ -110,7 +110,8 @@ def log_from_pid(pid: int) -> Optional[str]:
     """The running server's own log, derived from the binary it is executing.
 
     Squad always lays itself out as
-    ``<root>/SquadGame/Binaries/Linux/SquadGameServer`` and always writes
+    ``<root>/SquadGame/Binaries/Linux/SquadGameServer`` (``Binaries/Win64/
+    SquadGameServer.exe`` on Windows, the same four levels deep) and always writes
     ``<root>/SquadGame/Saved/Logs/SquadGame.log``, so the process points at its
     own log no matter where somebody installed it. That matters because the
     fallback glob below only looks under ``/home/*/serverfiles`` — LinuxGSM's
@@ -118,8 +119,13 @@ def log_from_pid(pid: int) -> Optional[str]:
     find nothing and lose the kill feed without ever saying why.
     """
     import os
+
+    from ..procinfo import exe_path
+    link = exe_path(pid)
+    if link is None:
+        return None
     try:
-        exe = os.path.realpath(f"/proc/{pid}/exe")
+        exe = os.path.realpath(link)
     except OSError:
         return None
     root = exe

@@ -39,7 +39,8 @@ def _target_alive(pid: int) -> bool:
     (map change / crash) the old pid dies and reads start failing; we
     use this to exit cleanly so systemd re-runs `pidof` and re-attaches
     to the new pid, instead of spinning forever on a dead pid."""
-    return os.path.exists(f"/proc/{pid}")
+    from .procinfo import pid_alive
+    return pid_alive(pid)
 
 
 def _discover_with_retry(fn, pm, label, *, attempts: int = 3,

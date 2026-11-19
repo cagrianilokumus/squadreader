@@ -10,10 +10,21 @@ The process knows where its own log is. These tests pin that down, and pin down
 that an operator's explicit setting still wins.
 """
 import os
+from types import SimpleNamespace
 
 import pytest
 
+from sqreader import procinfo
 from sqreader.squad import logtail
+
+
+@pytest.fixture(autouse=True)
+def _procfs_path(monkeypatch):
+    """These tests drive the Linux /proc resolver through mocks, so they pin
+    that path even when the suite runs on Windows (where procinfo would
+    otherwise take its Win32 branch and never consult the mocks). Only the
+    module's own view of the platform changes, not the interpreter's."""
+    monkeypatch.setattr(procinfo, "sys", SimpleNamespace(platform="linux"))
 
 
 def _install(root, *, with_log=True):
