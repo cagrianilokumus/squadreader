@@ -75,9 +75,15 @@ Task Scheduler
   JSON API, read-only. Nothing is exposed to the network. Note that on a
   shared machine other local processes could reach that port; it serves only
   finished replays and statistics.
-- Outbound: **none by default.** Only if enrolled with squadreader.com
-  (`-EnrollToken`), finished matches (statistics and the replay file) are sent
-  there over HTTPS (443) after each round. Nothing is sent live.
+- Outbound: **none by default.** Only when enrolled with squadreader.com
+  (`-EnrollToken`) AND publishing is switched on (`-Push`, or `push_enabled`
+  in `sqreader.config.json`), finished matches (statistics and the replay
+  file) are sent there over HTTPS (443) after each round, plus a periodic
+  health check-in. Nothing is sent live. Enrolled but NOT publishing, it
+  contacts squadreader.com only while it cannot read the game (for example
+  during the server's daily restart): a health check-in saying so, and a
+  request for a signed offset update. Without enrolment it never connects
+  anywhere.
 
 ## Stopping and removal
 

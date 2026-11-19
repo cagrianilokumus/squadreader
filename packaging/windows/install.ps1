@@ -24,6 +24,14 @@
   Do not run diagnose as the service account first (e.g. the game server is
   down). Not recommended: that check is what proves the reader can work.
 
+.PARAMETER EnrollToken
+  Register this machine with squadreader.com (one-time token from
+  squadreader.com/setup). Does NOT start publishing; see -Push.
+
+.PARAMETER Push
+  Publish finished matches to squadreader.com (needs an enrolment). Can also
+  be switched on later with "push_enabled": true in sqreader.config.json.
+
 .PARAMETER SquadPort
   The game port of the Squad server to read (its Port= argument). Required:
   on a machine with several servers this is what picks the right one.
@@ -93,10 +101,13 @@ if (Test-Path $cfgPath) {
 }
 $conf["squad_port"] = $SquadPort
 $conf["server_id"] = $ServerId
-if ($Push -or $EnrollToken) {
-    $conf["push_enabled"] = $true
-    $conf["central_url"] = $CentralUrl
-}
+# Enrolling and publishing are separate on purpose: -EnrollToken only
+# registers this machine. Publishing starts with -Push, or later by setting
+# "push_enabled": true in sqreader.config.json (read when the reader next
+# restarts, e.g. at the game server's daily restart). A value set that way
+# is kept by a re-run of this script.
+if ($Push -or $EnrollToken) { $conf["central_url"] = $CentralUrl }
+if ($Push) { $conf["push_enabled"] = $true }
 Write-Utf8NoBom $cfgPath (($conf | ConvertTo-Json -Depth 5) + "`n")
 $readBack = Invoke-Py "from sqreader import config; print(config.get('squad_port'))"
 if ("$readBack".Trim() -ne "$SquadPort") {
@@ -144,7 +155,7 @@ $cfg = [pscustomobject]@{
     Interactive   = [bool]$CurrentUserInteractive
     HttpPort      = $HttpPort
     CpuLimit      = $CpuLimit
-    Push          = [bool]($Push -or $EnrollToken)
+    Push          = [bool]$Push
     Version       = "$(Invoke-Py 'import sqreader; print(sqreader.__version__)')".Trim()
     InstalledAt   = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 }

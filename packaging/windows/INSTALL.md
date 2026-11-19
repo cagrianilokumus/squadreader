@@ -73,7 +73,8 @@ Expected end of the output:
 | `-HttpPort` | `8081` | local port of the viewer, on 127.0.0.1 only |
 | `-CpuLimit` | `50` | CPU cap, in percent of ONE core |
 | `-RetentionMaxAgeDays` / `-RetentionMaxTotalGB` / `-RetentionMinFreeGB` | `90` / `50` / `20` | recording clean-up policy |
-| `-EnrollToken` | none | connect to squadreader.com (publishes finished matches only) |
+| `-EnrollToken` | none | register with squadreader.com; does **not** publish anything yet |
+| `-Push` | off | publish finished matches to squadreader.com (also: `"push_enabled": true` in `sqreader.config.json`, read at the reader's next restart) |
 | `-SkipCheck` | off | do not run the diagnose step (not recommended) |
 
 ## Check it
