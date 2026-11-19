@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 import threading
 from dataclasses import dataclass
 from typing import Any, Callable, Optional, Sequence
@@ -98,6 +99,23 @@ class ProcessBuildWorker:
         self._gen_at_spawn = self._gen
         # stderr inherits the parent's so the worker's own logs land in the
         # journal; stdout is the NDJSON frame pipe.
+        if sys.platform == "win32":
+            # A console Ctrl+C (which is how a Windows service manager stops
+            # us) goes to every process in the group; in a group of its own
+            # the worker is spared it and stop() ends it instead, rather than
+            # it dying first and the read loop respawning it mid-shutdown.
+            # The job ties its life to ours: Windows has no reparenting for
+            # the worker's own orphan check to notice.
+            self._proc = subprocess.Popen(
+                self._argv, stdout=subprocess.PIPE, stderr=None,
+                text=True, bufsize=1,
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+            from .. import winproc
+            try:
+                winproc.kill_with_this_process(self._proc.pid)
+            except OSError:
+                pass
+            return
         self._proc = subprocess.Popen(
             self._argv, stdout=subprocess.PIPE, stderr=None,
             text=True, bufsize=1)

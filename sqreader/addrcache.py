@@ -46,8 +46,12 @@ def binary_identity(pid: int) -> str | None:
     can't be stat'd, which disables the cache (callers then always
     validate / discover).
     """
+    from .procinfo import exe_path
+    exe = exe_path(pid)
+    if exe is None:
+        return None
     try:
-        st = os.stat(f"/proc/{pid}/exe")
+        st = os.stat(exe)
     except OSError:
         return None
     return f"{st.st_size}:{int(st.st_mtime)}"

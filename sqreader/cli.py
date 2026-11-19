@@ -39,7 +39,139 @@ def _target_alive(pid: int) -> bool:
     (map change / crash) the old pid dies and reads start failing; we
     use this to exit cleanly so systemd re-runs `pidof` and re-attaches
     to the new pid, instead of spinning forever on a dead pid."""
-    return os.path.exists(f"/proc/{pid}")
+    from .procinfo import pid_alive
+    return pid_alive(pid)
+
+
+def _install_stop_handlers(handler) -> None:
+    """Route every "please stop" the platform can send to ``handler``.
+
+    systemd stops a unit with SIGTERM. A Windows service manager stops a
+    console program with Ctrl+C (SIGINT) or Ctrl+Break (SIGBREAK, which exists
+    only on Windows); SIGTERM is never delivered there but registering it is
+    harmless. Whichever arrives, the loop ends and the shutdown path closes
+    the recording properly.
+    """
+    signal.signal(signal.SIGTERM, handler)
+    signal.signal(signal.SIGINT, handler)
+    sigbreak = getattr(signal, "SIGBREAK", None)
+    if sigbreak is not None:
+        signal.signal(sigbreak, handler)
+
+
+def _shutdown_requested() -> str | None:
+    """"stop" or "restart" when a control file asks serve to leave, else None.
+
+    The restart file (SQREADER_RESTART_FILE) ends serve the same clean way as
+    the stop file; `supervise` then starts it again at once instead of
+    stopping too. That is how a change made from outside (enrolment, push
+    switched on in the config) takes effect without waiting for the game
+    server's next restart.
+    """
+    if _stop_requested():
+        return "stop"
+    path = os.environ.get("SQREADER_RESTART_FILE")
+    if path and os.path.exists(path):
+        return "restart"
+    return None
+
+
+def _stop_requested() -> bool:
+    """Whether a stop file asks this process to shut down cleanly.
+
+    Windows has no SIGTERM for a service manager to send: Task Scheduler ends
+    a task with TerminateProcess, which skips the shutdown path that closes
+    the recording and leaves the match open for the next boot. `supervise`
+    instead names a file in SQREADER_STOP_FILE; when it appears, `serve`
+    leaves its loop exactly as it would on SIGTERM. Unset (every Linux
+    deployment), this is always False.
+    """
+    path = os.environ.get("SQREADER_STOP_FILE")
+    if not path:
+        return False
+    return os.path.exists(path)
+
+
+def _sleep_unless_stopping(seconds: float) -> None:
+    """time.sleep(seconds), in short steps, leaving early (SystemExit 0) when
+    a stop is requested — the degraded wait can be five minutes long."""
+    steps = max(1, int(seconds + 0.999))
+    for _ in range(steps):
+        reason = _shutdown_requested()
+        if reason:
+            print(f"[{reason}] {reason} requested while waiting for the game; "
+                  f"exiting", file=sys.stderr)
+            raise SystemExit(0)
+        time.sleep(seconds / steps)
+
+
+def _enroll_from_drop_file() -> None:
+    """Redeem an enrolment token left in a file, as `sqreader enroll` would.
+
+    Enrolment has to run ON the game server's machine: it binds the
+    credentials to that machine's hardware fingerprint. On a hosted machine
+    reached only by FTP nobody can run a command there, so `supervise` names
+    a file in SQREADER_ENROLL_FILE and `serve` looks for it when it starts.
+    The token is the file's last word, so a pasted install line works too.
+    Success removes the file; a failure renames it to <name>.failed with the
+    reason in the log. It never re-enrols an enrolled machine, and it does
+    not switch push on: that stays push_enabled / --push.
+    """
+    path = os.environ.get("SQREADER_ENROLL_FILE")
+    if not path or not os.path.exists(path):
+        return
+    drop = Path(path)
+    from . import agent_creds
+    try:
+        words = drop.read_text(encoding="utf-8-sig").split()
+    except OSError as e:
+        print(f"[enroll] cannot read {drop}: {e!r}", file=sys.stderr)
+        return
+    creds = agent_creds.load()
+    if creds and creds.get("SQREADER_AGENT_ID"):
+        print(f"[enroll] already enrolled as {creds['SQREADER_AGENT_ID']}; "
+              f"ignoring {drop.name} (delete .env.agent to enrol again)",
+              file=sys.stderr)
+        os.replace(drop, drop.with_name(drop.name + ".ignored"))
+        return
+    if not words:
+        print(f"[enroll] {drop.name} is empty", file=sys.stderr)
+        os.replace(drop, drop.with_name(drop.name + ".failed"))
+        return
+    print(f"[enroll] enrolling from {drop.name}", file=sys.stderr)
+    try:
+        rc = cmd_enroll(argparse.Namespace(token=words[-1], central_url=None,
+                                           status=False, stats_db=None))
+    except Exception as e:  # noqa: BLE001 - a bad token must not stop serve
+        print(f"[enroll] failed: {e!r}", file=sys.stderr)
+        rc = 1
+    if rc == 0:
+        drop.unlink(missing_ok=True)
+    else:
+        os.replace(drop, drop.with_name(drop.name + ".failed"))
+
+
+def _self_update_supported() -> bool:
+    """Whether this platform can install a staged release.
+
+    The install step swaps the binary while it is not running, from systemd's
+    ExecStartPre, and smoke-tests the candidate under a `.new` name. Windows
+    has neither half: a running .exe cannot be replaced, there is no pre-start
+    hook, and a `.new` file does not execute. Staging there would only make
+    the agent restart, find nothing installed, and do it again, so updates on
+    Windows are installed by hand until it has an installer of its own.
+    """
+    return sys.platform != "win32"
+
+
+def _parent_gone(parent_pid: int) -> bool:
+    """The build worker's orphan check. Linux reparents an orphan, so its
+    ppid changes; Windows never does, so there the parent's liveness is asked
+    directly (the job object in buildworker is the primary guarantee)."""
+    if sys.platform == "win32":
+        from .procinfo import pid_alive
+        return not pid_alive(parent_pid)
+    return os.getppid() != parent_pid
 
 
 def _discover_with_retry(fn, pm, label, *, attempts: int = 3,
@@ -70,11 +202,34 @@ def _discover_with_retry(fn, pm, label, *, attempts: int = 3,
         f"{label} discovery failed after {attempts} attempts: {last}")
 
 
+def _addr_cache_base(pm) -> int | None:
+    """What the address cache's entries are relative to.
+
+    Linux: 0. SquadGameServer is non-PIE there, so its globals sit at the same
+    absolute address on every launch and the cache stores them as they are.
+
+    Windows: the game module's load address. The .exe is ASLR-relocated on
+    every launch, so only an offset from its base survives a restart. None
+    when the module cannot be located, which turns the cache off rather than
+    pairing an offset with the wrong base.
+    """
+    if sys.platform != "win32":
+        return 0
+    from .ue.module import load_module
+    try:
+        return load_module(pm, config.get("squad_process_name")).base
+    except Exception:
+        return None
+
+
 def _resolve_gobjects(pm, binary_id: str | None = None):
     """Resolve GUObjectArray. Order: cached addr → known hardcoded addr →
     signature discovery. Every candidate is validated (sane num_elements)
     before use; whatever resolves is written back to the address cache so
-    the next startup is instant instead of paying the ~30 s discovery."""
+    the next startup is instant instead of paying the ~30 s discovery.
+
+    The hardcoded address is a Linux one, so Windows skips straight from the
+    cache to discovery (see _addr_cache_base for how the cache differs)."""
     from . import addrcache
     from .ue.uobject import (
         GUObjectArray, KNOWN_GOBJECTS_ADDR_V10_4_1, find_gobjects_base,
@@ -88,8 +243,13 @@ def _resolve_gobjects(pm, binary_id: str | None = None):
         except Exception:
             return None
 
-    cached = addrcache.get(binary_id, "gobjects")
+    base = _addr_cache_base(pm)
+    cache_id = binary_id if base is not None else None
+    rel = base or 0
+
+    cached = addrcache.get(cache_id, "gobjects")
     if cached is not None:
+        cached += rel
         arr = _valid(cached)
         if arr is not None:
             print(f"[+] GUObjectArray from cache @ {cached:#x}", file=sys.stderr)
@@ -97,23 +257,28 @@ def _resolve_gobjects(pm, binary_id: str | None = None):
         print(f"[!] cached GUObjectArray addr {cached:#x} stale; "
               "falling back", file=sys.stderr)
 
-    arr = _valid(KNOWN_GOBJECTS_ADDR_V10_4_1)
-    if arr is not None:
-        addrcache.put(binary_id, "gobjects", KNOWN_GOBJECTS_ADDR_V10_4_1)
-        return arr
-    print("[!] known GUObjectArray addr invalid; running discovery...",
-          file=sys.stderr)
+    if sys.platform == "win32":
+        print("[*] no usable cached GUObjectArray addr; running discovery...",
+              file=sys.stderr)
+    else:
+        arr = _valid(KNOWN_GOBJECTS_ADDR_V10_4_1)
+        if arr is not None:
+            addrcache.put(cache_id, "gobjects", KNOWN_GOBJECTS_ADDR_V10_4_1)
+            return arr
+        print("[!] known GUObjectArray addr invalid; running discovery...",
+              file=sys.stderr)
 
     addr = _discover_with_retry(find_gobjects_base, pm, "GUObjectArray")
     print(f"[+] GUObjectArray discovered at {addr:#x}", file=sys.stderr)
-    addrcache.put(binary_id, "gobjects", addr)
+    addrcache.put(cache_id, "gobjects", addr - rel)
     return GUObjectArray(pm, addr)
 
 
 def _resolve_fname_pool(pm, binary_id: str | None = None):
     """Resolve FNamePool. Order: cached addr → known hardcoded addr →
     heap-scan discovery. Validity = index 0 resolves to 'None' (the
-    canonical first reserved EName). Resolved addr is cached."""
+    canonical first reserved EName). Resolved addr is cached. As with
+    GUObjectArray, Windows has no known address to try."""
     from . import addrcache
     from .ue.fname import (
         FNameEntryAllocator, KNOWN_ALLOCATOR_ADDR_V10_4_1,
@@ -127,8 +292,13 @@ def _resolve_fname_pool(pm, binary_id: str | None = None):
         except Exception:
             return None
 
-    cached = addrcache.get(binary_id, "fnamepool")
+    base = _addr_cache_base(pm)
+    cache_id = binary_id if base is not None else None
+    rel = base or 0
+
+    cached = addrcache.get(cache_id, "fnamepool")
     if cached is not None:
+        cached += rel
         alloc = _valid(cached)
         if alloc is not None:
             print(f"[+] FNamePool from cache @ {cached:#x}", file=sys.stderr)
@@ -136,16 +306,20 @@ def _resolve_fname_pool(pm, binary_id: str | None = None):
         print(f"[!] cached FNamePool addr {cached:#x} stale; falling back",
               file=sys.stderr)
 
-    alloc = _valid(KNOWN_ALLOCATOR_ADDR_V10_4_1)
-    if alloc is not None:
-        addrcache.put(binary_id, "fnamepool", KNOWN_ALLOCATOR_ADDR_V10_4_1)
-        return alloc
-    print("[!] known FNamePool addr invalid; running discovery...",
-          file=sys.stderr)
+    if sys.platform == "win32":
+        print("[*] no usable cached FNamePool addr; running discovery...",
+              file=sys.stderr)
+    else:
+        alloc = _valid(KNOWN_ALLOCATOR_ADDR_V10_4_1)
+        if alloc is not None:
+            addrcache.put(cache_id, "fnamepool", KNOWN_ALLOCATOR_ADDR_V10_4_1)
+            return alloc
+        print("[!] known FNamePool addr invalid; running discovery...",
+              file=sys.stderr)
 
     addr = _discover_with_retry(find_fname_pool_base, pm, "FNamePool")
     print(f"[+] FNamePool discovered at {addr:#x}", file=sys.stderr)
-    addrcache.put(binary_id, "fnamepool", addr)
+    addrcache.put(cache_id, "fnamepool", addr - rel)
     return FNameEntryAllocator(pm, addr)
 
 
@@ -225,8 +399,9 @@ def _open_pipeline_or_wait(args: argparse.Namespace, *, state_dir,
                 _degraded_try_offsets(
                     creds, state_dir, channel,
                     seq=ingest_client._next_seq(backlog))
-            if config.get("update_enabled") and updater.running_binary(
-                    compiled=_is_compiled()) is not None:
+            if (config.get("update_enabled") and _self_update_supported()
+                    and updater.running_binary(
+                        compiled=_is_compiled()) is not None):
                 try:
                     got = updater.fetch_and_accept(
                         creds, channel, seq=ingest_client._next_seq(backlog),
@@ -246,7 +421,7 @@ def _open_pipeline_or_wait(args: argparse.Namespace, *, state_dir,
                 except Exception as e:
                     print(f"[degraded] update check failed: {e!r}",
                           file=sys.stderr)
-        time.sleep(delay)
+        _sleep_unless_stopping(delay)
         delay = min(delay * 2, _DEGRADED_MAX_SEC)
 
 
@@ -388,8 +563,7 @@ def cmd_watch(args: argparse.Namespace) -> int:
     stop = {"flag": False}
     def _stop(sig, frame):
         stop["flag"] = True
-    signal.signal(signal.SIGTERM, _stop)
-    signal.signal(signal.SIGINT, _stop)
+    _install_stop_handlers(_stop)
 
     tick = 0
     started = time.time()
@@ -528,6 +702,10 @@ def cmd_serve(args: argparse.Namespace) -> int:
     a live view. Optional --out / --sqrx-out tee each tick to disk in parallel.
     """
     import logging
+
+    # Before anything reads the enrolment: a token dropped in since the last
+    # start is redeemed first, so this run already sees the credentials.
+    _enroll_from_drop_file()
 
     from .squad.snapshot import (
         DamageTracker, SnapshotCaches, build_snapshot, clean_nonfinite,
@@ -859,7 +1037,8 @@ def cmd_serve(args: argparse.Namespace) -> int:
             # Staging anyway would loop: the install step clears the stage, the
             # next check-in re-accepts the same release, and the agent restarts
             # for it every check-in interval.
-            if updater.running_binary(compiled=_is_compiled()) is None:
+            if (not _self_update_supported()
+                    or updater.running_binary(compiled=_is_compiled()) is None):
                 return
             got = updater.fetch_and_accept(
                 push_creds, _checkin_channel,
@@ -1047,8 +1226,7 @@ def cmd_serve(args: argparse.Namespace) -> int:
 
     def _stop(sig, frame):
         stop["flag"] = True
-    signal.signal(signal.SIGTERM, _stop)
-    signal.signal(signal.SIGINT, _stop)
+    _install_stop_handlers(_stop)
 
     tick = 0
     started = time.time()
@@ -1163,6 +1341,11 @@ def cmd_serve(args: argparse.Namespace) -> int:
     snap: dict = {}
     try:
         while not stop["flag"]:
+            reason = _shutdown_requested()
+            if reason:
+                print(f"[{reason}] {reason} requested at tick {tick}; shutting "
+                      f"down cleanly", file=sys.stderr)
+                break
             tick += 1
             t_tick = time.time()
             try:
@@ -1961,6 +2144,72 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     return 0 if ok else 1
 
 
+def cmd_diagnose(args: argparse.Namespace) -> int:
+    """One shareable report on whether this machine can run the reader.
+    Exit 1 when any check failed. See sqreader/diagnose.py."""
+    from . import diagnose
+    try:
+        sys.stdout.reconfigure(errors="replace")  # type: ignore[union-attr]
+    except Exception:
+        pass
+    report = diagnose.run(args.pid, deep=args.deep)
+    text = report.text()
+    print(text, end="")
+    if args.out:
+        args.out.write_text(text, encoding="utf-8")
+        print(f"report written to {args.out}", file=sys.stderr)
+    return 1 if report.failures else 0
+
+
+def cmd_supervise(args: argparse.Namespace) -> int:
+    """Run a subcommand (normally `serve`) under sqreader/supervisor.py:
+    restarted when it exits, logged to a rotating file, CPU-capped, stopped
+    cleanly through a stop file. How the Windows package runs the reader."""
+    from . import supervisor
+    child = list(args.child)
+    if child and child[0] == "--":
+        child = child[1:]
+    if not child:
+        print("supervise: name the command to keep running after --, "
+              "e.g.  sqreader supervise --log-file logs/sqreader.log -- serve",
+              file=sys.stderr)
+        return 2
+
+    # The Linux daily timer's job, on a thread of the supervisor: a host that
+    # runs this from its own panel has no Task Scheduler to give it.
+    retention = None
+    if args.retention_dir:
+        if args.retention_every_hours <= 0:
+            print("supervise: --retention-every-hours must be above 0",
+                  file=sys.stderr)
+            return 2
+        policy = argparse.Namespace(
+            recordings_dir=args.retention_dir,
+            max_age_days=args.retention_max_age_days,
+            max_total_gb=args.retention_max_total_gb,
+            min_free_gb=args.retention_min_free_gb,
+            min_keep=args.retention_min_keep,
+            in_progress_min=60.0, dry_run=False)
+
+        def retention(say):
+            prune_recordings(policy, say=say, warn=say)
+
+    log = (supervisor.RotatingLog(args.log_file,
+                                  max_bytes=int(args.log_max_mb * (1 << 20)),
+                                  keep=args.log_keep)
+           if args.log_file else None)
+    stop_file = args.stop_file
+
+    def _on_signal(sig, frame):
+        # Ctrl+C / Ctrl+Break / SIGTERM: stop the child the clean way.
+        supervisor.request_stop(stop_file)
+    _install_stop_handlers(_on_signal)
+    return supervisor.run([*_self_command(), *child], stop_file=stop_file,
+                          log=log, cpu_percent_of_one_core=args.cpu_limit or None,
+                          retention=retention,
+                          retention_every=args.retention_every_hours * 3600)
+
+
 def cmd_test(args: argparse.Namespace) -> int:
     # Delegate to scripts/test_all.py for now; it already lives next to
     # the verify_* scripts and orchestrates them with subprocess.
@@ -2095,9 +2344,9 @@ def cmd_build_worker(args: argparse.Namespace) -> int:
     print(f"build-worker: streaming full snapshots for pid {pid}",
           file=sys.stderr)
     while True:
-        # Orphan guard: if the parent `serve` died (ppid changed), stop —
-        # don't linger building against a closed pipe.
-        if os.getppid() != parent_pid:
+        # Orphan guard: if the parent `serve` died, stop — don't linger
+        # building against a closed pipe.
+        if _parent_gone(parent_pid):
             return 0
         tick += 1
         t0 = time.time()
@@ -2129,6 +2378,12 @@ def cmd_build_worker(args: argparse.Namespace) -> int:
                 bad_streak = 0
             out.write(json.dumps(snap, ensure_ascii=False) + "\n")
             out.flush()
+        except BrokenPipeError:
+            # Parent closed the pipe (serve stopped / restarted) — we're done.
+            # Must precede `except OSError`, of which it is a subclass; after
+            # it, this branch could never run and a closed pipe was retried as
+            # a read error until the orphan check caught up.
+            return 0
         except OSError as e:
             if not _target_alive(pid):
                 print(f"[build-worker] target pid {pid} gone; exiting",
@@ -2136,9 +2391,6 @@ def cmd_build_worker(args: argparse.Namespace) -> int:
                 return 1
             print(f"[build-worker] read error: {e!r}", file=sys.stderr)
             time.sleep(0.5)
-        except BrokenPipeError:
-            # Parent closed the pipe (serve stopped / restarted) — we're done.
-            return 0
         except Exception as e:  # noqa: BLE001 - one bad tick must not kill us
             import traceback
             print(f"[build-worker] snapshot error: {e!r}", file=sys.stderr)
@@ -2227,6 +2479,18 @@ def _is_compiled() -> bool:
     return bool(getattr(sys, "frozen", False) or "__compiled__" in globals())
 
 
+def _self_command() -> list[str]:
+    """How to re-invoke this program; append the subcommand and its args.
+
+    Shared by the `build-worker` subprocess and by `supervise`, which starts
+    `serve` as its child. See _worker_prefix for why it is not simply
+    sys.executable.
+    """
+    if _is_compiled():
+        return [os.environ.get("NUITKA_ONEFILE_BINARY") or sys.argv[0]]
+    return [sys.executable, "-m", "sqreader.cli"]
+
+
 def _worker_prefix() -> list[str]:
     """How to re-invoke this program to run the `build-worker` subprocess.
 
@@ -2238,10 +2502,7 @@ def _worker_prefix() -> list[str]:
     loop begins. Nuitka exports the real artifact path as NUITKA_ONEFILE_BINARY;
     argv[0] is the fallback.
     """
-    if _is_compiled():
-        exe = os.environ.get("NUITKA_ONEFILE_BINARY") or sys.argv[0]
-        return [exe, "build-worker"]
-    return [sys.executable, "-m", "sqreader.cli", "build-worker"]
+    return [*_self_command(), "build-worker"]
 
 
 def cmd_version(args: argparse.Namespace) -> int:
@@ -2275,6 +2536,17 @@ def cmd_version(args: argparse.Namespace) -> int:
 
 
 def cmd_retention(args: argparse.Namespace) -> int:
+    """Prune old recordings so the disk cannot fill (see prune_recordings)."""
+    return prune_recordings(args)
+
+
+def _print_stderr(msg: str) -> None:
+    print(msg, file=sys.stderr)
+
+
+def prune_recordings(args: argparse.Namespace, *,
+                     say: Callable[[str], None] = print,
+                     warn: Callable[[str], None] = _print_stderr) -> int:
     """Prune old recordings so the disk cannot fill.
 
     Recordings grow by hundreds of MB a day and nothing else deletes them. On a
@@ -2291,17 +2563,20 @@ def cmd_retention(args: argparse.Namespace) -> int:
       * --dry-run changes nothing.
 
     Exits 0 even when nothing matched, so the systemd timer stays green.
+
+    Every line it reports goes to `say` (stdout) or `warn` (stderr):
+    `supervise` runs it on a thread of its own and writes them to its log.
     """
     import shutil
     import time
 
     d = Path(args.recordings_dir).expanduser()
     if not d.is_dir():
-        print(f"recordings dir not found: {d}", file=sys.stderr)
+        warn(f"recordings dir not found: {d}")
         return 1
     dry = bool(args.dry_run)
     if dry:
-        print("[retention] DRY RUN — nothing will be deleted")
+        say("[retention] DRY RUN — nothing will be deleted")
 
     cutoff = time.time() - args.in_progress_min * 60
     files = []
@@ -2355,10 +2630,10 @@ def cmd_retention(args: argparse.Namespace) -> int:
         deletable = sum(sz for _m, sz, p in files
                         if p not in doomed and p not in keepers)
         if free + freed + deletable < need:
-            print(f"[retention] cannot reach {args.min_free_gb:g} GB free by "
-                  f"pruning recordings (only {deletable / 1024**3:.1f} GB here, "
-                  f"{free / 1024**3:.1f} GB free) — something else is filling "
-                  f"the disk; not deleting on this policy", file=sys.stderr)
+            warn(f"[retention] cannot reach {args.min_free_gb:g} GB free by "
+                 f"pruning recordings (only {deletable / 1024**3:.1f} GB here, "
+                 f"{free / 1024**3:.1f} GB free) — something else is filling "
+                 f"the disk; not deleting on this policy")
         else:
             for _m, sz, p in files:
                 if free + freed >= need:
@@ -2368,7 +2643,7 @@ def cmd_retention(args: argparse.Namespace) -> int:
                     freed += sz
 
     if not doomed:
-        print("[retention] nothing to prune")
+        say("[retention] nothing to prune")
         return 0
 
     total = 0
@@ -2377,7 +2652,7 @@ def cmd_retention(args: argparse.Namespace) -> int:
             total += p.stat().st_size
         except OSError:
             pass
-        print(f"[retention] {'would remove' if dry else 'removing'} {p.name}")
+        say(f"[retention] {'would remove' if dry else 'removing'} {p.name}")
         if dry:
             continue
         for victim in (p, p.with_suffix(".meta.json")):
@@ -2386,10 +2661,9 @@ def cmd_retention(args: argparse.Namespace) -> int:
             except FileNotFoundError:
                 pass
             except OSError as exc:
-                print(f"[retention] could not remove {victim}: {exc}",
-                      file=sys.stderr)
-    print(f"[retention] {len(doomed)} recording(s), "
-          f"{total / 1024**3:.2f} GB {'would be' if dry else ''} freed")
+                warn(f"[retention] could not remove {victim}: {exc}")
+    say(f"[retention] {len(doomed)} recording(s), "
+        f"{total / 1024**3:.2f} GB {'would be' if dry else ''} freed")
     return 0
 
 
@@ -2699,6 +2973,58 @@ def build_parser() -> argparse.ArgumentParser:
                                 "the live binary (run after Squad updates)")
     p_doc.add_argument("--pid", type=int)
     p_doc.set_defaults(func=cmd_doctor)
+
+    p_diag = sub.add_parser(
+        "diagnose",
+        help="check that this machine can run the reader and write one report "
+             "to send back (says nothing about other servers on the box)")
+    p_diag.add_argument("--pid", type=int)
+    p_diag.add_argument("--deep", action="store_true",
+                        help="also locate UE's global tables and read one "
+                             "snapshot (keeps one CPU core busy for a while)")
+    p_diag.add_argument("--out", type=Path,
+                        help="also write the report to this file (UTF-8)")
+    p_diag.set_defaults(func=cmd_diagnose)
+
+    p_sup = sub.add_parser(
+        "supervise",
+        help="keep a subcommand (normally serve) running: restart it when it "
+             "exits, log to a rotating file, cap its CPU, stop it cleanly via "
+             "a stop file. How the Windows package runs the reader.")
+    p_sup.add_argument("--log-file", type=Path,
+                       help="timestamped, size-rotated log (default: stdout)")
+    p_sup.add_argument("--log-max-mb", type=float, default=20.0,
+                       help="rotate the log at this size (default 20)")
+    p_sup.add_argument("--log-keep", type=int, default=5,
+                       help="rotated logs to keep (default 5)")
+    p_sup.add_argument("--stop-file", type=Path, default=Path("sqreader.stop"),
+                       help="creating this file stops the child cleanly, then "
+                            "the supervisor (default ./sqreader.stop)")
+    p_sup.add_argument("--cpu-limit", type=float, default=0.0,
+                       help="Windows: hard-cap the child's CPU at this percent "
+                            "of ONE core (50 = the Linux unit's CPUQuota); "
+                            "0 = no cap")
+    p_sup.add_argument("--retention-dir", type=Path, default=None,
+                       help="prune old recordings in this dir from a thread "
+                            "of this process (the Linux daily timer's job): "
+                            "5 min after start, then every "
+                            "--retention-every-hours. Off when omitted.")
+    p_sup.add_argument("--retention-every-hours", type=float, default=24.0,
+                       help="hours between clean-ups (default 24)")
+    p_sup.add_argument("--retention-max-age-days", type=float, default=90.0,
+                       help="drop recordings older than N days (default 90, "
+                            "0 = off)")
+    p_sup.add_argument("--retention-max-total-gb", type=float, default=50.0,
+                       help="drop oldest until the dir fits in N GB "
+                            "(default 50, 0 = off)")
+    p_sup.add_argument("--retention-min-free-gb", type=float, default=20.0,
+                       help="drop oldest until the disk has N GB free "
+                            "(default 20, 0 = off)")
+    p_sup.add_argument("--retention-min-keep", type=int, default=3,
+                       help="always keep the newest N recordings (default 3)")
+    p_sup.add_argument("child", nargs=argparse.REMAINDER,
+                       help="-- <subcommand> [args...]")
+    p_sup.set_defaults(func=cmd_supervise)
 
     p_prof = sub.add_parser(
         "profile-build",

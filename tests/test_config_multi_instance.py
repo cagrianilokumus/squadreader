@@ -5,9 +5,20 @@ answers with one of them arbitrarily — so several agents can end up reading th
 same game, and which game that is can change on any restart. These pin the
 behaviour that makes the choice deterministic.
 """
+from types import SimpleNamespace
+
 import pytest
 
 from sqreader import config
+
+
+@pytest.fixture(autouse=True)
+def _procfs_path(monkeypatch):
+    """These tests drive the Linux /proc resolver through mocks, so they pin
+    that path even when the suite runs on Windows (where config would
+    otherwise take its Win32 branch and never consult the mocks). Only the
+    module's own view of the platform changes, not the interpreter's."""
+    monkeypatch.setattr(config, "sys", SimpleNamespace(platform="linux"))
 
 MAIN = ["/data/serverfiles/.../SquadGameServer", "SquadGame",
          "-MultiHome=203.0.113.10", "-Port=7787", "-QueryPort=27165"]

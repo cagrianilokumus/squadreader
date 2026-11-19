@@ -26,6 +26,7 @@ Correlation:
 from __future__ import annotations
 
 import re
+import sys
 import threading
 import time
 from collections import deque
@@ -110,7 +111,8 @@ def log_from_pid(pid: int) -> Optional[str]:
     """The running server's own log, derived from the binary it is executing.
 
     Squad always lays itself out as
-    ``<root>/SquadGame/Binaries/Linux/SquadGameServer`` and always writes
+    ``<root>/SquadGame/Binaries/Linux/SquadGameServer`` (``Binaries/Win64/
+    SquadGameServer.exe`` on Windows, the same four levels deep) and always writes
     ``<root>/SquadGame/Saved/Logs/SquadGame.log``, so the process points at its
     own log no matter where somebody installed it. That matters because the
     fallback glob below only looks under ``/home/*/serverfiles`` — LinuxGSM's
@@ -118,8 +120,13 @@ def log_from_pid(pid: int) -> Optional[str]:
     find nothing and lose the kill feed without ever saying why.
     """
     import os
+
+    from ..procinfo import exe_path
+    link = exe_path(pid)
+    if link is None:
+        return None
     try:
-        exe = os.path.realpath(f"/proc/{pid}/exe")
+        exe = os.path.realpath(link)
     except OSError:
         return None
     root = exe
@@ -303,6 +310,22 @@ class DamageLogParser:
         return out
 
 
+def _open_log(path: str):
+    """Open the server log as text, without getting in the server's way.
+
+    Linux: a plain open(); renaming a file someone holds open is fine there.
+    Windows: Python's open() would stop the Squad server from renaming its log
+    to SquadGame-backup-<date>.log on restart (WinError 32) for as long as we
+    hold it, so the file is opened with delete-sharing instead. The rotation
+    check in _follow then notices the new SquadGame.log and moves to it.
+    """
+    if sys.platform == "win32":
+        from .. import winproc
+        return open(winproc.open_shared_fd(path), encoding="utf-8",
+                    errors="replace")
+    return open(path, encoding="utf-8", errors="replace")
+
+
 class LogTailer:
     """Follows the Squad log from its end in a daemon thread, feeds each new
     line to a DamageLogParser, and hands recent events to the snapshot loop
@@ -346,7 +369,7 @@ class LogTailer:
 
     def _follow(self) -> None:
         import os
-        f = open(self.path, encoding="utf-8", errors="replace")
+        f = _open_log(self.path)
         try:
             # Initial catch-up: replay the log's tail to rebuild the
             # correlation state (a player downed just before we started can
@@ -385,7 +408,7 @@ class LogTailer:
                     st = os.stat(self.path)
                     if st.st_ino != cur_ino or st.st_size < f.tell():
                         f.close()
-                        f = open(self.path, encoding="utf-8", errors="replace")
+                        f = _open_log(self.path)
                         cur_ino = os.fstat(f.fileno()).st_ino
                         buf = ""
                         continue

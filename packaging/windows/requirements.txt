@@ -1,0 +1,9 @@
+# Wheels bundled into the Windows package (CPython 3.13, win_amd64).
+# Exact versions AND hashes: build.ps1 installs with --require-hashes, so a
+# changed file on the index stops the build instead of shipping. To bump one,
+# download it, check it, and replace both the version and its sha256 here.
+zstandard==0.25.0 --hash=sha256:1f830a0dac88719af0ae43b8b2d6aef487d437036468ef3c2ea59c51f9d55fd5
+cryptography==50.0.2 --hash=sha256:7afa5a6602a9f29af1f3a2965f831bae7c9d5d597b7cbb716d41ab3b7d89879c
+cffi==2.1.1 --hash=sha256:1aa5645c30469b09530c4ebca77ebf8f17618293c58f8549cb1a543a50236e7d
+pycparser==3.12 --hash=sha256:a076f3f489b39b43ed13563a1dafe42447445bec2e294154ec5c57fcdda4c85e
+numpy==2.5.5 --hash=sha256:e0608d1585557b68dcb6a70a41654f7536567960afad79d91752d2863b242b68

@@ -460,6 +460,10 @@ _REFLECTED_SCALARS: tuple[tuple[str, str, str], ...] = (
     ("SQ_VWEAPON_MAGAZINES_OFFSET",        "SQVehicleWeapon", "Magazines"),
     ("SQ_VWEAPON_VEHICLE_TURRET_OFFSET",   "SQVehicleWeapon", "VehicleTurret"),
     ("SQ_SOLDIER_TAKE_HIT_INFO_OFFSET",    "SQSoldier", "LastTakeHitInfo"),
+    # Both found 8 bytes further on in Squad v10.6.3 (on Windows): `doctor`
+    # read the right value through reflection all along, the reader just
+    # never asked for it.
+    ("MARKER_MGR_MARKER_ARRAY_OFFSET",     "SQMapMarkerManagerComponent", "MarkerArray"),
 )
 
 #: Offset dicts whose every key is a UPROPERTY name on one UClass.
@@ -469,6 +473,7 @@ _REFLECTED_DICTS: tuple[tuple[str, str], ...] = (
     ("MARKER_OFFSETS", "SQMapMarker"),
     ("VEHICLE_SPAWNER_OFFSETS", "SQVehicleSpawner"),
     ("PROJECTILE_OFFSETS", "SQProjectile"),
+    ("LANE_GRAPH_OFFSETS", "SQGraphInitializerComponent"),
 )
 
 #: Constants reflection cannot see, each sitting a fixed distance from one
@@ -482,6 +487,9 @@ _ANCHORED_SCALARS: tuple[tuple[str, str], ...] = (
     ("SQ_SEATCOMP_FORCE_OCCUPIED_OFFSET", "SQ_SEATCOMP_SEATED_SOLDIER_OFFSET"),
     ("SQ_VEHCOMP_STATE_OFFSET",           "SQ_VEHCOMP_HEALTH_OFFSET"),
     ("SQ_TURRET_INVENTORY_OFFSET",        "SQ_VEHICLESEAT_SEAT_HEALTH_OFFSET"),
+    # A sum computed at import, so it has to be carried along explicitly:
+    # MarkerArray's Items TArray sits a fixed distance into the struct.
+    ("MARKER_ITEMS_ABS_OFFSET",           "MARKER_MGR_MARKER_ARRAY_OFFSET"),
 )
 
 

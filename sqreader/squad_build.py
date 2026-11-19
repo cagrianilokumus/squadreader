@@ -31,9 +31,13 @@ def build_sha256(pid: int) -> str | None:
     symlink to the on-disk binary; hashing it is ~1s once per process boot, so
     callers should cache the result rather than recompute per check-in.
     """
+    from .procinfo import exe_path
+    exe = exe_path(pid)
+    if exe is None:
+        return None
     try:
         h = hashlib.sha256()
-        with open(f"/proc/{pid}/exe", "rb") as f:
+        with open(exe, "rb") as f:
             while True:
                 chunk = f.read(_CHUNK)
                 if not chunk:
