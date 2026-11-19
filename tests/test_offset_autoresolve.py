@@ -76,6 +76,28 @@ def test_nothing_moves_when_nothing_moved(monkeypatch):
     assert sn.RALLY_OFFSETS == before
 
 
+def test_marker_array_and_its_items_follow_together(monkeypatch):
+    """Squad v10.6.3 moved MarkerArray from +0xb8 to +0xc0. The Items TArray
+    the reader actually walks is a sum computed at import, so it must move by
+    the same amount or every marker is read from 8 bytes off."""
+    items_delta = sn.MARKER_ITEMS_ABS_OFFSET - sn.MARKER_MGR_MARKER_ARRAY_OFFSET
+    found = _layouts(monkeypatch, {
+        "SQMapMarkerManagerComponent": {"MarkerArray": 0xC0},
+    })
+    moved = sn.autoresolve_offsets(None, found, None)
+    assert sn.MARKER_MGR_MARKER_ARRAY_OFFSET == 0xC0
+    assert sn.MARKER_ITEMS_ABS_OFFSET == 0xC0 + items_delta
+    assert "MARKER_ITEMS_ABS_OFFSET" in moved
+
+
+def test_lane_graph_links_follow(monkeypatch):
+    found = _layouts(monkeypatch, {
+        "SQGraphInitializerComponent": {"DesignOutgoingLinks": 0xC0},
+    })
+    sn.autoresolve_offsets(None, found, None)
+    assert sn.LANE_GRAPH_OFFSETS["DesignOutgoingLinks"] == 0xC0
+
+
 # --- the fields reflection cannot see ------------------------------------
 
 def test_an_unreflected_neighbour_travels_with_its_anchor(monkeypatch):
