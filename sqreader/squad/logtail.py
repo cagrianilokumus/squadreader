@@ -26,6 +26,7 @@ Correlation:
 from __future__ import annotations
 
 import re
+import sys
 import threading
 import time
 from collections import deque
@@ -309,6 +310,22 @@ class DamageLogParser:
         return out
 
 
+def _open_log(path: str):
+    """Open the server log as text, without getting in the server's way.
+
+    Linux: a plain open(); renaming a file someone holds open is fine there.
+    Windows: Python's open() would stop the Squad server from renaming its log
+    to SquadGame-backup-<date>.log on restart (WinError 32) for as long as we
+    hold it, so the file is opened with delete-sharing instead. The rotation
+    check in _follow then notices the new SquadGame.log and moves to it.
+    """
+    if sys.platform == "win32":
+        from .. import winproc
+        return open(winproc.open_shared_fd(path), encoding="utf-8",
+                    errors="replace")
+    return open(path, encoding="utf-8", errors="replace")
+
+
 class LogTailer:
     """Follows the Squad log from its end in a daemon thread, feeds each new
     line to a DamageLogParser, and hands recent events to the snapshot loop
@@ -352,7 +369,7 @@ class LogTailer:
 
     def _follow(self) -> None:
         import os
-        f = open(self.path, encoding="utf-8", errors="replace")
+        f = _open_log(self.path)
         try:
             # Initial catch-up: replay the log's tail to rebuild the
             # correlation state (a player downed just before we started can
@@ -391,7 +408,7 @@ class LogTailer:
                     st = os.stat(self.path)
                     if st.st_ino != cur_ino or st.st_size < f.tell():
                         f.close()
-                        f = open(self.path, encoding="utf-8", errors="replace")
+                        f = _open_log(self.path)
                         cur_ino = os.fstat(f.fileno()).st_ino
                         buf = ""
                         continue

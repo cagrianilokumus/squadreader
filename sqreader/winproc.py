@@ -24,6 +24,7 @@ first use, so importing this module on Linux costs nothing.
 from __future__ import annotations
 
 import errno
+import os
 import sys
 from types import SimpleNamespace
 from typing import Any, NamedTuple
@@ -558,6 +559,43 @@ def process_user(pid: int) -> str | None:
         a.k32.CloseHandle(token)
 
 
+def open_shared_fd(path: str) -> int:
+    """A read-only C file descriptor on ``path`` that does not lock it.
+
+    Python's own open() on Windows lets others read and write the file but
+    not rename or delete it. A log the reader is tailing could then not be
+    rotated by the program writing it — the Squad server renames
+    SquadGame.log to SquadGame-backup-<date>.log when it restarts, and that
+    rename fails with WinError 32 for as long as we hold the file. Opened
+    with FILE_SHARE_DELETE as well, the rename goes through and our handle
+    simply keeps pointing at the renamed file.
+    """
+    if sys.platform != "win32":
+        raise _not_windows()
+    import ctypes
+    import msvcrt
+    from ctypes import wintypes as wt
+
+    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    k32.CreateFileW.argtypes = [wt.LPCWSTR, wt.DWORD, wt.DWORD, ctypes.c_void_p,
+                                wt.DWORD, wt.DWORD, wt.HANDLE]
+    k32.CreateFileW.restype = wt.HANDLE
+    GENERIC_READ, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL = 0x80000000, 3, 0x80
+    SHARE_ALL = 0x1 | 0x2 | 0x4              # READ | WRITE | DELETE
+    h = k32.CreateFileW(path, GENERIC_READ, SHARE_ALL, None, OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL, None)
+    if not h or h == ctypes.c_void_p(-1).value:
+        err = ctypes.get_last_error()
+        if err in (2, 3):                    # FILE_NOT_FOUND, PATH_NOT_FOUND
+            raise FileNotFoundError(errno.ENOENT, f"no such file: {path}")
+        raise OSError(errno.EIO, f"CreateFileW({path}) failed: winerror {err}")
+    try:
+        return msvcrt.open_osfhandle(h, os.O_RDONLY)
+    except Exception:
+        _api().k32.CloseHandle(h)
+        raise
+
+
 # -- child lifetime ---------------------------------------------------------------
 
 _job_handle: int | None = None
@@ -647,6 +685,7 @@ __all__ = [
     "is_alive",
     "list_processes",
     "open_for_read",
+    "open_shared_fd",
     "query_regions",
     "read",
 ]
