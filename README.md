@@ -481,6 +481,7 @@ Example systemd units and an nginx/Caddy reverse-proxy are in [`deploy/`](deploy
 | `sqreader watch` | snapshots in a loop, to the terminal or a `captures/*.ndjson` file |
 | `sqreader serve` | record matches and serve the replay viewer and stats (`--push` also publishes finished matches) |
 | `sqreader doctor` | resolve every memory offset against the running binary and report any that moved |
+| `sqreader diagnose` | one report on whether this machine can run the reader (process, account, memory access, log); `--deep` also reads the game, `--out` saves it to send |
 | `sqreader enroll <TOKEN>` | register this machine with a central site; `--status` shows the enrolment and push queue |
 | `sqreader stats-backfill` | rebuild the stats database from recordings on disk; `--push` publishes them |
 | `sqreader stats-elo-recalc` | recompute every ELO rating from scratch, oldest match first |

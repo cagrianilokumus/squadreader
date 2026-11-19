@@ -501,6 +501,63 @@ def list_processes() -> list[ProcEntry]:
     return out
 
 
+def process_user(pid: int) -> str | None:
+    """``DOMAIN\\user`` that ``pid`` runs as, or None if it cannot be read.
+
+    Whether the reader can open the game at all comes down to this: Windows
+    grants memory reads to the same account (or an elevated one). Reading the
+    owner needs only PROCESS_QUERY_LIMITED_INFORMATION + TOKEN_QUERY.
+    """
+    if sys.platform != "win32":
+        raise _not_windows()
+    import ctypes
+    from ctypes import wintypes as wt
+
+    a = _api()
+    adv = ctypes.WinDLL("advapi32", use_last_error=True)
+    adv.OpenProcessToken.argtypes = [wt.HANDLE, wt.DWORD,
+                                     ctypes.POINTER(wt.HANDLE)]
+    adv.OpenProcessToken.restype = wt.BOOL
+    adv.GetTokenInformation.argtypes = [wt.HANDLE, ctypes.c_int,
+                                        ctypes.c_void_p, wt.DWORD,
+                                        ctypes.POINTER(wt.DWORD)]
+    adv.GetTokenInformation.restype = wt.BOOL
+    adv.LookupAccountSidW.argtypes = [
+        wt.LPCWSTR, ctypes.c_void_p, wt.LPWSTR, ctypes.POINTER(wt.DWORD),
+        wt.LPWSTR, ctypes.POINTER(wt.DWORD), ctypes.POINTER(ctypes.c_int)]
+    adv.LookupAccountSidW.restype = wt.BOOL
+
+    h = _query_handle(pid)
+    if h is None:
+        return None
+    token = wt.HANDLE()
+    try:
+        if not adv.OpenProcessToken(h, 0x0008, ctypes.byref(token)):  # QUERY
+            return None
+    finally:
+        a.k32.CloseHandle(h)
+    try:
+        need = wt.DWORD(0)
+        adv.GetTokenInformation(token, 1, None, 0, ctypes.byref(need))  # User
+        if not need.value:
+            return None
+        buf = ctypes.create_string_buffer(need.value)
+        if not adv.GetTokenInformation(token, 1, buf, need, ctypes.byref(need)):
+            return None
+        # TOKEN_USER { SID_AND_ATTRIBUTES User { PSID Sid; DWORD Attributes } }
+        sid = ctypes.c_void_p.from_buffer(buf).value
+        name = ctypes.create_unicode_buffer(256)
+        domain = ctypes.create_unicode_buffer(256)
+        n, d = wt.DWORD(len(name)), wt.DWORD(len(domain))
+        use = ctypes.c_int(0)
+        if not adv.LookupAccountSidW(None, sid, name, ctypes.byref(n), domain,
+                                     ctypes.byref(d), ctypes.byref(use)):
+            return None
+        return f"{domain.value}\\{name.value}" if domain.value else name.value
+    finally:
+        a.k32.CloseHandle(token)
+
+
 # -- child lifetime ---------------------------------------------------------------
 
 _job_handle: int | None = None
@@ -584,6 +641,7 @@ __all__ = [
     "ProcEntry",
     "close_handle",
     "kill_with_this_process",
+    "process_user",
     "command_line",
     "image_path",
     "is_alive",

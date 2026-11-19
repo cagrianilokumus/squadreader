@@ -2043,6 +2043,23 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     return 0 if ok else 1
 
 
+def cmd_diagnose(args: argparse.Namespace) -> int:
+    """One shareable report on whether this machine can run the reader.
+    Exit 1 when any check failed. See sqreader/diagnose.py."""
+    from . import diagnose
+    try:
+        sys.stdout.reconfigure(errors="replace")  # type: ignore[union-attr]
+    except Exception:
+        pass
+    report = diagnose.run(args.pid, deep=args.deep)
+    text = report.text()
+    print(text, end="")
+    if args.out:
+        args.out.write_text(text, encoding="utf-8")
+        print(f"report written to {args.out}", file=sys.stderr)
+    return 1 if report.failures else 0
+
+
 def cmd_test(args: argparse.Namespace) -> int:
     # Delegate to scripts/test_all.py for now; it already lives next to
     # the verify_* scripts and orchestrates them with subprocess.
@@ -2784,6 +2801,18 @@ def build_parser() -> argparse.ArgumentParser:
                                 "the live binary (run after Squad updates)")
     p_doc.add_argument("--pid", type=int)
     p_doc.set_defaults(func=cmd_doctor)
+
+    p_diag = sub.add_parser(
+        "diagnose",
+        help="check that this machine can run the reader and write one report "
+             "to send back (says nothing about other servers on the box)")
+    p_diag.add_argument("--pid", type=int)
+    p_diag.add_argument("--deep", action="store_true",
+                        help="also locate UE's global tables and read one "
+                             "snapshot (keeps one CPU core busy for a while)")
+    p_diag.add_argument("--out", type=Path,
+                        help="also write the report to this file (UTF-8)")
+    p_diag.set_defaults(func=cmd_diagnose)
 
     p_prof = sub.add_parser(
         "profile-build",
