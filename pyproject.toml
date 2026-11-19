@@ -4,7 +4,7 @@ name = "sqreader"
 # below) so a release bump touches one line and the running agent reports the
 # same string it was built from.
 dynamic = ["version"]
-description = "Read live Squad dedicated-server game state from /proc/<pid>/mem and emit NDJSON snapshots."
+description = "Read live Squad dedicated-server game state (Linux /proc/<pid>/mem, Windows ReadProcessMemory) and emit NDJSON snapshots."
 readme = "README.md"
 # No SPDX identifier exists for "AGPL plus an added condition", so this is a
 # LicenseRef. Do NOT put an OSI classifier below: the Commons Clause makes this
@@ -20,6 +20,7 @@ classifiers = [
     # usefully anyway (it needs root on the game host).
     "Private :: Do Not Upload",
     "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3",
 ]
 dependencies = [

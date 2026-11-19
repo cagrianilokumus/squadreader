@@ -182,3 +182,58 @@ Full layout walks via `scripts/verify_reflection.py`. Selected fields:
 ---
 
 (New Squad version → new section. Do not edit old sections.)
+
+## Squad v10.6.3 / UE 5.7.4 build 694944, **Windows** (`SquadGameServer.exe`, Shipping)
+
+Verified on a local dedicated server of the exact build BlueFang runs
+(`694944.3212.//Squad/v10.6.3`). `sqreader diagnose --deep` and `doctor`
+pass everything that does not need players on the server.
+
+### Binary layout
+
+| Item | Value |
+|---|---|
+| Binary type | PE32+, **ASLR**: the image base changes per boot (seen `0x7ff623680000`, `0x7ff7288d0000`) |
+| Process tree | a launcher `<root>\SquadGameServer.exe` starts the game `<root>\SquadGame\Binaries\Win64\SquadGameServer.exe` (same file name) |
+| Image | ~196 MB, `.text` ~134 MB, ~6.9 MB writable |
+| Writable section | reported by `VirtualQueryEx` as **~150 regions** (pages already written are RW, untouched ones still copy-on-write); contiguous, so they are merged before scanning |
+| Address space | ~44,600 committed regions (4.5 GB), vs a few thousand lines in `/proc/<pid>/maps` |
+
+### UE globals
+
+Both live in the exe's writable section (file-backed `MEM_IMAGE`, not
+anonymous), found by the same signatures as on Linux. No hardcoded address
+applies: the address cache stores them as **offsets from the image base**.
+
+| Global | Found | Discovery time |
+|---|---|---|
+| `GUObjectArray` | `.data`, 258,176 objects on Al Basrah AAS v1 | 0.8 s |
+| `FNameEntryAllocator` | `.data`, 103 blocks | 13 s (heap scan for Block 0) |
+
+### FNameEntryAllocator layout (Windows x64)
+
+`FRWLock` is `SRWLOCK` (8 bytes) instead of `pthread_rwlock_t` (56 bytes), so
+every field after it moves:
+
+| Offset | Type | Field |
+|---|---|---|
+| `0x00` | SRWLOCK (8 B) | `Lock` |
+| `0x08` | uint32 | `CurrentBlock` |
+| `0x0C` | uint32 | `CurrentByteCursor` |
+| `0x10` | uint8\*[8192] | `Blocks[]` |
+
+### Everything else
+
+FUObjectArray / FUObjectItem / UObject / UStruct / FField / FProperty match
+the v10.4.1 Linux tables above unchanged: every class the reader needs
+resolves and reflection reads correctly. Against the baked v10.4.1 values,
+reflection re-derives 28 constants at startup (vehicle components, seats,
+deployables, rally points, markers, take-hit info, and two that were not
+auto-resolved before this build: `SQMapMarkerManagerComponent.MarkerArray`
+0xb8 -> 0xc0 and `SQGraphInitializerComponent.DesignOutgoingLinks` 0xb8 ->
+0xc0). `ComponentToWorld` is found at `+0x210` (was `+0x200`). Whether those
+moves come from the platform or from the newer Squad build cannot be told
+from one platform alone.
+
+Still to verify with players on the server: the per-player stats collector
+fields (`doctor` reports them as missing on an empty server).

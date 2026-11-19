@@ -154,8 +154,8 @@ unless you run `sqreader enroll`.
 
 ### Requirements
 
-- **Linux.** The reader depends on `/proc/<pid>/mem`; it does not run on Windows
-  or macOS.
+- **Linux or Windows.** On Linux the reader uses `/proc/<pid>/mem`; on Windows
+  `ReadProcessMemory` (see [On Windows](#on-windows)). macOS is not supported.
 - **Python ≥ 3.10.**
 - Permission to read the game process's memory: run as **root**, or grant the
   Python process `CAP_SYS_PTRACE` and `CAP_DAC_READ_SEARCH`.
@@ -179,6 +179,34 @@ sudo sqreader serve
 
 On a standard single-instance box **no configuration is needed**: the Squad
 server is found by its process name.
+
+### On Windows
+
+The reader runs beside a Windows Squad server (`SquadGameServer.exe`) too. On
+Windows it opens the game with read access only (`PROCESS_VM_READ`), runs as
+the same account as the game, and needs no administrator rights once
+installed. From a source checkout:
+
+```powershell
+pip install -e .
+sqreader diagnose --deep      # can this machine read the game? one report
+sqreader serve
+```
+
+For a machine you do not administer yourself there is a self-contained
+package (its own Python, nothing installed system-wide, two scheduled tasks):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File packaging\windows\build.ps1
+# -> dist\sqreader-<version>-windows-x64.zip; on the game server:
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -SquadPort <Port=>
+```
+
+[`packaging/windows/INSTALL.md`](packaging/windows/INSTALL.md) is the guide
+for whoever installs it, and
+[`packaging/windows/TECHNICAL-SUMMARY.md`](packaging/windows/TECHNICAL-SUMMARY.md)
+what it does on the machine. Self-update is off on Windows: a release is
+installed by re-running `install.ps1` from the new package.
 
 ### In Docker
 
@@ -511,7 +539,8 @@ See [PRIVACY.md](PRIVACY.md) for what is stored, how long, and how to delete it.
 
 ## Known limitations
 
-- **Linux only** (depends on `/proc/<pid>/mem`).
+- **Linux and Windows only.** Self-update and squadreader.com's one-line
+  installer are Linux-only for now; on Windows a release is installed by hand.
 - **Squad-version-specific.** The offsets were reverse-engineered on Squad
   v10.4.1 ([`docs/offsets.md`](docs/offsets.md)). Since 1.4.5 the reader
   re-derives them from the running binary at startup, which carried it through
