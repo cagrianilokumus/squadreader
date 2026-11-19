@@ -24,6 +24,15 @@ So the scheduled task runs this, and this runs ``serve`` as its child:
   its CPU and ends it if this process is killed;
 * asks it to stop through a stop file (SQREADER_STOP_FILE): ``serve`` leaves
   its loop through the same path SIGTERM takes, then this exits too.
+
+Two more control files sit beside the stop file, for an owner who can reach
+the folder (over FTP, say) but cannot run anything on the machine:
+
+* ``sqreader.restart``: ``serve`` stops cleanly and is started again at
+  once, so a config change takes effect now rather than at the game
+  server's next restart;
+* ``enroll-token.txt``: ``serve`` redeems the token when it starts (see
+  cli._enroll_from_drop_file); drop it, then the restart file.
 """
 from __future__ import annotations
 
@@ -41,6 +50,10 @@ MIN_DELAY_SEC = 5.0
 MAX_DELAY_SEC = 30.0
 #: A run this long counts as healthy: the next failure starts over at MIN.
 HEALTHY_AFTER_SEC = 120.0
+
+#: The control files beside the stop file (see the module docstring).
+RESTART_FILE_NAME = "sqreader.restart"
+ENROLL_FILE_NAME = "enroll-token.txt"
 
 _BELOW_NORMAL_PRIORITY_CLASS = 0x00004000
 _CREATE_NEW_PROCESS_GROUP = 0x00000200
@@ -126,9 +139,13 @@ def run(argv: Sequence[str], *, stop_file: Path | str,
     exits. Returns 0 once stopped."""
     out = log or _Stdout()
     stop = Path(stop_file)
+    restart = stop.with_name(RESTART_FILE_NAME)
     stop.unlink(missing_ok=True)            # a stale one would stop us at once
-    env = dict(os.environ, SQREADER_STOP_FILE=str(stop), PYTHONUNBUFFERED="1",
-               PYTHONIOENCODING="utf-8")
+    restart.unlink(missing_ok=True)
+    env = dict(os.environ, SQREADER_STOP_FILE=str(stop),
+               SQREADER_RESTART_FILE=str(restart),
+               SQREADER_ENROLL_FILE=str(stop.with_name(ENROLL_FILE_NAME)),
+               PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8")
     out.write_line(f"[supervisor] started (pid {os.getpid()}); child: "
                    f"{' '.join(argv)}")
     if sys.platform == "win32":
@@ -163,13 +180,19 @@ def run(argv: Sequence[str], *, stop_file: Path | str,
                            f"{ran:.0f}s")
         if stop.exists():
             break
+        if restart.exists():
+            restart.unlink(missing_ok=True)
+            out.write_line("[supervisor] restart requested; starting again now")
+            delay = min_delay
+            continue
         delay = min_delay if ran >= healthy_after else delay
         out.write_line(f"[supervisor] restarting in {delay:g}s")
         steps = max(1, int(delay + 0.999))
         for _ in range(steps):
-            if stop.exists():
+            if stop.exists() or restart.exists():
                 break
             sleep(delay / steps)
+        restart.unlink(missing_ok=True)
         delay = min(delay * 2, max_delay)
     stop.unlink(missing_ok=True)
     out.write_line("[supervisor] stopped")
@@ -183,4 +206,5 @@ def request_stop(stop_file: Path | str) -> None:
 
 
 __all__ = ["RotatingLog", "run", "request_stop", "MIN_DELAY_SEC",
-           "MAX_DELAY_SEC", "HEALTHY_AFTER_SEC"]
+           "MAX_DELAY_SEC", "HEALTHY_AFTER_SEC", "RESTART_FILE_NAME",
+           "ENROLL_FILE_NAME"]

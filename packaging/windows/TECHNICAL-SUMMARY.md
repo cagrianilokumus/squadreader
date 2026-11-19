@@ -85,6 +85,14 @@ Task Scheduler
   request for a signed offset update. Without enrolment it never connects
   anywhere.
 
+## Control files
+
+`state\enroll-token.txt` (enrol at the next start), `state\sqreader.restart`
+(restart cleanly) and `state\sqreader.stop` (stop) let whoever can write to
+the folder manage the reader without running anything on the machine. They
+grant nothing beyond what write access to the folder already gives: the
+config file in it decides what the reader does anyway.
+
 ## Stopping and removal
 
 - `sqreaderctl.ps1 stop` asks the reader to stop through a file in `state\`:

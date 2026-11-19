@@ -10,7 +10,8 @@
     1. checks the bundled Python runs (version + selftest)
     2. writes sqreader.config.json (which game server to read)
     3. finds the Windows account the game server runs as
-    4. lets that account write recordings\, stats\, logs\, state\
+    4. lets that account write this folder (recordings, stats, logs, state,
+       and its enrolment file)
     5. runs `diagnose --deep` AS that account, to prove it can read the game
     6. registers the task "sqreader-<ServerId>" (at boot, restarts on failure,
        below-normal priority, CPU capped) and "sqreader-<ServerId>-retention"
@@ -106,7 +107,9 @@ $conf["server_id"] = $ServerId
 # "push_enabled": true in sqreader.config.json (read when the reader next
 # restarts, e.g. at the game server's daily restart). A value set that way
 # is kept by a re-run of this script.
-if ($Push -or $EnrollToken) { $conf["central_url"] = $CentralUrl }
+# central_url alone switches nothing on; it is where an enrolment (now, or
+# later from state\enroll-token.txt) is redeemed.
+$conf["central_url"] = $CentralUrl
 if ($Push) { $conf["push_enabled"] = $true }
 Write-Utf8NoBom $cfgPath (($conf | ConvertTo-Json -Depth 5) + "`n")
 $readBack = Invoke-Py "from sqreader import config; print(config.get('squad_port'))"
@@ -137,7 +140,9 @@ catch { throw "127.0.0.1:$HttpPort is already in use on this machine; re-run wit
 $dataDirs = @("recordings", "stats", "logs", "state")
 foreach ($d in $dataDirs) { New-Item -ItemType Directory -Force -Path (Join-Path $SqrRoot $d) | Out-Null }
 if (-not $CurrentUserInteractive) {
-    & icacls $SqrRoot /grant "${User}:(OI)(CI)RX" /Q | Out-Null
+    # Modify on the folder itself too: the reader writes its enrolment
+    # (.env.agent) next to the config when it enrols from enroll-token.txt.
+    & icacls $SqrRoot /grant "${User}:(OI)(CI)M" /Q | Out-Null
     foreach ($d in $dataDirs) {
         & icacls (Join-Path $SqrRoot $d) /grant "${User}:(OI)(CI)M" /Q | Out-Null
         if ($LASTEXITCODE -ne 0) { throw "icacls could not grant $User access to $d" }

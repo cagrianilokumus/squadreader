@@ -38,8 +38,8 @@ checks pass. It:
 3. finds the Windows account the Squad server runs as. The reader runs as the
    **same account**: Windows lets an account read its own processes' memory,
    so no administrator rights are needed;
-4. lets that account write the `recordings\`, `stats\`, `logs\` and `state\`
-   subfolders;
+4. lets that account write this folder (`recordings\`, `stats\`, `logs\`,
+   `state\`, and its enrolment file);
 5. runs `diagnose --deep` **as that account** and saves the result to
    `diagnose-install.txt`. This proves the reader can see the game before
    anything is registered;
@@ -113,6 +113,17 @@ design.
 Ending the task in Task Scheduler also works; it is just not clean (the match
 in progress is kept, but its recording is not closed). Everything the reader
 started ends with it.
+
+## Control files (for the server owner, e.g. over FTP)
+
+Three files in `state\` act as switches, so the owner can manage the reader
+without anyone running a command on the machine:
+
+| Put this file in `state\` | Effect |
+|---|---|
+| `enroll-token.txt` (containing the token) | the reader enrols with squadreader.com at its next start, then deletes the file (`.failed` if it did not work) |
+| `sqreader.restart` | the reader restarts cleanly within seconds (to pick up a config change or an enrolment) |
+| `sqreader.stop` | the reader stops cleanly and the task ends (start it again with `sqreaderctl.ps1 start`) |
 
 ## Update
 

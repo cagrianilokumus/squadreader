@@ -59,6 +59,23 @@ def _install_stop_handlers(handler) -> None:
         signal.signal(sigbreak, handler)
 
 
+def _shutdown_requested() -> str | None:
+    """"stop" or "restart" when a control file asks serve to leave, else None.
+
+    The restart file (SQREADER_RESTART_FILE) ends serve the same clean way as
+    the stop file; `supervise` then starts it again at once instead of
+    stopping too. That is how a change made from outside (enrolment, push
+    switched on in the config) takes effect without waiting for the game
+    server's next restart.
+    """
+    if _stop_requested():
+        return "stop"
+    path = os.environ.get("SQREADER_RESTART_FILE")
+    if path and os.path.exists(path):
+        return "restart"
+    return None
+
+
 def _stop_requested() -> bool:
     """Whether a stop file asks this process to shut down cleanly.
 
@@ -80,11 +97,58 @@ def _sleep_unless_stopping(seconds: float) -> None:
     a stop is requested — the degraded wait can be five minutes long."""
     steps = max(1, int(seconds + 0.999))
     for _ in range(steps):
-        if _stop_requested():
-            print("[stop] stop requested while waiting for the game; exiting",
-                  file=sys.stderr)
+        reason = _shutdown_requested()
+        if reason:
+            print(f"[{reason}] {reason} requested while waiting for the game; "
+                  f"exiting", file=sys.stderr)
             raise SystemExit(0)
         time.sleep(seconds / steps)
+
+
+def _enroll_from_drop_file() -> None:
+    """Redeem an enrolment token left in a file, as `sqreader enroll` would.
+
+    Enrolment has to run ON the game server's machine: it binds the
+    credentials to that machine's hardware fingerprint. On a hosted machine
+    reached only by FTP nobody can run a command there, so `supervise` names
+    a file in SQREADER_ENROLL_FILE and `serve` looks for it when it starts.
+    The token is the file's last word, so a pasted install line works too.
+    Success removes the file; a failure renames it to <name>.failed with the
+    reason in the log. It never re-enrols an enrolled machine, and it does
+    not switch push on: that stays push_enabled / --push.
+    """
+    path = os.environ.get("SQREADER_ENROLL_FILE")
+    if not path or not os.path.exists(path):
+        return
+    drop = Path(path)
+    from . import agent_creds
+    try:
+        words = drop.read_text(encoding="utf-8-sig").split()
+    except OSError as e:
+        print(f"[enroll] cannot read {drop}: {e!r}", file=sys.stderr)
+        return
+    creds = agent_creds.load()
+    if creds and creds.get("SQREADER_AGENT_ID"):
+        print(f"[enroll] already enrolled as {creds['SQREADER_AGENT_ID']}; "
+              f"ignoring {drop.name} (delete .env.agent to enrol again)",
+              file=sys.stderr)
+        os.replace(drop, drop.with_name(drop.name + ".ignored"))
+        return
+    if not words:
+        print(f"[enroll] {drop.name} is empty", file=sys.stderr)
+        os.replace(drop, drop.with_name(drop.name + ".failed"))
+        return
+    print(f"[enroll] enrolling from {drop.name}", file=sys.stderr)
+    try:
+        rc = cmd_enroll(argparse.Namespace(token=words[-1], central_url=None,
+                                           status=False, stats_db=None))
+    except Exception as e:  # noqa: BLE001 - a bad token must not stop serve
+        print(f"[enroll] failed: {e!r}", file=sys.stderr)
+        rc = 1
+    if rc == 0:
+        drop.unlink(missing_ok=True)
+    else:
+        os.replace(drop, drop.with_name(drop.name + ".failed"))
 
 
 def _self_update_supported() -> bool:
@@ -638,6 +702,10 @@ def cmd_serve(args: argparse.Namespace) -> int:
     a live view. Optional --out / --sqrx-out tee each tick to disk in parallel.
     """
     import logging
+
+    # Before anything reads the enrolment: a token dropped in since the last
+    # start is redeemed first, so this run already sees the credentials.
+    _enroll_from_drop_file()
 
     from .squad.snapshot import (
         DamageTracker, SnapshotCaches, build_snapshot, clean_nonfinite,
@@ -1273,9 +1341,10 @@ def cmd_serve(args: argparse.Namespace) -> int:
     snap: dict = {}
     try:
         while not stop["flag"]:
-            if _stop_requested():
-                print(f"[stop] stop requested at tick {tick}; shutting down "
-                      f"cleanly", file=sys.stderr)
+            reason = _shutdown_requested()
+            if reason:
+                print(f"[{reason}] {reason} requested at tick {tick}; shutting "
+                      f"down cleanly", file=sys.stderr)
                 break
             tick += 1
             t_tick = time.time()

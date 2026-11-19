@@ -248,3 +248,119 @@ def test_ending_the_task_ends_everything_below_it(tmp_path):
     finally:
         if host.poll() is None:
             host.kill()
+
+
+# ------------------------------------------------ restart and enrol files
+
+_SERVE_LIKE = """
+import os, sys, time
+print("env " + " ".join(sorted(k for k in os.environ if k.startswith("SQREADER_"))), flush=True)
+r, s = os.environ["SQREADER_RESTART_FILE"], os.environ["SQREADER_STOP_FILE"]
+while not (os.path.exists(r) or os.path.exists(s)):
+    time.sleep(0.02)
+print("leaving: " + ("restart" if os.path.exists(r) else "stop"), flush=True)
+"""
+
+
+def test_the_restart_file_restarts_at_once_without_stopping(tmp_path):
+    stop = tmp_path / "sqreader.stop"
+    restart = tmp_path / supervisor.RESTART_FILE_NAME
+    log = Lines()
+    restart.write_text("stale")                    # cleared at start, not obeyed
+
+    def control():
+        while not log.find("env "):
+            time.sleep(0.02)
+        restart.write_text("x")                    # owner asks for a restart
+        while len(log.find("[supervisor] child running")) < 2:
+            time.sleep(0.02)
+        supervisor.request_stop(stop)
+    t = threading.Thread(target=control)
+    t.start()
+    rc = supervisor.run([PY, "-c", _SERVE_LIKE], stop_file=stop, log=log,
+                        sleep=lambda s: pytest.fail("a restart must not back off"))
+    t.join()
+    assert rc == 0
+    assert log.find("[supervisor] restart requested")
+    assert "leaving: restart" in log.lines and "leaving: stop" in log.lines
+    assert len(log.find("[supervisor] child running")) == 2
+    assert not restart.exists()
+    env = log.find("env ")[0]
+    for name in ("SQREADER_ENROLL_FILE", "SQREADER_RESTART_FILE",
+                 "SQREADER_STOP_FILE"):
+        assert name in env
+
+
+def test_serve_leaves_on_a_restart_request_too(tmp_path, monkeypatch):
+    restart = tmp_path / "sqreader.restart"
+    monkeypatch.delenv("SQREADER_STOP_FILE", raising=False)
+    monkeypatch.setenv("SQREADER_RESTART_FILE", str(restart))
+    assert cli._shutdown_requested() is None
+    restart.write_text("x")
+    assert cli._shutdown_requested() == "restart"
+    with pytest.raises(SystemExit) as ei:
+        cli._sleep_unless_stopping(300)
+    assert ei.value.code == 0
+
+
+@pytest.fixture
+def drop(tmp_path, monkeypatch):
+    """A token file named by SQREADER_ENROLL_FILE, and a fake enrol."""
+    path = tmp_path / supervisor.ENROLL_FILE_NAME
+    monkeypatch.setenv("SQREADER_ENROLL_FILE", str(path))
+    calls = []
+
+    def fake_enroll(args):
+        calls.append(args.token)
+        return 0 if args.token != "bad" else 1
+    monkeypatch.setattr(cli, "cmd_enroll", fake_enroll)
+    from sqreader import agent_creds
+    monkeypatch.setattr(agent_creds, "load", lambda: {})
+    return path, calls
+
+
+def test_a_dropped_token_is_redeemed_and_removed(drop):
+    path, calls = drop
+    path.write_text("tok-123\n")
+    cli._enroll_from_drop_file()
+    assert calls == ["tok-123"] and not path.exists()
+
+
+def test_a_pasted_install_line_works_too(drop):
+    path, calls = drop
+    path.write_text("curl -fsSL https://squadreader.com/install.sh | sudo bash -s -- tok-456\n")
+    cli._enroll_from_drop_file()
+    assert calls == ["tok-456"]
+
+
+def test_a_failed_enrolment_is_kept_aside(drop):
+    path, calls = drop
+    path.write_text("bad")
+    cli._enroll_from_drop_file()
+    assert not path.exists()
+    assert path.with_name(path.name + ".failed").read_text() == "bad"
+
+
+def test_an_enrolled_machine_is_never_re_enrolled(drop, monkeypatch):
+    path, calls = drop
+    from sqreader import agent_creds
+    monkeypatch.setattr(agent_creds, "load", lambda: {"SQREADER_AGENT_ID": "a1"})
+    path.write_text("tok-789")
+    cli._enroll_from_drop_file()
+    assert calls == []
+    assert path.with_name(path.name + ".ignored").exists()
+
+
+def test_an_empty_token_file_fails_without_calling_central(drop):
+    path, calls = drop
+    path.write_text("  \n")
+    cli._enroll_from_drop_file()
+    assert calls == [] and path.with_name(path.name + ".failed").exists()
+
+
+def test_no_token_file_no_enrolment(drop, monkeypatch):
+    path, calls = drop
+    cli._enroll_from_drop_file()                  # file absent
+    monkeypatch.delenv("SQREADER_ENROLL_FILE")
+    cli._enroll_from_drop_file()                  # not supervised (Linux)
+    assert calls == []
