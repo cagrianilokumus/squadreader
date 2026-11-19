@@ -19,3 +19,5 @@
 *.svg text
 *.pdf binary
 *.sqrx binary
+# cmd.exe misreads LF-only batch files (labels, long lines); keep them CRLF.
+*.cmd text eol=crlf

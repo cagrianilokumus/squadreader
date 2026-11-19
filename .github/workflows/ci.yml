@@ -66,6 +66,37 @@ jobs:
       - name: Tests (pytest)
         run: pytest -q
 
+  # The self-contained Windows package (packaging/windows). Built exactly as a
+  # release would be, which ends with the PACKAGED interpreter running
+  # `version` and `selftest`. Not uploaded: artifact storage is small and
+  # shared, and a ~90 MB zip per push would fill it.
+  package-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      # Windows PowerShell 5.1 is what a game-server host runs, and it reads a
+      # BOM-less script as ANSI: the scripts must parse there AND stay ASCII.
+      - name: PowerShell scripts parse and are ASCII
+        shell: powershell
+        run: |
+          $bad = 0
+          Get-ChildItem packaging/windows/*.ps1 | ForEach-Object {
+            $errs = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$null, [ref]$errs) | Out-Null
+            if ($errs) { $errs | ForEach-Object { Write-Host "$($_.Extent.File):$($_.Extent.StartLineNumber): $($_.Message)" }; $bad++ }
+            if (@([IO.File]::ReadAllBytes($_.FullName) | Where-Object { $_ -gt 127 }).Count) { Write-Host "$($_.Name): not ASCII"; $bad++ }
+          }
+          if ($bad) { exit 1 }
+
+      - name: Build the package
+        shell: powershell
+        run: ./packaging/windows/build.ps1 -Python python
+
   # The container tests in docker/tests/ shell out to a real daemon and are not
   # collected by `pytest` (testpaths is tests/), so nothing used to check this
   # tree at all. These are the cheap half of that suite: the shell the image
