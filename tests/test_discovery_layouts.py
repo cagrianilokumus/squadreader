@@ -268,3 +268,65 @@ def test_linux_cache_keeps_absolute_addresses(on_linux, cache):
     arr = cli._resolve_gobjects(pm, "build-1")
     assert arr.base == LNX_EXT + GOBJ_OFF
     assert addrcache.get("build-1", "gobjects") == LNX_EXT + GOBJ_OFF
+
+
+# --------------------------------------------- the shape Windows really has
+
+
+def test_region_for_agrees_with_a_linear_walk():
+    """region_for became a binary search (45k regions on a real Windows
+    server made the walk take minutes). Same answer, everywhere."""
+    import random
+    regions, addr = [], 0x10000
+    rnd = random.Random(7)
+    for _ in range(500):
+        addr += rnd.choice([0, 0x1000, 0x5000])          # gaps, and none
+        size = rnd.choice([0x1000, 0x2000, 0x10000])
+        regions.append((_reg(addr, size, "rw-p", 0, ""), b""))
+        addr += size
+    pm = MapPM(regions)
+
+    def linear(a):
+        return next((r for r in pm.maps if r.start <= a < r.end), None)
+
+    probes = [rnd.randrange(0, addr + 0x10000) for _ in range(5000)]
+    probes += [r.start for r in pm.maps] + [r.end for r in pm.maps]
+    probes += [r.end - 1 for r in pm.maps] + [0, -1]
+    for a in probes:
+        assert pm.region_for(a) is linear(a), hex(a)
+
+
+def test_region_index_follows_a_refreshed_map():
+    pm = MapPM([(_reg(0x10000, 0x1000, "rw-p", 0, ""), b"")])
+    assert pm.region_for(0x10000) is not None
+    pm._maps = [_reg(0x50000, 0x1000, "rw-p", 0, "")]
+    assert pm.region_for(0x10000) is None
+    assert pm.region_for(0x50000) is pm._maps[0]
+
+
+def test_windows_table_straddling_two_section_regions_is_found(on_windows):
+    """A real Squad .exe reports its .data as ~150 regions (written pages are
+    RW, untouched ones still copy-on-write). The scan merges them back, so a
+    table across a region boundary is not missed."""
+    split = 0x1000 * 3                       # .data region boundary
+    gobj_at = split - 32                     # the 32-byte array crosses it
+    data = bytearray(0x10000)
+    _put(data, gobj_at, _uobject_array(WIN_HEAP + 0x100, GOBJ_NUM))
+    heap = bytearray(0x20000)
+    pm = MapPM([
+        (_reg(IMG, 0x1000, "r--p", 1, WIN_EXE), b""),
+        (_reg(IMG + 0x1000, 0x8000, "r-xp", 1, WIN_EXE), b""),
+        (_reg(IMG + 0xB000, split, "rw-p", 1, WIN_EXE), bytes(data[:split])),
+        (_reg(IMG + 0xB000 + split, 0x10000 - split, "rw-p", 1, WIN_EXE),
+         bytes(data[split:])),
+        (_reg(WIN_HEAP, 0x20000, "rw-p", 0, ""), heap),
+    ])
+
+    def read_across(addr, size):
+        out = b""
+        while size > 0:
+            chunk = MapPM.read(pm, addr, size)
+            out, addr, size = out + chunk, addr + len(chunk), size - len(chunk)
+        return out
+    pm.read = read_across                    # ReadProcessMemory spans regions
+    assert find_gobjects_base(pm) == IMG + 0xB000 + gobj_at

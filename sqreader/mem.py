@@ -35,6 +35,7 @@ import re
 import struct
 import sys
 import time
+from bisect import bisect_right
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator, Sequence
@@ -238,9 +239,25 @@ class ProcessMemory:
         self._maps = parse_maps(self.pid)
 
     def region_for(self, addr: int) -> MapRegion | None:
-        for r in self.maps:
-            if r.start <= addr < r.end:
-                return r
+        """The mapping holding ``addr``, or None.
+
+        A binary search over the maps sorted by start. Mappings never
+        overlap, so the answer is the one a linear walk would give; the walk
+        was simply too slow once a process has ~45k regions, which a Windows
+        game server does (VirtualQueryEx splits far finer than
+        /proc/<pid>/maps). Discovery asks this once per candidate pointer, and
+        the linear version turned seconds into tens of minutes there.
+        """
+        maps = self.maps
+        index = getattr(self, "_region_index", None)
+        if index is None or index[0] != (id(maps), len(maps)):
+            ordered = sorted(maps, key=lambda r: r.start)
+            index = ((id(maps), len(maps)), [r.start for r in ordered], ordered)
+            self._region_index = index
+        _, starts, ordered = index
+        i = bisect_right(starts, addr) - 1
+        if i >= 0 and addr < ordered[i].end:
+            return ordered[i]
         return None
 
     def module_base(self, path_suffix: str) -> int | None:

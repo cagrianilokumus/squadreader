@@ -613,10 +613,23 @@ def find_gobjects_base(pm: ProcessMemory) -> int:
         # whose zero-initialised tail is the BSS. The image mapping already
         # covers that tail, so there is no separate anonymous region to find
         # beside it the way there is on Linux.
+        #
+        # Windows reports that section as MANY regions (~150 on Squad
+        # v10.6.3): pages already written are private RW, untouched ones are
+        # still copy-on-write, and each change of protection starts a new
+        # region. They are contiguous, so they are merged back into spans and
+        # each span is read whole; scanning region by region would miss a
+        # struct that straddles two of them.
         pm.refresh_maps()
         mod = load_module(pm, "SquadGameServer")
-        spans = [(r.start, r.size) for r in mod.regions
-                 if r.writable and r.readable]
+        spans = []
+        for r in sorted(mod.regions, key=lambda r: r.start):
+            if not (r.writable and r.readable):
+                continue
+            if spans and spans[-1][0] + spans[-1][1] == r.start:
+                spans[-1] = (spans[-1][0], spans[-1][1] + r.size)
+            else:
+                spans.append((r.start, r.size))
         if not spans:
             raise RuntimeError("no writable section in the game module")
     else:
