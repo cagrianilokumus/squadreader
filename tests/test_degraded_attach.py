@@ -109,6 +109,7 @@ def test_it_restarts_itself_to_install_a_release(monkeypatch, tmp_path):
                         lambda k: True if k == "update_enabled" else
                         (False if k == "offset_autoheal" else "stable"))
     monkeypatch.setattr(cli, "_is_compiled", lambda: True)
+    monkeypatch.setattr(cli, "_self_update_supported", lambda: True)
     fake_up = types.SimpleNamespace(
         running_binary=lambda **k: tmp_path / "sqreader",
         staged_version=lambda d: "",
@@ -123,3 +124,31 @@ def test_it_restarts_itself_to_install_a_release(monkeypatch, tmp_path):
                                    channel="stable", started=0.0)
 
     assert ei.value.code == 0, "exit 0 so systemd restarts into the new binary"
+
+
+def test_where_a_release_cannot_be_installed_it_is_not_fetched(monkeypatch,
+                                                               tmp_path):
+    """Windows: nothing can swap the binary, so staging a release would only
+    restart the agent into the same version, forever. It keeps waiting for the
+    game instead, and never asks central for a release."""
+    _fail_then(monkeypatch, 2)
+    fake_ic = types.SimpleNamespace(
+        current_creds=lambda: {"SQREADER_AGENT_ID": "a"},
+        default_backlog_dir=lambda d: tmp_path,
+        checkin=lambda *a, **k: None,
+        _next_seq=lambda b: 1)
+    monkeypatch.setattr(sqreader, "ingest_client", fake_ic)
+    monkeypatch.setattr(cli.config, "get",
+                        lambda k: True if k == "update_enabled" else
+                        (False if k == "offset_autoheal" else "stable"))
+    monkeypatch.setattr(cli, "_is_compiled", lambda: True)
+    monkeypatch.setattr(cli, "_self_update_supported", lambda: False)
+    fake_up = types.SimpleNamespace(
+        running_binary=lambda **k: tmp_path / "sqreader",
+        staged_version=lambda d: "",
+        fetch_and_accept=lambda *a, **k: pytest.fail("fetched a release"))
+    monkeypatch.setattr(sqreader, "updater", fake_up)
+
+    got = cli._open_pipeline_or_wait(_Args(), state_dir=tmp_path,
+                                     channel="stable", started=0.0)
+    assert got[0] == "pid"

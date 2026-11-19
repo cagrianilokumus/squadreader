@@ -43,6 +43,45 @@ def _target_alive(pid: int) -> bool:
     return pid_alive(pid)
 
 
+def _install_stop_handlers(handler) -> None:
+    """Route every "please stop" the platform can send to ``handler``.
+
+    systemd stops a unit with SIGTERM. A Windows service manager stops a
+    console program with Ctrl+C (SIGINT) or Ctrl+Break (SIGBREAK, which exists
+    only on Windows); SIGTERM is never delivered there but registering it is
+    harmless. Whichever arrives, the loop ends and the shutdown path closes
+    the recording properly.
+    """
+    signal.signal(signal.SIGTERM, handler)
+    signal.signal(signal.SIGINT, handler)
+    sigbreak = getattr(signal, "SIGBREAK", None)
+    if sigbreak is not None:
+        signal.signal(sigbreak, handler)
+
+
+def _self_update_supported() -> bool:
+    """Whether this platform can install a staged release.
+
+    The install step swaps the binary while it is not running, from systemd's
+    ExecStartPre, and smoke-tests the candidate under a `.new` name. Windows
+    has neither half: a running .exe cannot be replaced, there is no pre-start
+    hook, and a `.new` file does not execute. Staging there would only make
+    the agent restart, find nothing installed, and do it again, so updates on
+    Windows are installed by hand until it has an installer of its own.
+    """
+    return sys.platform != "win32"
+
+
+def _parent_gone(parent_pid: int) -> bool:
+    """The build worker's orphan check. Linux reparents an orphan, so its
+    ppid changes; Windows never does, so there the parent's liveness is asked
+    directly (the job object in buildworker is the primary guarantee)."""
+    if sys.platform == "win32":
+        from .procinfo import pid_alive
+        return not pid_alive(parent_pid)
+    return os.getppid() != parent_pid
+
+
 def _discover_with_retry(fn, pm, label, *, attempts: int = 3,
                          delay: float = 2.0):
     """Run a heap-signature discovery fn, retrying transient failures.
@@ -268,8 +307,9 @@ def _open_pipeline_or_wait(args: argparse.Namespace, *, state_dir,
                 _degraded_try_offsets(
                     creds, state_dir, channel,
                     seq=ingest_client._next_seq(backlog))
-            if config.get("update_enabled") and updater.running_binary(
-                    compiled=_is_compiled()) is not None:
+            if (config.get("update_enabled") and _self_update_supported()
+                    and updater.running_binary(
+                        compiled=_is_compiled()) is not None):
                 try:
                     got = updater.fetch_and_accept(
                         creds, channel, seq=ingest_client._next_seq(backlog),
@@ -431,8 +471,7 @@ def cmd_watch(args: argparse.Namespace) -> int:
     stop = {"flag": False}
     def _stop(sig, frame):
         stop["flag"] = True
-    signal.signal(signal.SIGTERM, _stop)
-    signal.signal(signal.SIGINT, _stop)
+    _install_stop_handlers(_stop)
 
     tick = 0
     started = time.time()
@@ -902,7 +941,8 @@ def cmd_serve(args: argparse.Namespace) -> int:
             # Staging anyway would loop: the install step clears the stage, the
             # next check-in re-accepts the same release, and the agent restarts
             # for it every check-in interval.
-            if updater.running_binary(compiled=_is_compiled()) is None:
+            if (not _self_update_supported()
+                    or updater.running_binary(compiled=_is_compiled()) is None):
                 return
             got = updater.fetch_and_accept(
                 push_creds, _checkin_channel,
@@ -1090,8 +1130,7 @@ def cmd_serve(args: argparse.Namespace) -> int:
 
     def _stop(sig, frame):
         stop["flag"] = True
-    signal.signal(signal.SIGTERM, _stop)
-    signal.signal(signal.SIGINT, _stop)
+    _install_stop_handlers(_stop)
 
     tick = 0
     started = time.time()
@@ -2138,9 +2177,9 @@ def cmd_build_worker(args: argparse.Namespace) -> int:
     print(f"build-worker: streaming full snapshots for pid {pid}",
           file=sys.stderr)
     while True:
-        # Orphan guard: if the parent `serve` died (ppid changed), stop —
-        # don't linger building against a closed pipe.
-        if os.getppid() != parent_pid:
+        # Orphan guard: if the parent `serve` died, stop — don't linger
+        # building against a closed pipe.
+        if _parent_gone(parent_pid):
             return 0
         tick += 1
         t0 = time.time()
@@ -2172,6 +2211,12 @@ def cmd_build_worker(args: argparse.Namespace) -> int:
                 bad_streak = 0
             out.write(json.dumps(snap, ensure_ascii=False) + "\n")
             out.flush()
+        except BrokenPipeError:
+            # Parent closed the pipe (serve stopped / restarted) — we're done.
+            # Must precede `except OSError`, of which it is a subclass; after
+            # it, this branch could never run and a closed pipe was retried as
+            # a read error until the orphan check caught up.
+            return 0
         except OSError as e:
             if not _target_alive(pid):
                 print(f"[build-worker] target pid {pid} gone; exiting",
@@ -2179,9 +2224,6 @@ def cmd_build_worker(args: argparse.Namespace) -> int:
                 return 1
             print(f"[build-worker] read error: {e!r}", file=sys.stderr)
             time.sleep(0.5)
-        except BrokenPipeError:
-            # Parent closed the pipe (serve stopped / restarted) — we're done.
-            return 0
         except Exception as e:  # noqa: BLE001 - one bad tick must not kill us
             import traceback
             print(f"[build-worker] snapshot error: {e!r}", file=sys.stderr)

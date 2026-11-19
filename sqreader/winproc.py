@@ -501,9 +501,89 @@ def list_processes() -> list[ProcEntry]:
     return out
 
 
+# -- child lifetime ---------------------------------------------------------------
+
+_job_handle: int | None = None
+
+
+def kill_with_this_process(pid: int) -> bool:
+    """Make the kernel kill ``pid`` when THIS process ends, however it ends.
+
+    The Windows counterpart of a child noticing its parent is gone. On Linux
+    the build worker sees its ppid change and stops; Windows never reparents,
+    so an orphaned worker would keep building snapshots on the game server
+    forever. Instead the child goes into a job object flagged
+    KILL_ON_JOB_CLOSE whose only handle this process holds: when this process
+    exits — cleanly, by crash, or by TerminateProcess — the handle closes and
+    the kernel ends the job's processes. Returns False if that could not be
+    arranged (the caller keeps its own liveness check either way).
+    """
+    global _job_handle
+    if sys.platform != "win32":
+        raise _not_windows()
+    import ctypes
+    from ctypes import wintypes as wt
+
+    a = _api()
+    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+
+    class BASIC(ctypes.Structure):
+        _fields_ = [
+            ("PerProcessUserTimeLimit", ctypes.c_int64),
+            ("PerJobUserTimeLimit", ctypes.c_int64),
+            ("LimitFlags", wt.DWORD),
+            ("MinimumWorkingSetSize", ctypes.c_size_t),
+            ("MaximumWorkingSetSize", ctypes.c_size_t),
+            ("ActiveProcessLimit", wt.DWORD),
+            ("Affinity", ctypes.c_size_t),
+            ("PriorityClass", wt.DWORD),
+            ("SchedulingClass", wt.DWORD),
+        ]
+
+    class EXTENDED(ctypes.Structure):
+        _fields_ = [
+            ("BasicLimitInformation", BASIC),
+            ("IoInfo", ctypes.c_uint64 * 6),
+            ("ProcessMemoryLimit", ctypes.c_size_t),
+            ("JobMemoryLimit", ctypes.c_size_t),
+            ("PeakProcessMemoryUsed", ctypes.c_size_t),
+            ("PeakJobMemoryUsed", ctypes.c_size_t),
+        ]
+
+    k32.CreateJobObjectW.argtypes = [ctypes.c_void_p, wt.LPCWSTR]
+    k32.CreateJobObjectW.restype = wt.HANDLE
+    k32.SetInformationJobObject.argtypes = [
+        wt.HANDLE, ctypes.c_int, ctypes.c_void_p, wt.DWORD]
+    k32.SetInformationJobObject.restype = wt.BOOL
+    k32.AssignProcessToJobObject.argtypes = [wt.HANDLE, wt.HANDLE]
+    k32.AssignProcessToJobObject.restype = wt.BOOL
+
+    if _job_handle is None:
+        job = k32.CreateJobObjectW(None, None)
+        if not job:
+            return False
+        info = EXTENDED()
+        info.BasicLimitInformation.LimitFlags = 0x2000  # KILL_ON_JOB_CLOSE
+        if not k32.SetInformationJobObject(job, 9, ctypes.byref(info),
+                                           ctypes.sizeof(info)):
+            a.k32.CloseHandle(job)
+            return False
+        _job_handle = int(job)          # held, never closed, until we exit
+
+    PROCESS_SET_QUOTA, PROCESS_TERMINATE = 0x0100, 0x0001
+    h = a.k32.OpenProcess(PROCESS_SET_QUOTA | PROCESS_TERMINATE, False, pid)
+    if not h:
+        return False
+    try:
+        return bool(k32.AssignProcessToJobObject(_job_handle, h))
+    finally:
+        a.k32.CloseHandle(h)
+
+
 __all__ = [
     "ProcEntry",
     "close_handle",
+    "kill_with_this_process",
     "command_line",
     "image_path",
     "is_alive",
