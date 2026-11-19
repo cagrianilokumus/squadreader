@@ -601,7 +601,8 @@ def open_shared_fd(path: str) -> int:
 _job_handle: int | None = None
 
 
-def kill_with_this_process(pid: int) -> bool:
+def kill_with_this_process(pid: int, *,
+                           cpu_percent_of_one_core: float | None = None) -> bool:
     """Make the kernel kill ``pid`` when THIS process ends, however it ends.
 
     The Windows counterpart of a child noticing its parent is gone. On Linux
@@ -612,6 +613,12 @@ def kill_with_this_process(pid: int) -> bool:
     exits — cleanly, by crash, or by TerminateProcess — the handle closes and
     the kernel ends the job's processes. Returns False if that could not be
     arranged (the caller keeps its own liveness check either way).
+
+    ``cpu_percent_of_one_core`` additionally hard-caps the CPU the job's
+    processes may use, together — the counterpart of the CPUQuota=50% the
+    Linux unit runs under, so the reader can never take the game server's
+    cycles. It applies when this process creates its job, i.e. on the first
+    call; later calls reuse that job as it is.
     """
     global _job_handle
     if sys.platform != "win32":
@@ -663,6 +670,17 @@ def kill_with_this_process(pid: int) -> bool:
                                            ctypes.sizeof(info)):
             a.k32.CloseHandle(job)
             return False
+        if cpu_percent_of_one_core:
+            # JOBOBJECT_CPU_RATE_CONTROL_INFORMATION: ControlFlags, CpuRate.
+            # CpuRate is in 1/100 % of the WHOLE machine, so one core's share
+            # is divided by the core count. ENABLE | HARD_CAP.
+            cores = os.cpu_count() or 1
+            rate = round(cpu_percent_of_one_core * 100 / cores)
+            rate_info = (wt.DWORD * 2)(0x1 | 0x4, max(1, min(10000, rate)))
+            if not k32.SetInformationJobObject(job, 15, ctypes.byref(rate_info),
+                                               ctypes.sizeof(rate_info)):
+                a.k32.CloseHandle(job)
+                return False
         _job_handle = int(job)          # held, never closed, until we exit
 
     PROCESS_SET_QUOTA, PROCESS_TERMINATE = 0x0100, 0x0001
@@ -675,9 +693,24 @@ def kill_with_this_process(pid: int) -> bool:
         a.k32.CloseHandle(h)
 
 
+def contain_this_process(*, cpu_percent_of_one_core: float | None = None) -> bool:
+    """Put THIS process into the kill-on-close (optionally CPU-capped) job.
+
+    Every process started from here on is created inside the job too, which
+    closes the race kill_with_this_process cannot: a child assigned after it
+    started may already have started children of its own, and those are not
+    in the job. (The venv launcher does exactly that: python.exe there is a
+    stub that starts the real interpreter as its child.) The cap then covers
+    this process and everything below it, together.
+    """
+    return kill_with_this_process(os.getpid(),
+                                  cpu_percent_of_one_core=cpu_percent_of_one_core)
+
+
 __all__ = [
     "ProcEntry",
     "close_handle",
+    "contain_this_process",
     "kill_with_this_process",
     "process_user",
     "command_line",

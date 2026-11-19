@@ -59,6 +59,34 @@ def _install_stop_handlers(handler) -> None:
         signal.signal(sigbreak, handler)
 
 
+def _stop_requested() -> bool:
+    """Whether a stop file asks this process to shut down cleanly.
+
+    Windows has no SIGTERM for a service manager to send: Task Scheduler ends
+    a task with TerminateProcess, which skips the shutdown path that closes
+    the recording and leaves the match open for the next boot. `supervise`
+    instead names a file in SQREADER_STOP_FILE; when it appears, `serve`
+    leaves its loop exactly as it would on SIGTERM. Unset (every Linux
+    deployment), this is always False.
+    """
+    path = os.environ.get("SQREADER_STOP_FILE")
+    if not path:
+        return False
+    return os.path.exists(path)
+
+
+def _sleep_unless_stopping(seconds: float) -> None:
+    """time.sleep(seconds), in short steps, leaving early (SystemExit 0) when
+    a stop is requested — the degraded wait can be five minutes long."""
+    steps = max(1, int(seconds + 0.999))
+    for _ in range(steps):
+        if _stop_requested():
+            print("[stop] stop requested while waiting for the game; exiting",
+                  file=sys.stderr)
+            raise SystemExit(0)
+        time.sleep(seconds / steps)
+
+
 def _self_update_supported() -> bool:
     """Whether this platform can install a staged release.
 
@@ -329,7 +357,7 @@ def _open_pipeline_or_wait(args: argparse.Namespace, *, state_dir,
                 except Exception as e:
                     print(f"[degraded] update check failed: {e!r}",
                           file=sys.stderr)
-        time.sleep(delay)
+        _sleep_unless_stopping(delay)
         delay = min(delay * 2, _DEGRADED_MAX_SEC)
 
 
@@ -1245,6 +1273,10 @@ def cmd_serve(args: argparse.Namespace) -> int:
     snap: dict = {}
     try:
         while not stop["flag"]:
+            if _stop_requested():
+                print(f"[stop] stop requested at tick {tick}; shutting down "
+                      f"cleanly", file=sys.stderr)
+                break
             tick += 1
             t_tick = time.time()
             try:
@@ -2060,6 +2092,33 @@ def cmd_diagnose(args: argparse.Namespace) -> int:
     return 1 if report.failures else 0
 
 
+def cmd_supervise(args: argparse.Namespace) -> int:
+    """Run a subcommand (normally `serve`) under sqreader/supervisor.py:
+    restarted when it exits, logged to a rotating file, CPU-capped, stopped
+    cleanly through a stop file. How the Windows package runs the reader."""
+    from . import supervisor
+    child = list(args.child)
+    if child and child[0] == "--":
+        child = child[1:]
+    if not child:
+        print("supervise: name the command to keep running after --, "
+              "e.g.  sqreader supervise --log-file logs/sqreader.log -- serve",
+              file=sys.stderr)
+        return 2
+    log = (supervisor.RotatingLog(args.log_file,
+                                  max_bytes=int(args.log_max_mb * (1 << 20)),
+                                  keep=args.log_keep)
+           if args.log_file else None)
+    stop_file = args.stop_file
+
+    def _on_signal(sig, frame):
+        # Ctrl+C / Ctrl+Break / SIGTERM: stop the child the clean way.
+        supervisor.request_stop(stop_file)
+    _install_stop_handlers(_on_signal)
+    return supervisor.run([*_self_command(), *child], stop_file=stop_file,
+                          log=log, cpu_percent_of_one_core=args.cpu_limit or None)
+
+
 def cmd_test(args: argparse.Namespace) -> int:
     # Delegate to scripts/test_all.py for now; it already lives next to
     # the verify_* scripts and orchestrates them with subprocess.
@@ -2329,6 +2388,18 @@ def _is_compiled() -> bool:
     return bool(getattr(sys, "frozen", False) or "__compiled__" in globals())
 
 
+def _self_command() -> list[str]:
+    """How to re-invoke this program; append the subcommand and its args.
+
+    Shared by the `build-worker` subprocess and by `supervise`, which starts
+    `serve` as its child. See _worker_prefix for why it is not simply
+    sys.executable.
+    """
+    if _is_compiled():
+        return [os.environ.get("NUITKA_ONEFILE_BINARY") or sys.argv[0]]
+    return [sys.executable, "-m", "sqreader.cli"]
+
+
 def _worker_prefix() -> list[str]:
     """How to re-invoke this program to run the `build-worker` subprocess.
 
@@ -2340,10 +2411,7 @@ def _worker_prefix() -> list[str]:
     loop begins. Nuitka exports the real artifact path as NUITKA_ONEFILE_BINARY;
     argv[0] is the fallback.
     """
-    if _is_compiled():
-        exe = os.environ.get("NUITKA_ONEFILE_BINARY") or sys.argv[0]
-        return [exe, "build-worker"]
-    return [sys.executable, "-m", "sqreader.cli", "build-worker"]
+    return [*_self_command(), "build-worker"]
 
 
 def cmd_version(args: argparse.Namespace) -> int:
@@ -2813,6 +2881,28 @@ def build_parser() -> argparse.ArgumentParser:
     p_diag.add_argument("--out", type=Path,
                         help="also write the report to this file (UTF-8)")
     p_diag.set_defaults(func=cmd_diagnose)
+
+    p_sup = sub.add_parser(
+        "supervise",
+        help="keep a subcommand (normally serve) running: restart it when it "
+             "exits, log to a rotating file, cap its CPU, stop it cleanly via "
+             "a stop file. How the Windows package runs the reader.")
+    p_sup.add_argument("--log-file", type=Path,
+                       help="timestamped, size-rotated log (default: stdout)")
+    p_sup.add_argument("--log-max-mb", type=float, default=20.0,
+                       help="rotate the log at this size (default 20)")
+    p_sup.add_argument("--log-keep", type=int, default=5,
+                       help="rotated logs to keep (default 5)")
+    p_sup.add_argument("--stop-file", type=Path, default=Path("sqreader.stop"),
+                       help="creating this file stops the child cleanly, then "
+                            "the supervisor (default ./sqreader.stop)")
+    p_sup.add_argument("--cpu-limit", type=float, default=0.0,
+                       help="Windows: hard-cap the child's CPU at this percent "
+                            "of ONE core (50 = the Linux unit's CPUQuota); "
+                            "0 = no cap")
+    p_sup.add_argument("child", nargs=argparse.REMAINDER,
+                       help="-- <subcommand> [args...]")
+    p_sup.set_defaults(func=cmd_supervise)
 
     p_prof = sub.add_parser(
         "profile-build",
