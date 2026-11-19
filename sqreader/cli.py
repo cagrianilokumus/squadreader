@@ -2174,6 +2174,26 @@ def cmd_supervise(args: argparse.Namespace) -> int:
               "e.g.  sqreader supervise --log-file logs/sqreader.log -- serve",
               file=sys.stderr)
         return 2
+
+    # The Linux daily timer's job, on a thread of the supervisor: a host that
+    # runs this from its own panel has no Task Scheduler to give it.
+    retention = None
+    if args.retention_dir:
+        if args.retention_every_hours <= 0:
+            print("supervise: --retention-every-hours must be above 0",
+                  file=sys.stderr)
+            return 2
+        policy = argparse.Namespace(
+            recordings_dir=args.retention_dir,
+            max_age_days=args.retention_max_age_days,
+            max_total_gb=args.retention_max_total_gb,
+            min_free_gb=args.retention_min_free_gb,
+            min_keep=args.retention_min_keep,
+            in_progress_min=60.0, dry_run=False)
+
+        def retention(say):
+            prune_recordings(policy, say=say, warn=say)
+
     log = (supervisor.RotatingLog(args.log_file,
                                   max_bytes=int(args.log_max_mb * (1 << 20)),
                                   keep=args.log_keep)
@@ -2185,7 +2205,9 @@ def cmd_supervise(args: argparse.Namespace) -> int:
         supervisor.request_stop(stop_file)
     _install_stop_handlers(_on_signal)
     return supervisor.run([*_self_command(), *child], stop_file=stop_file,
-                          log=log, cpu_percent_of_one_core=args.cpu_limit or None)
+                          log=log, cpu_percent_of_one_core=args.cpu_limit or None,
+                          retention=retention,
+                          retention_every=args.retention_every_hours * 3600)
 
 
 def cmd_test(args: argparse.Namespace) -> int:
@@ -2514,6 +2536,17 @@ def cmd_version(args: argparse.Namespace) -> int:
 
 
 def cmd_retention(args: argparse.Namespace) -> int:
+    """Prune old recordings so the disk cannot fill (see prune_recordings)."""
+    return prune_recordings(args)
+
+
+def _print_stderr(msg: str) -> None:
+    print(msg, file=sys.stderr)
+
+
+def prune_recordings(args: argparse.Namespace, *,
+                     say: Callable[[str], None] = print,
+                     warn: Callable[[str], None] = _print_stderr) -> int:
     """Prune old recordings so the disk cannot fill.
 
     Recordings grow by hundreds of MB a day and nothing else deletes them. On a
@@ -2530,17 +2563,20 @@ def cmd_retention(args: argparse.Namespace) -> int:
       * --dry-run changes nothing.
 
     Exits 0 even when nothing matched, so the systemd timer stays green.
+
+    Every line it reports goes to `say` (stdout) or `warn` (stderr):
+    `supervise` runs it on a thread of its own and writes them to its log.
     """
     import shutil
     import time
 
     d = Path(args.recordings_dir).expanduser()
     if not d.is_dir():
-        print(f"recordings dir not found: {d}", file=sys.stderr)
+        warn(f"recordings dir not found: {d}")
         return 1
     dry = bool(args.dry_run)
     if dry:
-        print("[retention] DRY RUN — nothing will be deleted")
+        say("[retention] DRY RUN — nothing will be deleted")
 
     cutoff = time.time() - args.in_progress_min * 60
     files = []
@@ -2594,10 +2630,10 @@ def cmd_retention(args: argparse.Namespace) -> int:
         deletable = sum(sz for _m, sz, p in files
                         if p not in doomed and p not in keepers)
         if free + freed + deletable < need:
-            print(f"[retention] cannot reach {args.min_free_gb:g} GB free by "
-                  f"pruning recordings (only {deletable / 1024**3:.1f} GB here, "
-                  f"{free / 1024**3:.1f} GB free) — something else is filling "
-                  f"the disk; not deleting on this policy", file=sys.stderr)
+            warn(f"[retention] cannot reach {args.min_free_gb:g} GB free by "
+                 f"pruning recordings (only {deletable / 1024**3:.1f} GB here, "
+                 f"{free / 1024**3:.1f} GB free) — something else is filling "
+                 f"the disk; not deleting on this policy")
         else:
             for _m, sz, p in files:
                 if free + freed >= need:
@@ -2607,7 +2643,7 @@ def cmd_retention(args: argparse.Namespace) -> int:
                     freed += sz
 
     if not doomed:
-        print("[retention] nothing to prune")
+        say("[retention] nothing to prune")
         return 0
 
     total = 0
@@ -2616,7 +2652,7 @@ def cmd_retention(args: argparse.Namespace) -> int:
             total += p.stat().st_size
         except OSError:
             pass
-        print(f"[retention] {'would remove' if dry else 'removing'} {p.name}")
+        say(f"[retention] {'would remove' if dry else 'removing'} {p.name}")
         if dry:
             continue
         for victim in (p, p.with_suffix(".meta.json")):
@@ -2625,10 +2661,9 @@ def cmd_retention(args: argparse.Namespace) -> int:
             except FileNotFoundError:
                 pass
             except OSError as exc:
-                print(f"[retention] could not remove {victim}: {exc}",
-                      file=sys.stderr)
-    print(f"[retention] {len(doomed)} recording(s), "
-          f"{total / 1024**3:.2f} GB {'would be' if dry else ''} freed")
+                warn(f"[retention] could not remove {victim}: {exc}")
+    say(f"[retention] {len(doomed)} recording(s), "
+        f"{total / 1024**3:.2f} GB {'would be' if dry else ''} freed")
     return 0
 
 
@@ -2969,6 +3004,24 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Windows: hard-cap the child's CPU at this percent "
                             "of ONE core (50 = the Linux unit's CPUQuota); "
                             "0 = no cap")
+    p_sup.add_argument("--retention-dir", type=Path, default=None,
+                       help="prune old recordings in this dir from a thread "
+                            "of this process (the Linux daily timer's job): "
+                            "5 min after start, then every "
+                            "--retention-every-hours. Off when omitted.")
+    p_sup.add_argument("--retention-every-hours", type=float, default=24.0,
+                       help="hours between clean-ups (default 24)")
+    p_sup.add_argument("--retention-max-age-days", type=float, default=90.0,
+                       help="drop recordings older than N days (default 90, "
+                            "0 = off)")
+    p_sup.add_argument("--retention-max-total-gb", type=float, default=50.0,
+                       help="drop oldest until the dir fits in N GB "
+                            "(default 50, 0 = off)")
+    p_sup.add_argument("--retention-min-free-gb", type=float, default=20.0,
+                       help="drop oldest until the disk has N GB free "
+                            "(default 20, 0 = off)")
+    p_sup.add_argument("--retention-min-keep", type=int, default=3,
+                       help="always keep the newest N recordings (default 3)")
     p_sup.add_argument("child", nargs=argparse.REMAINDER,
                        help="-- <subcommand> [args...]")
     p_sup.set_defaults(func=cmd_supervise)

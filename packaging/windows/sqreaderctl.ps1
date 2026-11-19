@@ -24,11 +24,14 @@ function Show-Status {
     $info = Get-ScheduledTaskInfo -TaskName $cfg.TaskName
     Write-Sqr ("task {0}: {1} (last start {2}, runs as {3}, {4})" -f `
         $cfg.TaskName, $t.State, $info.LastRunTime, $cfg.User, $cfg.RunLevel)
-    $r = Get-ScheduledTaskInfo -TaskName $cfg.RetentionTask -ErrorAction SilentlyContinue
-    if ($r) {
-        $last = $(if ($r.LastRunTime -and $r.LastRunTime.Year -ge 2000) { $r.LastRunTime } else { "never" })
-        Write-Sqr ("retention: last run {0}, next {1}" -f $last, $r.NextRunTime)
+    $log = Join-Path $SqrRoot "logs\sqreader.log"
+    $ret = $null
+    if (Test-Path $log) {
+        $ret = Select-String -Path $log -Pattern "\[retention\]" -ErrorAction SilentlyContinue |
+            Select-Object -Last 1
     }
+    if ($ret) { Write-Sqr "retention (daily, inside the reader): $($ret.Line)" }
+    else { Write-Sqr "retention (daily, inside the reader): no run in the current log yet" }
     $rec = Join-Path $SqrRoot "recordings"
     if (Test-Path $rec) {
         $files = @(Get-ChildItem $rec -Filter *.sqrx -File -ErrorAction SilentlyContinue)

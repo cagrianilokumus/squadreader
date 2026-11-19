@@ -364,3 +364,128 @@ def test_no_token_file_no_enrolment(drop, monkeypatch):
     monkeypatch.delenv("SQREADER_ENROLL_FILE")
     cli._enroll_from_drop_file()                  # not supervised (Linux)
     assert calls == []
+
+
+# ------------------------------- self-contained: retention and address cache
+
+_WAIT_FOR_STOP = """
+import os, time
+print("cache " + os.environ.get("SQR_ADDR_CACHE", "-"), flush=True)
+while not os.path.exists(os.environ["SQREADER_STOP_FILE"]):
+    time.sleep(0.02)
+"""
+
+
+def _run_until(log, stop, predicate, **kw):
+    """supervisor.run on _WAIT_FOR_STOP, stopped once predicate() holds."""
+    def control():
+        deadline = time.monotonic() + 20
+        while not predicate() and time.monotonic() < deadline:
+            time.sleep(0.02)
+        supervisor.request_stop(stop)
+    t = threading.Thread(target=control)
+    t.start()
+    rc = supervisor.run([PY, "-c", _WAIT_FOR_STOP], stop_file=stop, log=log,
+                        **kw)
+    t.join()
+    return rc
+
+
+def test_retention_runs_on_a_thread_until_the_stop(tmp_path):
+    stop = tmp_path / "sqreader.stop"
+    log = Lines()
+    runs = []
+
+    def job(say):
+        runs.append(time.monotonic())
+        say(f"[retention] run {len(runs)}")
+    rc = _run_until(log, stop, lambda: len(runs) >= 3, retention=job,
+                    retention_first=0.01, retention_every=0.05)
+    assert rc == 0
+    assert len(runs) >= 3
+    assert "[retention] run 1" in log.lines
+    after = len(runs)
+    time.sleep(0.2)
+    assert len(runs) == after, "no clean-up runs once the supervisor stopped"
+
+
+def test_a_failing_retention_is_logged_and_tried_again(tmp_path):
+    stop = tmp_path / "sqreader.stop"
+    log = Lines()
+    calls = []
+
+    def job(say):
+        calls.append(1)
+        raise OSError("disk went away")
+    rc = _run_until(log, stop, lambda: len(calls) >= 2, retention=job,
+                    retention_first=0.01, retention_every=0.05)
+    assert rc == 0
+    assert any("disk went away" in ln for ln in log.find("[retention] failed"))
+    assert log.find("[supervisor] stopped")
+
+
+def test_no_retention_unless_asked(tmp_path):
+    stop = tmp_path / "sqreader.stop"
+    log = Lines()
+    _run_until(log, stop, lambda: log.find("cache "))
+    assert not log.find("[supervisor] retention")
+
+
+def test_the_address_cache_lives_beside_the_control_files(tmp_path, monkeypatch):
+    monkeypatch.delenv("SQR_ADDR_CACHE", raising=False)
+    stop = tmp_path / "state" / "sqreader.stop"
+    stop.parent.mkdir()
+    log = Lines()
+    _run_until(log, stop, lambda: log.find("cache "))
+    assert log.find("cache ")[0] == \
+        "cache " + str(stop.with_name(supervisor.ADDR_CACHE_NAME))
+
+
+def test_an_address_cache_set_by_the_owner_is_kept(tmp_path, monkeypatch):
+    mine = tmp_path / "elsewhere.json"
+    monkeypatch.setenv("SQR_ADDR_CACHE", str(mine))
+    stop = tmp_path / "sqreader.stop"
+    log = Lines()
+    _run_until(log, stop, lambda: log.find("cache "))
+    assert log.find("cache ")[0] == f"cache {mine}"
+
+
+def test_cli_wires_retention_to_the_recordings_policy(tmp_path, monkeypatch):
+    seen = {}
+
+    def fake_run(argv, **kw):
+        seen.update(kw)
+        return 0
+    monkeypatch.setattr(supervisor, "run", fake_run)
+    monkeypatch.setattr(cli, "_install_stop_handlers", lambda h: None)
+    rec = tmp_path / "recordings"
+    rec.mkdir()
+    old = rec / "old.sqrx"
+    old.write_bytes(b"x")
+    when = time.time() - 100 * 86400
+    os.utime(old, (when, when))
+    (rec / "new.sqrx").write_bytes(b"x")
+    rc = cli.main(["supervise", "--stop-file", str(tmp_path / "s"),
+                   "--retention-dir", str(rec), "--retention-every-hours", "6",
+                   "--retention-min-keep", "0", "--", "serve"])
+    assert rc == 0
+    assert seen["retention_every"] == 6 * 3600
+    said = []
+    seen["retention"](said.append)
+    assert not old.exists() and (rec / "new.sqrx").exists()
+    assert "[retention] removing old.sqrx" in said
+
+
+def test_cli_has_no_retention_without_a_dir(tmp_path, monkeypatch):
+    seen = {}
+    monkeypatch.setattr(supervisor, "run", lambda argv, **kw: seen.update(kw) or 0)
+    monkeypatch.setattr(cli, "_install_stop_handlers", lambda h: None)
+    assert cli.main(["supervise", "--stop-file", str(tmp_path / "s"),
+                     "--", "serve"]) == 0
+    assert seen["retention"] is None
+
+
+def test_cli_refuses_a_zero_retention_interval(tmp_path):
+    assert cli.main(["supervise", "--stop-file", str(tmp_path / "s"),
+                     "--retention-dir", str(tmp_path),
+                     "--retention-every-hours", "0", "--", "serve"]) == 2

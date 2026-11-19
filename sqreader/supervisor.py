@@ -33,6 +33,16 @@ the folder (over FTP, say) but cannot run anything on the machine:
   server's next restart;
 * ``enroll-token.txt``: ``serve`` redeems the token when it starts (see
   cli._enroll_from_drop_file); drop it, then the restart file.
+
+Two things keep it self-contained, so a host can run it as one process from
+its own panel, with no Task Scheduler and nothing written outside the folder:
+
+* **Retention.** The Linux unit has a daily timer that prunes old
+  recordings. Here a thread of this process does it (``retention=``): first
+  a few minutes after start, then every ``retention_every`` seconds.
+* **Address cache.** ``serve`` keeps a small cache of game addresses, by
+  default in the user's profile. The child is pointed at ``addresses.json``
+  beside the control files instead (SQR_ADDR_CACHE, unless already set).
 """
 from __future__ import annotations
 
@@ -54,6 +64,15 @@ HEALTHY_AFTER_SEC = 120.0
 #: The control files beside the stop file (see the module docstring).
 RESTART_FILE_NAME = "sqreader.restart"
 ENROLL_FILE_NAME = "enroll-token.txt"
+#: The child's address cache, also beside the stop file.
+ADDR_CACHE_NAME = "addresses.json"
+
+#: The first clean-up waits this long, so the reader attaches undisturbed.
+RETENTION_FIRST_DELAY_SEC = 300.0
+#: Then once a day, as the Linux timer does.
+RETENTION_EVERY_SEC = 86400.0
+#: How long stopping waits for a clean-up that is still deleting files.
+RETENTION_JOIN_SEC = 60.0
 
 _BELOW_NORMAL_PRIORITY_CLASS = 0x00004000
 _CREATE_NEW_PROCESS_GROUP = 0x00000200
@@ -128,15 +147,37 @@ def _spawn(argv: Sequence[str], env: dict[str, str]) -> subprocess.Popen:
                             env=env, **kwargs)
 
 
+def _retention_loop(job: Callable[[Callable[[str], None]], object],
+                    out: RotatingLog | _Stdout, *, first: float, every: float,
+                    done: threading.Event) -> None:
+    """Run ``job`` after ``first`` seconds, then every ``every`` seconds,
+    until ``done`` is set. A failing run is logged and tried again next
+    time; it never takes the supervisor down."""
+    wait = first
+    while not done.wait(wait):
+        try:
+            job(out.write_line)
+        except Exception as e:  # noqa: BLE001 - housekeeping must not kill us
+            out.write_line(f"[retention] failed: {e!r}")
+        wait = every
+
+
 def run(argv: Sequence[str], *, stop_file: Path | str,
         log: RotatingLog | _Stdout | None = None,
         cpu_percent_of_one_core: float | None = None,
+        retention: Callable[[Callable[[str], None]], object] | None = None,
+        retention_first: float = RETENTION_FIRST_DELAY_SEC,
+        retention_every: float = RETENTION_EVERY_SEC,
         min_delay: float = MIN_DELAY_SEC, max_delay: float = MAX_DELAY_SEC,
         healthy_after: float = HEALTHY_AFTER_SEC,
         sleep: Callable[[float], None] = time.sleep,
         clock: Callable[[], float] = time.monotonic) -> int:
     """Run ``argv`` until the stop file appears, restarting it whenever it
-    exits. Returns 0 once stopped."""
+    exits. Returns 0 once stopped.
+
+    ``retention``, if given, is called on a thread of its own with a
+    function that logs one line: ``retention_first`` seconds after start,
+    then every ``retention_every`` seconds."""
     out = log or _Stdout()
     stop = Path(stop_file)
     restart = stop.with_name(RESTART_FILE_NAME)
@@ -146,8 +187,20 @@ def run(argv: Sequence[str], *, stop_file: Path | str,
                SQREADER_RESTART_FILE=str(restart),
                SQREADER_ENROLL_FILE=str(stop.with_name(ENROLL_FILE_NAME)),
                PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8")
+    env.setdefault("SQR_ADDR_CACHE", str(stop.with_name(ADDR_CACHE_NAME)))
     out.write_line(f"[supervisor] started (pid {os.getpid()}); child: "
                    f"{' '.join(argv)}")
+    retention_done = threading.Event()
+    retention_thread = None
+    if retention is not None:
+        retention_thread = threading.Thread(
+            target=_retention_loop, name="sqreader-retention", daemon=True,
+            args=(retention, out),
+            kwargs=dict(first=retention_first, every=retention_every,
+                        done=retention_done))
+        retention_thread.start()
+        out.write_line(f"[supervisor] retention: in {retention_first:g}s, "
+                       f"then every {retention_every / 3600:g}h")
     if sys.platform == "win32":
         # Into the job BEFORE the first child exists, so the child and all it
         # starts are born inside it: capped together, and ended with us.
@@ -194,6 +247,9 @@ def run(argv: Sequence[str], *, stop_file: Path | str,
             sleep(delay / steps)
         restart.unlink(missing_ok=True)
         delay = min(delay * 2, max_delay)
+    retention_done.set()
+    if retention_thread is not None:
+        retention_thread.join(RETENTION_JOIN_SEC)
     stop.unlink(missing_ok=True)
     out.write_line("[supervisor] stopped")
     out.close()
@@ -207,4 +263,5 @@ def request_stop(stop_file: Path | str) -> None:
 
 __all__ = ["RotatingLog", "run", "request_stop", "MIN_DELAY_SEC",
            "MAX_DELAY_SEC", "HEALTHY_AFTER_SEC", "RESTART_FILE_NAME",
-           "ENROLL_FILE_NAME"]
+           "ENROLL_FILE_NAME", "ADDR_CACHE_NAME", "RETENTION_FIRST_DELAY_SEC",
+           "RETENTION_EVERY_SEC"]

@@ -5,7 +5,9 @@
 .DESCRIPTION
   Installs in place: the folder this script sits in IS the installation.
   Nothing is copied elsewhere and nothing is installed system-wide; the
-  only changes outside this folder are two scheduled tasks.
+  only change outside this folder is one scheduled task. (A host that runs
+  processes from its own panel needs no installer at all: see INSTALL.md,
+  "Running from a hosting panel".)
 
     1. checks the bundled Python runs (version + selftest)
     2. writes sqreader.config.json (which game server to read)
@@ -14,8 +16,7 @@
        and its enrolment file)
     5. runs `diagnose --deep` AS that account, to prove it can read the game
     6. registers the task "sqreader-<ServerId>" (at boot, restarts on failure,
-       below-normal priority, CPU capped) and "sqreader-<ServerId>-retention"
-       (daily clean-up of old recordings)
+       below-normal priority, CPU capped, daily clean-up of old recordings)
     7. starts the reader and shows its first log lines
 
   Re-running it upgrades or reconfigures: the reader is stopped cleanly
@@ -199,7 +200,9 @@ $serve = "serve --host 127.0.0.1 --port $HttpPort --hz 2 --recordings-dir record
          "--frontend-dir frontend\dist"
 if ($cfg.Push) { $serve += " --push" }
 $supArgs = "-m sqreader.cli supervise --log-file logs\sqreader.log --stop-file state\sqreader.stop " +
-           "--cpu-limit $CpuLimit -- $serve"
+           "--cpu-limit $CpuLimit --retention-dir recordings " +
+           "--retention-max-age-days $RetentionMaxAgeDays --retention-max-total-gb $RetentionMaxTotalGB " +
+           "--retention-min-free-gb $RetentionMinFreeGB -- $serve"
 $action = New-ScheduledTaskAction -Execute $SqrPython -Argument $supArgs -WorkingDirectory $SqrRoot
 if ($CurrentUserInteractive) {
     $trigger = New-ScheduledTaskTrigger -AtLogOn -User $User
@@ -213,17 +216,13 @@ $settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) 
 Register-SqrTask -TaskName $cfg.TaskName -Action $action -Trigger $trigger -Settings $settings `
     -User $User -Password $UserPassword -RunLevel $cfg.RunLevel -Interactive:$CurrentUserInteractive
 Write-Sqr "registered task $($cfg.TaskName) (runs at boot as $User, $($cfg.RunLevel))"
+Write-Sqr "retention runs inside the reader: daily, older than $RetentionMaxAgeDays days, over $RetentionMaxTotalGB GB, or under $RetentionMinFreeGB GB free"
 
-$ret = "/c `"`"$SqrPython`" -m sqreader.cli retention --recordings-dir recordings " +
-       "--max-age-days $RetentionMaxAgeDays --max-total-gb $RetentionMaxTotalGB " +
-       "--min-free-gb $RetentionMinFreeGB >> logs\retention.log 2>&1`""
-$retAction = New-ScheduledTaskAction -Execute "$env:SystemRoot\System32\cmd.exe" -Argument $ret -WorkingDirectory $SqrRoot
-$retTrigger = New-ScheduledTaskTrigger -Daily -At "06:30"
-$retSettings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Hours 1) -Priority 7 `
-    -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
-Register-SqrTask -TaskName $cfg.RetentionTask -Action $retAction -Trigger $retTrigger -Settings $retSettings `
-    -User $User -Password $UserPassword -RunLevel "Limited" -Interactive:$CurrentUserInteractive
-Write-Sqr "registered task $($cfg.RetentionTask) (daily 06:30: older than $RetentionMaxAgeDays days, over $RetentionMaxTotalGB GB, or under $RetentionMinFreeGB GB free)"
+# Earlier packages cleaned up from a second, daily task; the reader does it now.
+if (Get-ScheduledTask -TaskName $cfg.RetentionTask -ErrorAction SilentlyContinue) {
+    Unregister-ScheduledTask -TaskName $cfg.RetentionTask -Confirm:$false
+    Write-Sqr "removed the old task $($cfg.RetentionTask)"
+}
 
 Write-Utf8NoBom $SqrSettings (($cfg | ConvertTo-Json) + "`n")
 

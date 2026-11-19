@@ -26,9 +26,10 @@ A small viewer for those replays is served on 127.0.0.1 only.
   file, the server log, opened with full sharing so the server can still
   rotate it (rename to `SquadGame-backup-*.log`) at restart.
 - Nothing installed system-wide: no services, drivers, registry changes or
-  PATH changes. The only footprint outside its folder is two scheduled tasks
-  (and a small address cache in the service account's profile,
-  `.cache\sqreader\addresses.json`).
+  PATH changes, and it writes nothing outside its own folder (its address
+  cache is `state\addresses.json`). Run from a hosting panel there is no
+  footprint outside the folder at all; with `install.ps1` there is one
+  scheduled task.
 
 ## Which server it reads
 
@@ -37,36 +38,54 @@ only to the `SquadGameServer.exe` whose command line has `Port=<that port>`,
 and only to the real server under `SquadGame\Binaries\Win64\`, not the
 launcher in the install root. If that server is not running it waits; it
 never falls back to another instance. Other servers on the machine are not
-opened, and `diagnose` reports them only as a count.
+opened for reading, and `diagnose` reports them only as a count.
+
+To find it, the reader lists the machine's processes by name
+(`CreateToolhelp32Snapshot`) and, for each `SquadGameServer.exe` only, reads
+its image path and command line with `PROCESS_QUERY_LIMITED_INFORMATION`.
+Only the one whose port matches is opened with `PROCESS_VM_READ`.
 
 ## Account and privileges
 
-The tasks run as the account that runs the game server (detected at install),
-with a limited token, "run whether the user is logged on or not" without a
-stored password (S4U). Reading one's own processes needs no administrator
+When it runs from a hosting panel, it needs exactly one thing: to run as the
+account that runs `SquadGameServer.exe` (or one with `PROCESS_VM_READ` on
+it). No administrator rights.
+
+If opening the game is refused, the reader tries once to switch on
+`SeDebugPrivilege` **if the account already holds it** (only administrators
+and LocalSystem do; a normal account does not, and nothing is granted). That
+is how an administrator could read a game started by another user. Under a
+normal account this attempt does nothing.
+
+With `install.ps1`, the task runs as the account that runs the game server
+(detected at install), with a limited token, "run whether the user is logged
+on or not" without a stored password (S4U). Reading one's own processes needs no administrator
 rights. If the game runs elevated, the installer detects the refusal and uses
 the highest token of that same account instead. Administrator rights are used
-only by the installer, to register the tasks and set folder permissions.
+only by the installer, to register the task and set folder permissions.
 
 ## Processes and resources
 
 ```
-Task Scheduler
-  python.exe -m sqreader.cli supervise ...     restarts, logs, job object
+hosting panel, or Task Scheduler
+  python.exe -m sqreader.cli supervise ...     restarts, logs, job object,
+                                               daily retention (a thread)
     python.exe -m sqreader.cli serve ...       the reader
 ```
 
 - Both run at **below-normal priority** and inside one Windows **job object**
   with a hard CPU cap of **50% of one core** in total (the same limit the
-  Linux service runs under). Ending the task ends both: the job object closes
-  with the supervisor, so nothing is ever left running.
+  Linux service runs under). Ending the supervisor ends both: the job object
+  closes with it, so nothing is ever left running.
 - Measured on Squad v10.6.3 (the same build this machine runs), empty server,
   257,000 game objects: the reader used **about 22% of one core and 141 MB of
   RAM**, the supervisor 19 MB. A full server has more objects; the cap holds
   either way.
 - Disk: recordings grow by up to a few hundred MB per day on a busy server.
-  The daily retention task keeps them under 50 GB, deletes files older than 90
-  days, and frees space when the disk drops under 20 GB (all configurable).
+  A thread of the supervisor prunes them once a day (first 5 minutes after
+  start): it keeps them under 50 GB, deletes files older than 90 days, and
+  frees space when the disk drops under 20 GB (all configurable). It never
+  touches the match being recorded, and always keeps the newest 3.
   Logs are capped at 6 x 20 MB.
 
 ## Network
@@ -95,11 +114,13 @@ config file in it decides what the reader does anyway.
 
 ## Stopping and removal
 
-- `sqreaderctl.ps1 stop` asks the reader to stop through a file in `state\`:
-  it closes the current recording and exits within seconds. If it does not,
-  the task is ended after 90 s.
-- `uninstall.ps1` stops it and removes both tasks; `-Purge` also deletes the
-  data folders.
+- Creating `state\sqreader.stop`, or Ctrl+C / Ctrl+Break to the supervisor,
+  stops it cleanly: it closes the current recording and exits within
+  seconds. `sqreaderctl.ps1 stop` does the same, and ends the task if it has
+  not stopped after 90 s.
+- `uninstall.ps1` stops it and removes the task; `-Purge` also deletes the
+  data folders. Without the installer, deleting the folder removes
+  everything.
 
 ## Integrity
 
