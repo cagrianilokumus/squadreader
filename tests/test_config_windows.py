@@ -76,3 +76,17 @@ def test_without_port_prefers_an_instance_started_with_one():
 
 def test_without_port_unreadable_cmdline_still_attaches():
     assert _pick_windows_pid([(200, GAME, None)], PROC, None) == 200
+
+
+def test_a_config_written_with_a_bom_is_still_read(tmp_path, monkeypatch):
+    """Windows PowerShell 5.1 writes UTF-8 with a BOM. Read as plain utf-8 the
+    file failed to parse and was IGNORED: squad_port silently fell back to
+    "any server", which on a shared machine means someone else's."""
+    from sqreader import config
+    cfg = tmp_path / "sqreader.config.json"
+    cfg.write_bytes(b"\xef\xbb\xbf" + b'{"squad_port": 11271, "server_id": "bf"}')
+    monkeypatch.setenv("SQREADER_CONFIG", str(cfg))
+    monkeypatch.setattr(config, "_cache", None)
+    assert config.get("squad_port") == 11271
+    assert config.get("server_id") == "bf"
+    monkeypatch.setattr(config, "_cache", None)    # do not leak into other tests

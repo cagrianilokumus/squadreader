@@ -120,7 +120,10 @@ def _load() -> dict[str, Any]:
     path = Path(env) if env else Path.cwd() / "sqreader.config.json"
     if path.is_file():
         try:
-            data = json.loads(path.read_text(encoding="utf-8"))
+            # utf-8-sig: Windows PowerShell 5.1 writes UTF-8 WITH a BOM, which
+            # plain utf-8 hands to json as a stray U+FEFF: the file failed to
+            # parse and was ignored, squad_port and all, without a word.
+            data = json.loads(path.read_text(encoding="utf-8-sig"))
             if isinstance(data, dict):
                 # Skip `_comment` annotation keys used in the example file.
                 cfg.update({k: v for k, v in data.items()
