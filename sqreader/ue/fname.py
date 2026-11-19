@@ -50,6 +50,7 @@ other pool.
 from __future__ import annotations
 
 import struct
+import sys
 from dataclasses import dataclass
 from typing import Iterator
 
@@ -58,10 +59,17 @@ from ..mem import ProcessMemory
 
 # ----- structural constants --------------------------------------------------
 
-FNEA_LOCK_SIZE = 56                  # pthread_rwlock_t on Linux x86_64
-FNEA_CURRENT_BLOCK_OFFSET = 0x38     # uint32 — index of newest active block
-FNEA_CURRENT_CURSOR_OFFSET = 0x3C    # uint32 — write cursor into Blocks[CurrentBlock]
-FNEA_BLOCKS_OFFSET = 0x40            # uint8*[FNamePoolMaxBlocks] inline array
+# The allocator opens with UE's FRWLock, which is the platform's native
+# reader-writer lock, so its size — and with it every field after it — differs
+# by platform. The reader always runs on the same OS as the game it reads.
+FNEA_LOCK_SIZE_LINUX = 56            # pthread_rwlock_t on Linux x86_64
+FNEA_LOCK_SIZE_WINDOWS = 8           # SRWLOCK (one pointer) on Win64
+FNEA_LOCK_SIZE = (FNEA_LOCK_SIZE_WINDOWS if sys.platform == "win32"
+                  else FNEA_LOCK_SIZE_LINUX)
+# Linux / Windows values: 0x38/0x08, 0x3C/0x0C, 0x40/0x10.
+FNEA_CURRENT_BLOCK_OFFSET = FNEA_LOCK_SIZE       # uint32 — index of newest active block
+FNEA_CURRENT_CURSOR_OFFSET = FNEA_LOCK_SIZE + 4  # uint32 — write cursor into Blocks[CurrentBlock]
+FNEA_BLOCKS_OFFSET = FNEA_LOCK_SIZE + 8          # uint8*[FNamePoolMaxBlocks] inline array
 FNAME_POOL_MAX_BLOCKS = 8192         # UE 5.x default
 
 # Squad v10.4.1 (UE 5.7.4 build 604352, BuildID 96be21a2…) — verified stable
@@ -308,6 +316,25 @@ def _block0_addrs(pm: ProcessMemory) -> list[int]:
     return out
 
 
+def _allocator_search_regions(pm: ProcessMemory) -> list:
+    """Where the allocator itself (not its blocks) can live.
+
+    Linux: the binary is non-PIE and the allocator sits in the anonymous
+    "extended BSS" mapping right after the ELF's rw-p segment, so the
+    anonymous writable regions already cover it.
+
+    Windows: FNamePool is a static in the .exe's own writable section, which
+    is a file-backed MEM_IMAGE region and therefore NOT anonymous. Searching
+    only the heap would find Block 0 and then never find who points at it.
+    """
+    regions = pm.writable_anon_regions()
+    if sys.platform == "win32":
+        regions = regions + [r for r in pm.maps
+                             if r.writable and r.readable and r.inode != 0
+                             and r.pathname != "[mapped]"]
+    return regions
+
+
 def find_fname_pool_base(pm: ProcessMemory) -> int:
     """
     Locate an FNameEntryAllocator by:
@@ -326,8 +353,8 @@ def find_fname_pool_base(pm: ProcessMemory) -> int:
     needle_to_alloc_base: dict[int, int] = {}
     for b0 in block0_candidates:
         needle = struct.pack("<Q", b0)
-        # search every anon RW region for this pointer
-        for region in pm.writable_anon_regions():
+        # search every region the allocator can live in for this pointer
+        for region in _allocator_search_regions(pm):
             for chunk_addr, chunk in pm.iter_region_bytes(region, chunk=1 << 20):
                 pos = 0
                 while True:

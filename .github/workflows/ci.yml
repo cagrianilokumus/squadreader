@@ -38,6 +38,34 @@ jobs:
       - name: Tests (pytest)
         run: pytest -q
 
+  # The reader also runs on Windows, through sqreader/winproc.py instead of
+  # /proc. The whole suite runs there too: most of it is platform-neutral, and
+  # tests/test_winproc.py (skipped on Linux) reads real processes through the
+  # Win32 backend, which no fake can stand in for. mypy checks the win32 view
+  # of the code, which the Linux job above cannot see.
+  backend-windows:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install
+        run: pip install -e ".[dev]"
+
+      - name: Type-check (mypy, win32)
+        run: mypy --platform win32 sqreader
+
+      - name: Tests (pytest)
+        run: pytest -q
+
   # The container tests in docker/tests/ shell out to a real daemon and are not
   # collected by `pytest` (testpaths is tests/), so nothing used to check this
   # tree at all. These are the cheap half of that suite: the shell the image

@@ -71,11 +71,34 @@ def _discover_with_retry(fn, pm, label, *, attempts: int = 3,
         f"{label} discovery failed after {attempts} attempts: {last}")
 
 
+def _addr_cache_base(pm) -> int | None:
+    """What the address cache's entries are relative to.
+
+    Linux: 0. SquadGameServer is non-PIE there, so its globals sit at the same
+    absolute address on every launch and the cache stores them as they are.
+
+    Windows: the game module's load address. The .exe is ASLR-relocated on
+    every launch, so only an offset from its base survives a restart. None
+    when the module cannot be located, which turns the cache off rather than
+    pairing an offset with the wrong base.
+    """
+    if sys.platform != "win32":
+        return 0
+    from .ue.module import load_module
+    try:
+        return load_module(pm, config.get("squad_process_name")).base
+    except Exception:
+        return None
+
+
 def _resolve_gobjects(pm, binary_id: str | None = None):
     """Resolve GUObjectArray. Order: cached addr → known hardcoded addr →
     signature discovery. Every candidate is validated (sane num_elements)
     before use; whatever resolves is written back to the address cache so
-    the next startup is instant instead of paying the ~30 s discovery."""
+    the next startup is instant instead of paying the ~30 s discovery.
+
+    The hardcoded address is a Linux one, so Windows skips straight from the
+    cache to discovery (see _addr_cache_base for how the cache differs)."""
     from . import addrcache
     from .ue.uobject import (
         GUObjectArray, KNOWN_GOBJECTS_ADDR_V10_4_1, find_gobjects_base,
@@ -89,8 +112,13 @@ def _resolve_gobjects(pm, binary_id: str | None = None):
         except Exception:
             return None
 
-    cached = addrcache.get(binary_id, "gobjects")
+    base = _addr_cache_base(pm)
+    cache_id = binary_id if base is not None else None
+    rel = base or 0
+
+    cached = addrcache.get(cache_id, "gobjects")
     if cached is not None:
+        cached += rel
         arr = _valid(cached)
         if arr is not None:
             print(f"[+] GUObjectArray from cache @ {cached:#x}", file=sys.stderr)
@@ -98,23 +126,28 @@ def _resolve_gobjects(pm, binary_id: str | None = None):
         print(f"[!] cached GUObjectArray addr {cached:#x} stale; "
               "falling back", file=sys.stderr)
 
-    arr = _valid(KNOWN_GOBJECTS_ADDR_V10_4_1)
-    if arr is not None:
-        addrcache.put(binary_id, "gobjects", KNOWN_GOBJECTS_ADDR_V10_4_1)
-        return arr
-    print("[!] known GUObjectArray addr invalid; running discovery...",
-          file=sys.stderr)
+    if sys.platform == "win32":
+        print("[*] no usable cached GUObjectArray addr; running discovery...",
+              file=sys.stderr)
+    else:
+        arr = _valid(KNOWN_GOBJECTS_ADDR_V10_4_1)
+        if arr is not None:
+            addrcache.put(cache_id, "gobjects", KNOWN_GOBJECTS_ADDR_V10_4_1)
+            return arr
+        print("[!] known GUObjectArray addr invalid; running discovery...",
+              file=sys.stderr)
 
     addr = _discover_with_retry(find_gobjects_base, pm, "GUObjectArray")
     print(f"[+] GUObjectArray discovered at {addr:#x}", file=sys.stderr)
-    addrcache.put(binary_id, "gobjects", addr)
+    addrcache.put(cache_id, "gobjects", addr - rel)
     return GUObjectArray(pm, addr)
 
 
 def _resolve_fname_pool(pm, binary_id: str | None = None):
     """Resolve FNamePool. Order: cached addr → known hardcoded addr →
     heap-scan discovery. Validity = index 0 resolves to 'None' (the
-    canonical first reserved EName). Resolved addr is cached."""
+    canonical first reserved EName). Resolved addr is cached. As with
+    GUObjectArray, Windows has no known address to try."""
     from . import addrcache
     from .ue.fname import (
         FNameEntryAllocator, KNOWN_ALLOCATOR_ADDR_V10_4_1,
@@ -128,8 +161,13 @@ def _resolve_fname_pool(pm, binary_id: str | None = None):
         except Exception:
             return None
 
-    cached = addrcache.get(binary_id, "fnamepool")
+    base = _addr_cache_base(pm)
+    cache_id = binary_id if base is not None else None
+    rel = base or 0
+
+    cached = addrcache.get(cache_id, "fnamepool")
     if cached is not None:
+        cached += rel
         alloc = _valid(cached)
         if alloc is not None:
             print(f"[+] FNamePool from cache @ {cached:#x}", file=sys.stderr)
@@ -137,16 +175,20 @@ def _resolve_fname_pool(pm, binary_id: str | None = None):
         print(f"[!] cached FNamePool addr {cached:#x} stale; falling back",
               file=sys.stderr)
 
-    alloc = _valid(KNOWN_ALLOCATOR_ADDR_V10_4_1)
-    if alloc is not None:
-        addrcache.put(binary_id, "fnamepool", KNOWN_ALLOCATOR_ADDR_V10_4_1)
-        return alloc
-    print("[!] known FNamePool addr invalid; running discovery...",
-          file=sys.stderr)
+    if sys.platform == "win32":
+        print("[*] no usable cached FNamePool addr; running discovery...",
+              file=sys.stderr)
+    else:
+        alloc = _valid(KNOWN_ALLOCATOR_ADDR_V10_4_1)
+        if alloc is not None:
+            addrcache.put(cache_id, "fnamepool", KNOWN_ALLOCATOR_ADDR_V10_4_1)
+            return alloc
+        print("[!] known FNamePool addr invalid; running discovery...",
+              file=sys.stderr)
 
     addr = _discover_with_retry(find_fname_pool_base, pm, "FNamePool")
     print(f"[+] FNamePool discovered at {addr:#x}", file=sys.stderr)
-    addrcache.put(binary_id, "fnamepool", addr)
+    addrcache.put(cache_id, "fnamepool", addr - rel)
     return FNameEntryAllocator(pm, addr)
 
 

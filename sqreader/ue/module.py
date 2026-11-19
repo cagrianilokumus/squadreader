@@ -12,6 +12,8 @@ r-xp (.text), optionally another r--p (read-only relro), one rw-p
 """
 from __future__ import annotations
 
+import ntpath
+import sys
 from dataclasses import dataclass
 
 from ..mem import MapRegion, ProcessMemory
@@ -54,12 +56,33 @@ class Module:
                 f"regions={len(self.regions)})")
 
 
+def _windows_name_match(pathname: str, name: str) -> bool:
+    """``name`` is the module's file name, with or without .exe/.dll."""
+    base = ntpath.basename(pathname).lower()
+    want = name.lower()
+    return base in (want, want + ".exe", want + ".dll")
+
+
 def load_module(pm: ProcessMemory, path_suffix: str) -> Module:
-    """Build a Module from all /proc/<pid>/maps lines matching path_suffix."""
-    regs = tuple(sorted(
-        (r for r in pm.maps if path_suffix in r.pathname),
-        key=lambda r: r.start,
-    ))
+    """Build a Module from all /proc/<pid>/maps lines matching path_suffix.
+
+    On Windows a bare name is matched against each image's FILE name first:
+    every DLL a server loads sits under the install folder, and a folder that
+    happens to be called ``SquadGameServer`` would otherwise drag all of them
+    into the game module. The substring match remains the fallback.
+    """
+    regs: tuple[MapRegion, ...] = ()
+    if sys.platform == "win32" and "\\" not in path_suffix and "/" not in path_suffix:
+        regs = tuple(sorted(
+            (r for r in pm.maps
+             if r.inode != 0 and _windows_name_match(r.pathname, path_suffix)),
+            key=lambda r: r.start,
+        ))
+    if not regs:
+        regs = tuple(sorted(
+            (r for r in pm.maps if path_suffix in r.pathname),
+            key=lambda r: r.start,
+        ))
     if not regs:
         raise RuntimeError(f"no mappings found for module {path_suffix!r}")
     return Module(path=regs[0].pathname, base=regs[0].start, regions=regs)

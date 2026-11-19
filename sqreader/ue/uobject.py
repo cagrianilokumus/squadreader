@@ -43,6 +43,7 @@ Chunks hold 65 536 FUObjectItem each (UE constant NumElementsPerChunk).
 from __future__ import annotations
 
 import struct
+import sys
 from dataclasses import dataclass
 from typing import Iterator
 
@@ -592,7 +593,8 @@ class GUObjectArray:
 def find_gobjects_base(pm: ProcessMemory) -> int:
     """
     Scan combined .bss + extended-bss for the FChunkedFixedUObjectArray
-    signature; return the FUObjectArray base (16 bytes before).
+    signature; return the FUObjectArray base (16 bytes before). On Windows
+    the scan covers the game module's writable PE sections instead.
 
     Discovery heuristic must match a 32-byte struct with:
         +0    Objects: heap pointer
@@ -605,12 +607,26 @@ def find_gobjects_base(pm: ProcessMemory) -> int:
     """
     from .module import load_module
 
-    mod = load_module(pm, "SquadGameServer")
-    bss = mod.rw_region
-    pm.refresh_maps()
-    ext = pm.region_for(bss.end + 4)
-    if ext is None or not (ext.is_anonymous and ext.writable):
-        raise RuntimeError("extended-bss region not found")
+    spans: list[tuple[int, int]]
+    if sys.platform == "win32":
+        # A PE image keeps its statics in its own writable section(s): .data,
+        # whose zero-initialised tail is the BSS. The image mapping already
+        # covers that tail, so there is no separate anonymous region to find
+        # beside it the way there is on Linux.
+        pm.refresh_maps()
+        mod = load_module(pm, "SquadGameServer")
+        spans = [(r.start, r.size) for r in mod.regions
+                 if r.writable and r.readable]
+        if not spans:
+            raise RuntimeError("no writable section in the game module")
+    else:
+        mod = load_module(pm, "SquadGameServer")
+        bss = mod.rw_region
+        pm.refresh_maps()
+        ext = pm.region_for(bss.end + 4)
+        if ext is None or not (ext.is_anonymous and ext.writable):
+            raise RuntimeError("extended-bss region not found")
+        spans = [(bss.start, bss.size), (ext.start, ext.size)]
 
     def is_heap(p: int) -> bool:
         if p < 0x10000 or p > (1 << 47):
@@ -619,10 +635,7 @@ def find_gobjects_base(pm: ProcessMemory) -> int:
         return r is not None and r.is_anonymous and r.writable
 
     found: list[int] = []
-    for region_start, region_size in [
-        (bss.start, bss.size),
-        (ext.start, ext.size),
-    ]:
+    for region_start, region_size in spans:
         raw = pm.read(region_start, region_size)
         n = len(raw) // 8
         # The body reads a 32-byte (4-slot) struct at off=i*8, so the last
